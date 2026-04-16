@@ -453,6 +453,20 @@ jobs:
               echo ""
               echo "  Done! Run 'movie --help' to get started."
               echo ""
+
+              # If we modified an rc file, the parent (interactive)
+              # shell still has the old PATH because a child process
+              # cannot mutate its parent's environment. Give the user
+              # a one-liner to refresh the current shell instead of
+              # forcing them to open a new terminal.
+              if [[ -n "${REFRESH_HINT:-}" ]]; then
+                  echo "  ⚡ To use 'movie' in THIS shell right now, run:"
+                  echo ""
+                  echo "      $REFRESH_HINT"
+                  echo ""
+                  echo "  (Or open a new terminal — ${REFRESH_RC:-your shell rc} was already updated.)"
+                  echo ""
+              fi
           }
 
           main
