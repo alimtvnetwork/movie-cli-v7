@@ -2,9 +2,10 @@
 package db
 
 import (
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 	"fmt"
 	"time"
+
+	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 )
 
 // DuplicateGroup represents a set of media records that share a duplicate key.

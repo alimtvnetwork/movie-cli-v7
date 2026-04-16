@@ -73,7 +73,7 @@ func (d *DB) CountMedia(mediaType string) (int, error) {
 
 // ListAllMedia returns all media records that have a file path with genres populated.
 func (d *DB) ListAllMedia() ([]Media, error) {
-	rows, err := d.Query(`SELECT `+mediaColumns+`
+	rows, err := d.Query(`SELECT ` + mediaColumns + `
 		FROM Media WHERE OriginalFilePath != ''
 		ORDER BY CleanTitle ASC`)
 	if err != nil {

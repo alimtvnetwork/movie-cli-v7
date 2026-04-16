@@ -22,14 +22,14 @@ type Media struct {
 	CastList string `json:"cast_list,omitempty"` // aggregated from MediaCast+Cast
 	Language string `json:"language,omitempty"`  // resolved from Language.Code
 
-	ID         int64
-	Budget     int64
-	Revenue    int64
-	FileSize   int64   `json:"file_size,omitempty"` // computed: FileSizeMb * 1024 * 1024
-	ImdbRating float64
-	TmdbRating float64
-	Popularity float64
-	FileSizeMb float64
+	ID            int64
+	Budget        int64
+	Revenue       int64
+	FileSize      int64   `json:"file_size,omitempty"` // computed: FileSizeMb * 1024 * 1024
+	ImdbRating    float64
+	TmdbRating    float64
+	Popularity    float64
+	FileSizeMb    float64
 	Year          int
 	TmdbID        int
 	Runtime       int

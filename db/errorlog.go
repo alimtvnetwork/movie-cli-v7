@@ -2,8 +2,9 @@
 package db
 
 import (
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 	"fmt"
+
+	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 )
 
 // ErrorLogEntry holds all fields for an error log row.
