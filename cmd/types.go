@@ -13,18 +13,18 @@ import (
 
 // MoveContext groups parameters for batch and interactive move flows.
 type MoveContext struct {
+	Database  *db.DB
+	Scanner   *bufio.Scanner
 	Files     []os.FileInfo
 	SourceDir string
 	Home      string
-	Database  *db.DB
-	Scanner   *bufio.Scanner
 }
 
 // CleanupContext groups parameters for popout folder cleanup operations.
 type CleanupContext struct {
-	BatchID  string
 	Scanner  *bufio.Scanner
 	Database *db.DB
+	BatchID  string
 }
 
 // ScanServiceConfig groups parameters for post-scan services (REST, watch).
@@ -64,11 +64,11 @@ type RecursiveWalkOpts struct {
 
 // ThumbnailInput groups parameters for poster/thumbnail download functions.
 type ThumbnailInput struct {
-	PosterPath string
-	OutputDir  string
 	Client     *tmdb.Client
 	Database   *db.DB
 	Media      *db.Media
+	PosterPath string
+	OutputDir  string
 }
 
 // HistoryLogInput groups parameters for saving move history to JSON log.
@@ -82,10 +82,10 @@ type HistoryLogInput struct {
 
 // ScanLoopConfig groups parameters for the main scan processing loop.
 type ScanLoopConfig struct {
-	ScanDir   string
-	BatchID   string
 	Client    *tmdb.Client
 	JSONItems *[]scanJSONItem
+	ScanDir   string
+	BatchID   string
 	UseJSON   bool
 	UseTable  bool
 	HasTMDb   bool
@@ -113,9 +113,9 @@ type WatchState struct {
 
 // SuggestTypeInput groups parameters for type-based suggestion generation.
 type SuggestTypeInput struct {
-	MediaType string
 	Database  *db.DB
 	Client    *tmdb.Client
+	MediaType string
 	Count     int
 }
 
@@ -148,19 +148,19 @@ type FindMoveMediaInput struct {
 
 // WalkEntryInput groups parameters for processing a single walk entry during popout discovery.
 type WalkEntryInput struct {
-	RootDir string
-	Path    string
-	Info    os.FileInfo
-	Items   *[]popoutItem
+	Info     os.FileInfo
+	Items    *[]popoutItem
+	RootDir  string
+	Path     string
 	MaxDepth int
 }
 
 // FolderRemoveInput groups parameters for folder removal operations.
 type FolderRemoveInput struct {
-	DirPath string
-	DirName string
-	BatchID string
 	Database *db.DB
+	DirPath  string
+	DirName  string
+	BatchID  string
 }
 
 // MediaRequest groups database context for REST media handlers.
@@ -179,9 +179,9 @@ type MediaPatchRequest struct {
 
 // MediaUpdateField groups parameters for a single media field update.
 type MediaUpdateField struct {
-	Key      string
 	Val      interface{}
 	Database *db.DB
+	Key      string
 	ID       int64
 }
 
@@ -194,17 +194,17 @@ type UniqueFilter struct {
 // RecursiveFileContext groups parameters for handling a file during recursive directory walks.
 type RecursiveFileContext struct {
 	Files   *[]videoFile
+	Entry   os.DirEntry
 	Path    string
 	ScanDir string
-	Entry   os.DirEntry
 	Opts    RecursiveWalkOpts
 }
 
 // TrackScanResult groups the result of scanning a single file for action tracking.
 type TrackScanResult struct {
-	FullPath  string
 	InsertErr error
 	Media     *db.Media
+	FullPath  string
 	MediaID   int64
 }
 
@@ -223,10 +223,10 @@ type FillRecoInput struct {
 
 // FinalizeScanInput groups parameters for post-scan finalization.
 type FinalizeScanInput struct {
+	Database  *db.DB
 	JSONItems []scanJSONItem
 	ScanDir   string
 	OutputDir string
-	Database  *db.DB
 	Creds     tmdbCredentials
 	Removed   int
 	UseJSON   bool
@@ -249,36 +249,36 @@ type DryRunOutput struct {
 
 // RemoveStaleInput groups parameters for stale entry removal during scan.
 type RemoveStaleInput struct {
-	ExistingMedia []db.Media
 	DiskPaths     map[string]bool
-	BatchID       string
 	Database      *db.DB
+	ExistingMedia []db.Media
+	BatchID       string
 	Opts          ScanOutputOpts
 }
 
 // ProcessExistingInput groups parameters for processing existing media during scan.
 type ProcessExistingInput struct {
-	BatchID  string
 	Client   *tmdb.Client
 	Database *db.DB
 	EM       *db.Media
-	Opts     ScanOutputOpts
+	BatchID  string
 	VF       videoFile
+	Opts     ScanOutputOpts
 	HasTMDb  bool
 }
 
 // HandleRescanInput groups parameters for rescanning a media entry.
 type HandleRescanInput struct {
-	BatchID  string
 	Client   *tmdb.Client
 	Database *db.DB
 	EM       *db.Media
+	BatchID  string
 	Opts     ScanOutputOpts
 }
 
 // AppendUniqueInput groups parameters for appending unique search results.
 type AppendUniqueInput struct {
-	Results []tmdb.SearchResult
 	DiscErr error
+	Results []tmdb.SearchResult
 	Filter  UniqueFilter
 }
