@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.92.0
+
+### Changed
+- **Updater scope locked down** — Go `updater/` package no longer runs `git checkout`/`pull`/`fetch` or build commands. All git mutations and build/deploy steps are delegated to `run.ps1 -Update`.
+- Replaced `prepareRepoBranch` with `preflightRepo` in `updater/run.go` — only validates clean working tree before handoff.
+- Eliminates "pathspec did not match" errors caused by attempting to check out gitmap release labels (e.g. `release/v1.31.0`) that aren't real branches.
+
+### Added
+- New memory constraint `mem://constraints/updater-scope.md` — documents the Go-vs-PowerShell scope split so future contributors don't reintroduce git logic in Go.
+
+## v2.91.0
+
+### Fixed
+- Removed branch-switching logic from Go updater that caused `pathspec 'release/v1.31.0' did not match` failures on `movie update`.
+
 ## v2.16.0
 
 ### Changed
