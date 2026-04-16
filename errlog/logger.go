@@ -39,12 +39,12 @@ type Entry struct {
 
 // Logger writes errors to a log file and optionally to the database.
 type Logger struct {
-	mu       sync.Mutex
 	filePath string
 	file     *os.File
 	dbLog    func(Entry) // optional DB writer, set after DB opens
 	command  string
 	workDir  string
+	mu       sync.Mutex
 }
 
 // global singleton
