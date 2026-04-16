@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.93.0
+
+### Changed
+- **Module path renamed** — `github.com/alimtvnetwork/movie-cli-v4` → `github.com/alimtvnetwork/movie-cli-v5` across the entire project (104 files: Go imports, `go.mod`, README, CI workflows, install scripts, docs).
+- All GitHub URLs (`github.com/alimtvnetwork/movie-cli-v4` → `…/movie-cli-v5`) updated in README badges, install one-liners, and release-asset URLs.
+
+### Migration
+- Run `go mod tidy` after pulling to refresh the module cache.
+- Local clones tracking the old remote should update their `origin` URL: `git remote set-url origin https://github.com/alimtvnetwork/movie-cli-v5.git`.
+
 ## v2.92.0
 
 ### Changed
