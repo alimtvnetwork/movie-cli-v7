@@ -48,7 +48,7 @@ func runMainScanLoop(ctx *ScanContext, videoFiles []videoFile, cfg ScanLoopConfi
 			if existingPaths[ctx.ScannedItems[i].OriginalFilePath] == nil {
 				status = "new"
 			}
-			*jsonItems = append(*jsonItems, buildMediaJSONItem(&ctx.ScannedItems[i], status))
+			*cfg.JSONItems = append(*cfg.JSONItems, buildMediaJSONItem(&ctx.ScannedItems[i], status))
 		}
 	}
 
