@@ -4,8 +4,6 @@ package cmd
 import (
 	"fmt"
 	"strings"
-
-	"github.com/alimtvnetwork/movie-cli-v4/db"
 )
 
 func printHistoryTableUnified(records []unifiedRecord) {
