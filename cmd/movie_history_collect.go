@@ -77,7 +77,8 @@ func collectActionRecords(database *db.DB, records []unifiedRecord) []unifiedRec
 	case "scan":
 		adds, _ := database.ListActionsByType(db.FileActionScanAdd, historyLimit)
 		removes, _ := database.ListActionsByType(db.FileActionScanRemove, historyLimit)
-		actions = append(adds, removes...)
+		actions = adds
+		actions = append(actions, removes...)
 	case "delete":
 		actions, err = database.ListActionsByType(db.FileActionDelete, historyLimit)
 	case "popout":

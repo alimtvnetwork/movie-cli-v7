@@ -43,8 +43,11 @@ func collectPopoutFolders(rootDir string, items []popoutItem) []popoutFolderInfo
 func scanFolderContents(name, dirPath string) popoutFolderInfo {
 	var files []string
 	var totalSize int64
-	_ = filepath.Walk(dirPath, func(p string, fi os.FileInfo, err error) error {
-		if err != nil || fi.IsDir() {
+	_ = filepath.Walk(dirPath, func(p string, fi os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if fi.IsDir() {
 			return nil
 		}
 		rel, _ := filepath.Rel(dirPath, p)

@@ -35,7 +35,7 @@ func (c *Client) get(reqURL string, target interface{}) error {
 		if lastErr == nil {
 			return nil
 		}
-		if lastErr == ErrRateLimited {
+		if errors.Is(lastErr, ErrRateLimited) {
 			continue
 		}
 		if errors.Is(lastErr, ErrTimeout) || errors.Is(lastErr, ErrNetworkError) || errors.Is(lastErr, ErrAuthInvalid) {

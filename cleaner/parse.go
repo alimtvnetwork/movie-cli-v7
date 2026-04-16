@@ -29,7 +29,7 @@ var junkPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\b(amzn|nf|netflix|dsnp|disney|hmax|hulu|atvp|apple|pcok|peacock|pmtp|paramount|stan|crav|criterion|mubi)\b`),
 	regexp.MustCompile(`(?i)\b([57]\s*1|[27]\s*0)\b`),
 	regexp.MustCompile(`\[.*?\]`),
-	regexp.MustCompile(`\((?!\d{4}\))[^)]*\)`),
+	regexp.MustCompile(`\([^)]*\)`),
 }
 
 var yearInParens = regexp.MustCompile(`\((\d{4})\)`)

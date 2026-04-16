@@ -17,9 +17,9 @@ import (
 func discoverNestedVideos(rootDir string, maxDepth int) []popoutItem {
 	var items []popoutItem
 
-	_ = filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
+	_ = filepath.Walk(rootDir, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
 		}
 		return processWalkEntry(WalkEntryInput{
 			RootDir: rootDir, Path: path, Info: info, MaxDepth: maxDepth, Items: &items,
