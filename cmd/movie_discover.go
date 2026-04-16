@@ -54,6 +54,16 @@ func runMovieDiscover(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	genreName, genreID := resolveDiscoverGenre(args)
+	if genreID == 0 {
+		return
+	}
+
+	fetchAndPrintDiscover(client, genreName, genreID)
+}
+
+// resolveDiscoverGenre resolves the genre from args or interactive prompt.
+func resolveDiscoverGenre(args []string) (string, int) {
 	genreName := ""
 	if len(args) > 0 {
 		genreName = args[0]
@@ -61,7 +71,7 @@ func runMovieDiscover(cmd *cobra.Command, args []string) {
 	if genreName == "" {
 		genreName = promptGenre()
 		if genreName == "" {
-			return
+			return "", 0
 		}
 	}
 
@@ -69,9 +79,13 @@ func runMovieDiscover(cmd *cobra.Command, args []string) {
 	if genreID == 0 {
 		errlog.Error("Unknown genre: %s", genreName)
 		printAvailableGenres()
-		return
+		return genreName, 0
 	}
+	return genreName, genreID
+}
 
+// fetchAndPrintDiscover fetches discover results from TMDb and prints them.
+func fetchAndPrintDiscover(client *tmdb.Client, genreName string, genreID int) {
 	mediaType := resolveDiscoverType()
 	typeLabel := db.TypeLabelPlural(mediaType)
 
