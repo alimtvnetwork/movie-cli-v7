@@ -108,7 +108,7 @@ func candidateDirs(selfPath string) []string {
 // loadPowershellConfig reads powershell.json from the repo root.
 // Returns nil if the repo or file cannot be located.
 func loadPowershellConfig() *powershellConfig {
-	repoPath, _, err := findRepoPath()
+	repoPath, _, err := findRepoPath("")
 	if err != nil || repoPath == "" {
 		return nil
 	}
