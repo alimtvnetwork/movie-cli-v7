@@ -33,3 +33,4 @@ Current version: v2.23.0. Spec resequenced: foundation 01-06, app at 08, issues 
 
 - [Updater async console](mem://issues/05-updater-async-console) — ✅ Fixed: sync handoff, exit code propagation
 - [Guideline violations](mem://issues/06-guideline-violations-refactoring) — ✅ Phase 1-2 done, phases 3-7 pending
+- [CI/CD build fixes playbook](mem://ci-cd/01-build-fixes-playbook) — Root cause + fix + prevention for every recurring golangci-lint error. READ before editing .go files.
