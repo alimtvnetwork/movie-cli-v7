@@ -16,7 +16,7 @@ type StaleEntry struct {
 // OriginalFilePath no longer exists on disk.
 func (d *DB) FindStaleEntries(limit int) ([]StaleEntry, error) {
 	rows, err := d.Query(`
-		SELECT ` + mediaColumns + `
+		SELECT `+mediaColumns+`
 		FROM Media
 		WHERE OriginalFilePath != ''
 		ORDER BY CleanTitle ASC

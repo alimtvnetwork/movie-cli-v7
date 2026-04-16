@@ -88,7 +88,7 @@ func (d *DB) MediaHasGenres(mediaID int64) (bool, error) {
 // SearchMediaByGenre returns media that have the given genre (exact match on genre name).
 func (d *DB) SearchMediaByGenre(genreName string) ([]Media, error) {
 	rows, err := d.Query(`
-		SELECT ` + mediaColumns + `
+		SELECT `+mediaColumns+`
 		FROM Media
 		WHERE MediaId IN (
 			SELECT mg.MediaId FROM MediaGenre mg
@@ -106,7 +106,7 @@ func (d *DB) SearchMediaByGenre(genreName string) ([]Media, error) {
 // SearchMediaByGenreLike returns media matching a genre name pattern (LIKE).
 func (d *DB) SearchMediaByGenreLike(pattern string) ([]Media, error) {
 	rows, err := d.Query(`
-		SELECT ` + mediaColumns + `
+		SELECT `+mediaColumns+`
 		FROM Media
 		WHERE MediaId IN (
 			SELECT mg.MediaId FROM MediaGenre mg

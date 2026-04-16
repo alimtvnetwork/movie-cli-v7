@@ -8,7 +8,7 @@ import (
 
 // ListMedia returns paginated media records with genres populated.
 func (d *DB) ListMedia(offset, limit int) ([]Media, error) {
-	rows, err := d.Query(`SELECT ` + mediaColumns + `
+	rows, err := d.Query(`SELECT `+mediaColumns+`
 		FROM Media WHERE OriginalFilePath != ''
 		ORDER BY CleanTitle ASC LIMIT ? OFFSET ?`, limit, offset)
 	if err != nil {
@@ -25,7 +25,7 @@ func (d *DB) ListMedia(offset, limit int) ([]Media, error) {
 
 // SearchMedia searches by title (fuzzy via LIKE).
 func (d *DB) SearchMedia(query string) ([]Media, error) {
-	rows, err := d.Query(`SELECT ` + mediaColumns + `
+	rows, err := d.Query(`SELECT `+mediaColumns+`
 		FROM Media WHERE CleanTitle LIKE ? OR Title LIKE ?
 		ORDER BY Popularity DESC LIMIT 20`, "%"+query+"%", "%"+query+"%")
 	if err != nil {
@@ -42,7 +42,7 @@ func (d *DB) SearchMedia(query string) ([]Media, error) {
 
 // GetMediaByID returns a single media record with genres populated.
 func (d *DB) GetMediaByID(id int64) (*Media, error) {
-	row := d.QueryRow(`SELECT ` + mediaColumns + ` FROM Media WHERE MediaId = ?`, id)
+	row := d.QueryRow(`SELECT `+mediaColumns+` FROM Media WHERE MediaId = ?`, id)
 	m, err := scanMediaRow(row)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (d *DB) GetMediaByID(id int64) (*Media, error) {
 
 // GetMediaByTmdbID returns a media record by its TMDb ID with genres populated.
 func (d *DB) GetMediaByTmdbID(tmdbID int) (*Media, error) {
-	row := d.QueryRow(`SELECT ` + mediaColumns + ` FROM Media WHERE TmdbId = ?`, tmdbID)
+	row := d.QueryRow(`SELECT `+mediaColumns+` FROM Media WHERE TmdbId = ?`, tmdbID)
 	m, err := scanMediaRow(row)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (d *DB) GetMediaByScanDir(scanDir string) ([]Media, error) {
 	if prefix != "" && prefix[len(prefix)-1] != '/' && prefix[len(prefix)-1] != '\\' {
 		prefix += string([]byte{filepath.Separator})
 	}
-	rows, err := d.Query(`SELECT ` + mediaColumns + `
+	rows, err := d.Query(`SELECT `+mediaColumns+`
 		FROM Media WHERE OriginalFilePath LIKE ?
 		ORDER BY CleanTitle ASC`, prefix+"%")
 	if err != nil {
@@ -163,7 +163,7 @@ func (d *DB) FileSizeStats() (total float64, largest float64, smallest float64, 
 
 // MediaByType returns media filtered by type with genres populated.
 func (d *DB) MediaByType(mediaType string, limit int) ([]Media, error) {
-	rows, err := d.Query(`SELECT ` + mediaColumns + `
+	rows, err := d.Query(`SELECT `+mediaColumns+`
 		FROM Media WHERE Type = ? ORDER BY Popularity DESC LIMIT ?`, mediaType, limit)
 	if err != nil {
 		return nil, err

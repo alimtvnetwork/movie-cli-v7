@@ -123,7 +123,7 @@ func (d *DB) FindDuplicatesByFileSize() ([]DuplicateGroup, error) {
 }
 
 func (d *DB) mediaByTmdbIDAll(tmdbID int) ([]Media, error) {
-	rows, err := d.Query(`SELECT ` + mediaColumns + `
+	rows, err := d.Query(`SELECT `+mediaColumns+`
 		FROM Media WHERE TmdbId = ? ORDER BY MediaId`, tmdbID)
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func (d *DB) mediaByTmdbIDAll(tmdbID int) ([]Media, error) {
 }
 
 func (d *DB) mediaByFileName(name string) ([]Media, error) {
-	rows, err := d.Query(`SELECT ` + mediaColumns + `
+	rows, err := d.Query(`SELECT `+mediaColumns+`
 		FROM Media WHERE OriginalFileName = ? ORDER BY MediaId`, name)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (d *DB) mediaByFileName(name string) ([]Media, error) {
 }
 
 func (d *DB) mediaByFileSize(size float64) ([]Media, error) {
-	rows, err := d.Query(`SELECT ` + mediaColumns + `
+	rows, err := d.Query(`SELECT `+mediaColumns+`
 		FROM Media WHERE FileSizeMb = ? ORDER BY MediaId`, size)
 	if err != nil {
 		return nil, err

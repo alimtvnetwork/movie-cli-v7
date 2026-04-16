@@ -101,31 +101,33 @@ db/media.go:28:1: File is not properly formatted (gofmt)
 
 ---
 
-#### 1d. String concatenation spacing
+#### 1d. String concatenation spacing — TRUST gofmt, DO NOT GUESS
 
 **Sample error:**
 ```
-db/media_query.go:76:1: File is not properly formatted (gofmt)
-    rows, err := d.Query(`SELECT `+mediaColumns+`
+db/media_query.go:11:1: File is not properly formatted (gofmt)
+    rows, err := d.Query(`SELECT ` + mediaColumns + `
 ```
 
-**Root cause**: `gofmt` requires **spaces around `+`** when concatenating a raw string literal with an identifier. The pattern `` `…`+x+` ` `` is reformatted to `` `…` + x + ` ` ``.
+**Root cause**: `gofmt` has a specific rule for `+` between a raw string literal and an identifier on the same line: it wants **NO spaces** around `+`:
 
-**Fix pattern**:
 ```go
-// ❌ WRONG
+// ✅ CORRECT (what gofmt produces)
 d.Query(`SELECT `+mediaColumns+` FROM media`)
 
-// ✅ CORRECT
+// ❌ WRONG (gofmt will rewrite this)
 d.Query(`SELECT ` + mediaColumns + ` FROM media`)
 ```
 
-**Prevention rule**: Always put spaces around `+` in string concatenation. No exceptions.
+This is the OPPOSITE of normal arithmetic `+` (where spaces are required). The rule applies specifically when one operand is a string literal directly adjacent to the `+`.
 
-**Bulk fix (when many files affected)**:
+**Prevention rule**: NEVER manually adjust spacing around `+` in string concatenation. Run `gofmt -w` and accept whatever it produces. Bulk `sed` rewrites of these patterns are forbidden — they will fight gofmt.
+
+**The only safe fix command:**
 ```bash
-sed -i 's/`+mediaColumns+`/` + mediaColumns + `/g' db/*.go
+gofmt -s -w .
 ```
+
 
 ---
 
