@@ -358,10 +358,16 @@ jobs:
           add_to_path() {
               local dir="$1"
               if [[ "$NO_PATH" == "true" ]]; then return; fi
-              if echo "$PATH" | tr ':' '\n' | grep -qx "$dir"; then
-                  echo "  Already in PATH."
-                  return
-              fi
+
+              # Always export for THIS script's process tree so the
+              # post-install verification step (`movie version`) works.
+              # When the script is invoked via `curl … | bash`, this
+              # export dies with the subshell — it CANNOT reach the
+              # user's interactive parent shell. That's a Unix
+              # process-isolation rule, not a bug. We print a
+              # copy-paste one-liner at the end so the user can
+              # refresh their current shell in one step.
+              export PATH="$dir:$PATH"
 
               local shell_name rc_file export_line
               shell_name="$(basename "${SHELL:-/bin/bash}")"
@@ -378,13 +384,18 @@ jobs:
               fi
 
               if [[ -f "$rc_file" ]] && grep -qF "$dir" "$rc_file"; then
-                  echo "  Already in $rc_file."
+                  echo "  Already in $rc_file (new shells will pick it up)."
               else
                   echo "" >> "$rc_file"
                   echo "$export_line" >> "$rc_file"
-                  echo "  ✅ Added to $rc_file"
+                  echo "  ✅ Added to $rc_file (new shells will pick it up)."
               fi
-              export PATH="$dir:$PATH"
+
+              # Stash for the final-message hint — the parent shell
+              # needs this one-liner to see the new PATH without
+              # opening a fresh terminal.
+              REFRESH_HINT="$export_line"
+              REFRESH_RC="$rc_file"
           }
 
           main() {
