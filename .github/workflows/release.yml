@@ -220,9 +220,21 @@ jobs:
               if (-not $hasDir) {
                   $newPath = if ([string]::IsNullOrWhiteSpace($currentUserPath)) { $dir } else { $currentUserPath.TrimEnd(";") + ";" + $dir }
                   [Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
-                  Write-OK "Added to user PATH."
+                  Write-OK "Added to user PATH (persistent)."
               } else {
-                  Write-Step "Already in user PATH."
+                  Write-Step "Already in user PATH (persistent)."
+              }
+
+              # Also refresh the CURRENT session so 'movie' works immediately
+              # without opening a new terminal. PowerShell snapshots $env:PATH
+              # at shell startup; SetEnvironmentVariable only affects FUTURE
+              # sessions, which is why users see "command not found" right
+              # after install even though PATH was updated correctly.
+              $sessionParts = if ($env:PATH) { $env:PATH -split ";" } else { @() }
+              $hasSessionDir = $sessionParts | Where-Object { $_.Trim() -ieq $dir }
+              if (-not $hasSessionDir) {
+                  $env:PATH = if ([string]::IsNullOrWhiteSpace($env:PATH)) { $dir } else { $env:PATH.TrimEnd(";") + ";" + $dir }
+                  Write-OK "Refreshed PATH for current session."
               }
           }
 

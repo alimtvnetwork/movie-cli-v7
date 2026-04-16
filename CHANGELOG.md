@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.94.0
+
+### Fixed
+- **Installer now updates PATH for the current PowerShell session** — previously `[Environment]::SetEnvironmentVariable("PATH", ..., "User")` only affected *future* sessions, so users got "The term 'movie' is not recognized" immediately after install and had to open a new terminal. The installer now also refreshes `$env:PATH` in the running session so `movie` works right away.
+
 ## v2.93.0
 
 ### Changed
