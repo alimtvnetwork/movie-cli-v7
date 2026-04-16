@@ -3,10 +3,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/alimtvnetwork/movie-cli-v4/db"
+	"github.com/alimtvnetwork/movie-cli-v4/errlog"
 )
 
 // table column widths
@@ -24,7 +24,7 @@ const (
 func runMovieLsTable(database *db.DB) {
 	allMedia, err := database.ListMedia(0, 100000)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "❌ Database error: %v\n", err)
+		errlog.Error(msgDatabaseError, err)
 		return
 	}
 

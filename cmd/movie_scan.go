@@ -67,7 +67,7 @@ func runMovieScan(cmd *cobra.Command, args []string) {
 
 	database, err := db.Open()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "❌ Database error: %v\n", err)
+		errlog.Error(msgDatabaseError, err)
 		return
 	}
 	defer database.Close()
