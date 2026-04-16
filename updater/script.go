@@ -47,7 +47,7 @@ func hasPwshWithRunPS1(repoPath string) bool {
 
 // writeUpdateScript generates a temp PowerShell script for the update.
 func writeUpdateScript(repoPath, targetBinary string) (string, error) {
-	script := buildUpdateScriptContent(repoPath, targetBinary)
+	script := buildUpdateScriptContent(repoPath, targetBinary, currentBinaryPath())
 
 	tmpFile, err := os.CreateTemp(os.TempDir(), "movie-update-script-*.ps1")
 	if err != nil {
@@ -67,14 +67,27 @@ func writeUpdateScript(repoPath, targetBinary string) (string, error) {
 	return tmpFile.Name(), nil
 }
 
+func currentBinaryPath() string {
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	if resolved, evalErr := filepath.EvalSymlinks(binaryPath); evalErr == nil {
+		return resolved
+	}
+	return binaryPath
+}
+
 // buildUpdateScriptContent generates the PowerShell script content.
-func buildUpdateScriptContent(repoPath, targetBinary string) string {
+func buildUpdateScriptContent(repoPath, targetBinary, workerBinary string) string {
 	repoPath = powerShellString(repoPath)
 	targetBinary = powerShellString(targetBinary)
+	workerBinary = powerShellString(workerBinary)
 
 	return fmt.Sprintf(`$ErrorActionPreference = "Stop"
 $repoPath = "%s"
 $targetBinary = "%s"
+$workerBinary = "%s"
 
 function Resolve-VersionBinary {
     if ($targetBinary) {
@@ -108,19 +121,23 @@ if (-not (Test-Path $runScript)) {
 }
 
 Write-Host "  Running update via $runScript" -ForegroundColor Cyan
-$deployArgs = @("-Update")
+$runArgs = @{ Update = $true }
 if ($targetBinary) {
     $deployDir = Split-Path -Parent $targetBinary
     $targetName = Split-Path -Leaf $targetBinary
     if ($deployDir) {
-        $deployArgs += @("-DeployPath", $deployDir)
+        $runArgs["DeployPath"] = $deployDir
     }
     if ($targetName) {
-        $deployArgs += @("-BinaryNameOverride", $targetName)
+        $runArgs["BinaryNameOverride"] = $targetName
     }
     Write-Host "  Deploy target: $targetBinary" -ForegroundColor Gray
 }
-& $runScript @deployArgs
+& $runScript @runArgs
+$runExit = $LASTEXITCODE
+if ($runExit -ne 0) {
+    exit $runExit
+}
 
 # Compare versions from the original target binary
 $versionBinary = Resolve-VersionBinary
@@ -146,9 +163,16 @@ if ($versionBinary -and (Test-Path $versionBinary)) {
 
 # Auto-cleanup
 if ($versionBinary -and (Test-Path $versionBinary)) {
-    & $versionBinary update-cleanup 2>&1 | Out-Null
+    $cleanupArgs = @("update-cleanup")
+    if ($workerBinary) {
+        $cleanupArgs += @("--skip-path", $workerBinary)
+    }
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $null = & $versionBinary @cleanupArgs 2>&1
+    $ErrorActionPreference = $prevPref
 }
-`, repoPath, targetBinary)
+`, repoPath, targetBinary, workerBinary)
 }
 
 func powerShellString(value string) string {

@@ -63,7 +63,8 @@ var updateCleanupCmd = &cobra.Command{
   - Backup binaries (*.bak)`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("🧹 Cleaning update artifacts...")
-		cleaned, err := updater.Cleanup()
+		skipPath, _ := cmd.Flags().GetString("skip-path")
+		cleaned, err := updater.Cleanup(skipPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "❌ Cleanup failed: %v\n", err)
 			os.Exit(1)
@@ -80,6 +81,7 @@ func init() {
 	updateCmd.Flags().String("repo-path", "", "Path to the source repository")
 	updateRunnerCmd.Flags().String("repo-path", "", "Path to the source repository")
 	updateRunnerCmd.Flags().String("target-binary", "", "Original executable path to redeploy")
+	updateCleanupCmd.Flags().String("skip-path", "", "Path to skip during cleanup")
 }
 
 func exitOnUpdateError(label string, err error) {

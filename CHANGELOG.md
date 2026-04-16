@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.98.0
+
+### Fixed
+- **`movie update` now passes `-Update`, `-DeployPath`, and `-BinaryNameOverride` into `run.ps1` via a named-parameter splat** instead of a raw string array. The handoff worker was launching correctly, but PowerShell was not binding those override flags, so `run.ps1` silently fell back to `powershell.json` and deployed to the wrong directory.
+- **Auto-cleanup now skips the currently running handoff worker binary** via `update-cleanup --skip-path <worker>`, so post-update cleanup no longer tries to delete the still-running `movie-update-*.exe` copy and throw `Access is denied` at the end of a successful update.
+
 ## v2.97.0
 
 ### Fixed
