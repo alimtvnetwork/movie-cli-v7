@@ -82,12 +82,13 @@ type HistoryLogInput struct {
 
 // ScanLoopConfig groups parameters for the main scan processing loop.
 type ScanLoopConfig struct {
-	Client  *tmdb.Client
-	ScanDir string
-	BatchID string
-	UseJSON bool
-	UseTable bool
-	HasTMDb bool
+	Client    *tmdb.Client
+	ScanDir   string
+	BatchID   string
+	UseJSON   bool
+	UseTable  bool
+	HasTMDb   bool
+	JSONItems *[]scanJSONItem
 }
 
 // ScanOutputOpts groups output format flags used during scan processing.
@@ -218,4 +219,66 @@ type DiscoverGenreInput struct {
 type FillRecoInput struct {
 	Database  *db.DB
 	MediaType string
+}
+
+// FinalizeScanInput groups parameters for post-scan finalization.
+type FinalizeScanInput struct {
+	ScanDir   string
+	OutputDir string
+	Database  *db.DB
+	Creds     tmdbCredentials
+	Removed   int
+	JSONItems []scanJSONItem
+	UseJSON   bool
+}
+
+// DryRunInput groups parameters for dry-run scan processing.
+type DryRunInput struct {
+	VideoFiles []videoFile
+	UseJSON    bool
+	UseTable   bool
+}
+
+// DryRunOutput groups mutable output pointers for dry-run scan results.
+type DryRunOutput struct {
+	JSONItems  *[]scanJSONItem
+	TotalFiles *int
+	MovieCount *int
+	TVCount    *int
+}
+
+// RemoveStaleInput groups parameters for stale entry removal during scan.
+type RemoveStaleInput struct {
+	Database      *db.DB
+	ExistingMedia []db.Media
+	DiskPaths     map[string]bool
+	BatchID       string
+	Opts          ScanOutputOpts
+}
+
+// ProcessExistingInput groups parameters for processing existing media during scan.
+type ProcessExistingInput struct {
+	EM       *db.Media
+	VF       videoFile
+	Client   *tmdb.Client
+	Database *db.DB
+	Opts     ScanOutputOpts
+	BatchID  string
+	HasTMDb  bool
+}
+
+// HandleRescanInput groups parameters for rescanning a media entry.
+type HandleRescanInput struct {
+	EM       *db.Media
+	Client   *tmdb.Client
+	Database *db.DB
+	Opts     ScanOutputOpts
+	BatchID  string
+}
+
+// AppendUniqueInput groups parameters for appending unique search results.
+type AppendUniqueInput struct {
+	Results []tmdb.SearchResult
+	DiscErr error
+	Filter  UniqueFilter
 }

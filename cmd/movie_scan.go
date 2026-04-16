@@ -96,7 +96,10 @@ func runMovieScan(cmd *cobra.Command, args []string) {
 
 	ctx := createScanContext(database, creds, outputDir)
 	removed, jsonItems := executeScan(ctx, scanDir, useJSON)
-	finalizeScan(cmd, ctx, scanDir, outputDir, database, creds, removed, jsonItems, useJSON)
+	finalizeScan(cmd, ctx, FinalizeScanInput{
+		ScanDir: scanDir, OutputDir: outputDir, Database: database,
+		Creds: creds, Removed: removed, JSONItems: jsonItems, UseJSON: useJSON,
+	})
 }
 
 func createScanContext(database *db.DB, creds tmdbCredentials, outputDir string) *ScanContext {
@@ -121,8 +124,8 @@ func executeScan(ctx *ScanContext, scanDir string, useJSON bool) (int, []scanJSO
 	}
 
 	if scanDryRun {
-		runDryRunScan(videoFiles, useJSON, useTable,
-			&jsonItems, &ctx.TotalFiles, &ctx.MovieCount, &ctx.TVCount)
+		runDryRunScan(DryRunInput{VideoFiles: videoFiles, UseJSON: useJSON, UseTable: useTable},
+			DryRunOutput{JSONItems: &jsonItems, TotalFiles: &ctx.TotalFiles, MovieCount: &ctx.MovieCount, TVCount: &ctx.TVCount})
 		if useTable {
 			printScanTableFooter()
 		}
@@ -132,7 +135,8 @@ func executeScan(ctx *ScanContext, scanDir string, useJSON bool) (int, []scanJSO
 	removed := runMainScanLoop(ctx, videoFiles, ScanLoopConfig{
 		Client: ctx.Client, ScanDir: scanDir, BatchID: ctx.BatchID,
 		UseJSON: useJSON, UseTable: useTable, HasTMDb: ctx.HasTMDb,
-	}, &jsonItems)
+		JSONItems: &jsonItems,
+	})
 
 	if useTable {
 		printScanTableFooter()
@@ -140,26 +144,25 @@ func executeScan(ctx *ScanContext, scanDir string, useJSON bool) (int, []scanJSO
 	return removed, jsonItems
 }
 
-func finalizeScan(cmd *cobra.Command, ctx *ScanContext, scanDir, outputDir string,
-	database *db.DB, creds tmdbCredentials, removed int, jsonItems []scanJSONItem, useJSON bool) {
-	registerScanHistory(database, scanDir, ctx)
+func finalizeScan(cmd *cobra.Command, ctx *ScanContext, input FinalizeScanInput) {
+	registerScanHistory(input.Database, input.ScanDir, ctx)
 
-	if useJSON {
-		printScanJSON(scanDir, jsonItems, ScanStats{
+	if input.UseJSON {
+		printScanJSON(input.ScanDir, input.JSONItems, ScanStats{
 			Total: ctx.TotalFiles, Movies: ctx.MovieCount, TV: ctx.TVCount, Skipped: ctx.Skipped,
 		})
 	}
-	if !useJSON {
+	if !input.UseJSON {
 		printScanFooter(ScanStats{
-			ScanDir: scanDir, OutputDir: outputDir, Items: ctx.ScannedItems,
+			ScanDir: input.ScanDir, OutputDir: input.OutputDir, Items: ctx.ScannedItems,
 			Total: ctx.TotalFiles, Movies: ctx.MovieCount, TV: ctx.TVCount,
-			Skipped: ctx.Skipped, Removed: removed,
+			Skipped: ctx.Skipped, Removed: input.Removed,
 		})
 	}
 
-	tmdbClient := tmdb.NewClientWithToken(creds.APIKey, creds.Token)
+	tmdbClient := tmdb.NewClientWithToken(input.Creds.APIKey, input.Creds.Token)
 	startPostScanServices(cmd, ScanServiceConfig{
-		ScanDir: scanDir, OutputDir: outputDir, Database: database, Creds: creds,
+		ScanDir: input.ScanDir, OutputDir: input.OutputDir, Database: input.Database, Creds: input.Creds,
 	}, tmdbClient)
 }
 
@@ -221,28 +224,27 @@ func startRestWithOptionalWatch(cmd *cobra.Command, cfg ScanServiceConfig) {
 }
 
 // runDryRunScan handles the dry-run scanning loop for all output formats.
-func runDryRunScan(videoFiles []videoFile, useJSON, useTable bool,
-	jsonItems *[]scanJSONItem, totalFiles, movieCount, tvCount *int) {
-	if useJSON {
-		items, mc, tc := buildDryRunJSONItems(videoFiles)
-		*jsonItems = items
-		*totalFiles = len(items)
-		*movieCount = mc
-		*tvCount = tc
+func runDryRunScan(input DryRunInput, output DryRunOutput) {
+	if input.UseJSON {
+		items, mc, tc := buildDryRunJSONItems(input.VideoFiles)
+		*output.JSONItems = items
+		*output.TotalFiles = len(items)
+		*output.MovieCount = mc
+		*output.TVCount = tc
 		return
 	}
-	if useTable {
-		rows, mc, tc := buildDryRunTableRows(videoFiles)
+	if input.UseTable {
+		rows, mc, tc := buildDryRunTableRows(input.VideoFiles)
 		for _, row := range rows {
 			printScanTableRow(row)
 		}
-		*totalFiles = len(rows)
-		*movieCount = mc
-		*tvCount = tc
+		*output.TotalFiles = len(rows)
+		*output.MovieCount = mc
+		*output.TVCount = tc
 		return
 	}
-	runDryRunPlainOutput(videoFiles, DryRunCounters{
-		TotalFiles: totalFiles, MovieCount: movieCount, TVCount: tvCount,
+	runDryRunPlainOutput(input.VideoFiles, DryRunCounters{
+		TotalFiles: output.TotalFiles, MovieCount: output.MovieCount, TVCount: output.TVCount,
 	})
 }
 

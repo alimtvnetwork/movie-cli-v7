@@ -10,8 +10,7 @@ import (
 )
 
 // runMainScanLoop processes all video files: detects removals, rescans existing, processes new.
-func runMainScanLoop(ctx *ScanContext, videoFiles []videoFile, cfg ScanLoopConfig,
-	jsonItems *[]scanJSONItem) int {
+func runMainScanLoop(ctx *ScanContext, videoFiles []videoFile, cfg ScanLoopConfig) int {
 	database := ctx.Database
 
 	existingMedia, _ := database.GetMediaByScanDir(cfg.ScanDir)
@@ -20,7 +19,10 @@ func runMainScanLoop(ctx *ScanContext, videoFiles []videoFile, cfg ScanLoopConfi
 		diskPaths[vf.FullPath] = true
 	}
 
-	removed := removeStaleEntries(database, existingMedia, diskPaths, cfg.BatchID, ScanOutputOpts{UseJSON: cfg.UseJSON, UseTable: cfg.UseTable})
+	removed := removeStaleEntries(RemoveStaleInput{
+		Database: database, ExistingMedia: existingMedia, DiskPaths: diskPaths,
+		BatchID: cfg.BatchID, Opts: ScanOutputOpts{UseJSON: cfg.UseJSON, UseTable: cfg.UseTable},
+	})
 
 	existingPaths := make(map[string]*db.Media, len(existingMedia))
 	for i := range existingMedia {
@@ -30,7 +32,11 @@ func runMainScanLoop(ctx *ScanContext, videoFiles []videoFile, cfg ScanLoopConfi
 	client := cfg.Client
 	for _, vf := range videoFiles {
 		if em, found := existingPaths[vf.FullPath]; found {
-			processExistingMedia(ctx, em, vf, client, database, ScanOutputOpts{UseTable: cfg.UseTable, UseJSON: cfg.UseJSON}, cfg.BatchID, cfg.HasTMDb)
+			processExistingMedia(ctx, ProcessExistingInput{
+				EM: em, VF: vf, Client: client, Database: database,
+				Opts: ScanOutputOpts{UseTable: cfg.UseTable, UseJSON: cfg.UseJSON},
+				BatchID: cfg.BatchID, HasTMDb: cfg.HasTMDb,
+			})
 			continue
 		}
 		processVideoFile(vf, ctx)
@@ -42,21 +48,20 @@ func runMainScanLoop(ctx *ScanContext, videoFiles []videoFile, cfg ScanLoopConfi
 			if existingPaths[ctx.ScannedItems[i].OriginalFilePath] == nil {
 				status = "new"
 			}
-			*jsonItems = append(*jsonItems, buildMediaJSONItem(&ctx.ScannedItems[i], status))
+			*cfg.JSONItems = append(*cfg.JSONItems, buildMediaJSONItem(&ctx.ScannedItems[i], status))
 		}
 	}
 
 	return removed
 }
 
-func removeStaleEntries(database *db.DB, existingMedia []db.Media, diskPaths map[string]bool,
-	batchID string, opts ScanOutputOpts) int {
+func removeStaleEntries(input RemoveStaleInput) int {
 	var removeIDs []int64
 	var removeMedia []*db.Media
-	for i := range existingMedia {
-		if !diskPaths[existingMedia[i].OriginalFilePath] {
-			removeIDs = append(removeIDs, existingMedia[i].ID)
-			removeMedia = append(removeMedia, &existingMedia[i])
+	for i := range input.ExistingMedia {
+		if !input.DiskPaths[input.ExistingMedia[i].OriginalFilePath] {
+			removeIDs = append(removeIDs, input.ExistingMedia[i].ID)
+			removeMedia = append(removeMedia, &input.ExistingMedia[i])
 		}
 	}
 
@@ -64,15 +69,15 @@ func removeStaleEntries(database *db.DB, existingMedia []db.Media, diskPaths map
 		return 0
 	}
 
-	snapshotRemovedMedia(database, removeMedia, batchID)
+	snapshotRemovedMedia(input.Database, removeMedia, input.BatchID)
 
-	delCount, delErr := database.DeleteMediaByIDs(removeIDs)
+	delCount, delErr := input.Database.DeleteMediaByIDs(removeIDs)
 	if delErr != nil {
 		errlog.Warn("Could not remove %d stale entries: %v", len(removeIDs), delErr)
 		return 0
 	}
 
-	if !opts.UseJSON && !opts.UseTable {
+	if !input.Opts.UseJSON && !input.Opts.UseTable {
 		fmt.Printf("  🗑️  Removed %d entries (files no longer on disk)\n\n", delCount)
 	}
 	return delCount
@@ -93,47 +98,48 @@ func snapshotRemovedMedia(database *db.DB, media []*db.Media, scanBatchID string
 	}
 }
 
-func processExistingMedia(ctx *ScanContext, em *db.Media, vf videoFile,
-	client *tmdb.Client, database *db.DB, opts ScanOutputOpts, batchID string, hasTMDb bool) {
+func processExistingMedia(ctx *ScanContext, input ProcessExistingInput) {
 	ctx.TotalFiles++
 
-	needsRescan := hasTMDb && mediaNeedsRescan(em)
+	needsRescan := input.HasTMDb && mediaNeedsRescan(input.EM)
 	if needsRescan {
-		handleRescan(ctx, em, client, database, opts, batchID)
+		handleRescan(ctx, HandleRescanInput{
+			EM: input.EM, Client: input.Client, Database: input.Database,
+			Opts: input.Opts, BatchID: input.BatchID,
+		})
 	}
 	if !needsRescan {
-		handleSkippedMedia(ctx, em, opts)
+		handleSkippedMedia(ctx, input.EM, input.Opts)
 	}
 
-	ctx.ScannedItems = append(ctx.ScannedItems, *em)
-	if em.Type == string(db.MediaTypeMovie) {
+	ctx.ScannedItems = append(ctx.ScannedItems, *input.EM)
+	if input.EM.Type == string(db.MediaTypeMovie) {
 		ctx.MovieCount++
 		return
 	}
 	ctx.TVCount++
 }
 
-func handleRescan(ctx *ScanContext, em *db.Media, client *tmdb.Client,
-	database *db.DB, opts ScanOutputOpts, batchID string) {
-	preSnapshot, _ := db.MediaToJSON(em)
-	if !rescanMediaEntry(database, client, em) {
+func handleRescan(ctx *ScanContext, input HandleRescanInput) {
+	preSnapshot, _ := db.MediaToJSON(input.EM)
+	if !rescanMediaEntry(input.Database, input.Client, input.EM) {
 		ctx.Skipped++
-		if !opts.UseTable && !opts.UseJSON {
-			printRescanFailed(ctx.TotalFiles, em)
+		if !input.Opts.UseTable && !input.Opts.UseJSON {
+			printRescanFailed(ctx.TotalFiles, input.EM)
 		}
 		return
 	}
-	detail := fmt.Sprintf("Rescan updated: %s", em.CleanTitle)
-	database.InsertActionSimple(db.ActionSimpleInput{
-		FileAction: db.FileActionRescanUpdate, MediaID: em.ID,
-		Snapshot: preSnapshot, Detail: detail, BatchID: batchID,
+	detail := fmt.Sprintf("Rescan updated: %s", input.EM.CleanTitle)
+	input.Database.InsertActionSimple(db.ActionSimpleInput{
+		FileAction: db.FileActionRescanUpdate, MediaID: input.EM.ID,
+		Snapshot: preSnapshot, Detail: detail, BatchID: input.BatchID,
 	})
-	if opts.UseTable {
-		printScanTableRow(buildMediaTableRow(ctx.TotalFiles, em, "rescanned"))
+	if input.Opts.UseTable {
+		printScanTableRow(buildMediaTableRow(ctx.TotalFiles, input.EM, "rescanned"))
 		return
 	}
-	if !opts.UseJSON {
-		printRescanSuccess(ctx.TotalFiles, em)
+	if !input.Opts.UseJSON {
+		printRescanSuccess(ctx.TotalFiles, input.EM)
 	}
 }
 

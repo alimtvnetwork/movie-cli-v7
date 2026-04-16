@@ -80,7 +80,7 @@ func discoverByGenres(sc SuggestCollector, input DiscoverGenreInput) []tmdb.Sear
 		}
 		fmt.Printf("  🎭 Discovering %s %s...\n", g.name, input.TypeName)
 		results, discErr := sc.Client.DiscoverByGenre(input.MediaType, genreID, 1)
-		suggestions = appendUniqueResults(results, discErr, suggestions, UniqueFilter{ExistingIDs: sc.ExistingIDs, Count: sc.Count})
+		suggestions = appendUniqueResults(AppendUniqueInput{Results: results, DiscErr: discErr, Filter: UniqueFilter{ExistingIDs: sc.ExistingIDs, Count: sc.Count}}, suggestions)
 	}
 	return suggestions
 }
@@ -120,12 +120,12 @@ func fillFromTrending(sc SuggestCollector, mediaType string, suggestions []tmdb.
 	return appendUnique(trending, suggestions, UniqueFilter{ExistingIDs: sc.ExistingIDs, Count: sc.Count})
 }
 
-func appendUniqueResults(results []tmdb.SearchResult, discErr error, suggestions []tmdb.SearchResult, filter UniqueFilter) []tmdb.SearchResult {
-	if discErr != nil {
-		errlog.Warn("Discover error: %v", discErr)
+func appendUniqueResults(input AppendUniqueInput, suggestions []tmdb.SearchResult) []tmdb.SearchResult {
+	if input.DiscErr != nil {
+		errlog.Warn("Discover error: %v", input.DiscErr)
 		return suggestions
 	}
-	return appendUnique(results, suggestions, filter)
+	return appendUnique(input.Results, suggestions, input.Filter)
 }
 
 func appendUnique(results, suggestions []tmdb.SearchResult, filter UniqueFilter) []tmdb.SearchResult {
