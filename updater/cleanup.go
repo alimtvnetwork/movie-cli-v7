@@ -32,7 +32,9 @@ type powershellConfig struct {
 //   - *.old                   rename-first deploy backups
 //   - *.bak                   legacy backup files
 //   - legacy binaries (movie*, mahin*) and their handoff copies
-func Cleanup() (int, error) {
+// skipPath is an optional extra path that must be preserved, such as the
+// currently running handoff worker binary.
+func Cleanup(skipPath string) (int, error) {
 	cleaned := 0
 
 	selfPath, err := os.Executable()
@@ -44,6 +46,7 @@ func Cleanup() (int, error) {
 	}
 
 	baseName := binaryBaseName(selfPath)
+	skipPaths := resolveSkipPaths(selfPath, skipPath)
 	dirs := candidateDirs(selfPath)
 
 	fmt.Println("  Scanning directories:")
@@ -52,10 +55,37 @@ func Cleanup() (int, error) {
 	}
 
 	for _, dir := range dirs {
-		cleaned += cleanDir(dir, baseName, selfPath)
+		cleaned += cleanDir(dir, baseName, skipPaths)
 	}
 
 	return cleaned, nil
+}
+
+func resolveSkipPaths(paths ...string) []string {
+	seen := map[string]struct{}{}
+	var cleaned []string
+	for _, path := range paths {
+		if strings.TrimSpace(path) == "" {
+			continue
+		}
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			continue
+		}
+		if resolved, evalErr := filepath.EvalSymlinks(abs); evalErr == nil {
+			abs = resolved
+		}
+		key := abs
+		if runtime.GOOS == "windows" {
+			key = strings.ToLower(abs)
+		}
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		cleaned = append(cleaned, abs)
+	}
+	return cleaned
 }
 
 // binaryBaseName returns the running binary name without extension,
@@ -127,7 +157,7 @@ func loadPowershellConfig() *powershellConfig {
 }
 
 // cleanDir removes all known leftover patterns in a single directory.
-func cleanDir(dir, baseName, selfPath string) int {
+func cleanDir(dir, baseName string, skipPaths []string) int {
 	patterns := []string{
 		filepath.Join(dir, baseName+"-update-*"),
 		filepath.Join(dir, "*.old"),
@@ -147,7 +177,7 @@ func cleanDir(dir, baseName, selfPath string) int {
 	}
 	cleaned := 0
 	for _, pattern := range patterns {
-		cleaned += cleanGlob(pattern, selfPath)
+		cleaned += cleanGlob(pattern, skipPaths)
 	}
 	return cleaned
 }
@@ -156,8 +186,8 @@ func cleanDir(dir, baseName, selfPath string) int {
 // Add new names here when the project is renamed again.
 var legacyBaseNames = []string{"movie", "mahin"}
 
-// cleanGlob removes files matching a glob pattern, skipping the running binary.
-func cleanGlob(pattern, selfPath string) int {
+// cleanGlob removes files matching a glob pattern, skipping preserved paths.
+func cleanGlob(pattern string, skipPaths []string) int {
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		return 0
@@ -165,7 +195,7 @@ func cleanGlob(pattern, selfPath string) int {
 
 	cleaned := 0
 	for _, match := range matches {
-		if shouldSkip(match, selfPath) {
+		if shouldSkip(match, skipPaths) {
 			continue
 		}
 		if err := os.Remove(match); err != nil {
@@ -178,10 +208,10 @@ func cleanGlob(pattern, selfPath string) int {
 	return cleaned
 }
 
-// shouldSkip returns true when the match is the running binary or a directory.
-func shouldSkip(match, selfPath string) bool {
+// shouldSkip returns true when the match is a preserved path or a directory.
+func shouldSkip(match string, skipPaths []string) bool {
 	abs, _ := filepath.Abs(match)
-	if pathsEqual(abs, selfPath) {
+	if isPreservedPath(abs, skipPaths) {
 		return true
 	}
 	info, err := os.Stat(match)
@@ -189,6 +219,15 @@ func shouldSkip(match, selfPath string) bool {
 		return true
 	}
 	return info.IsDir()
+}
+
+func isPreservedPath(path string, skipPaths []string) bool {
+	for _, skipPath := range skipPaths {
+		if pathsEqual(path, skipPath) {
+			return true
+		}
+	}
+	return false
 }
 
 // pathsEqual compares two paths case-insensitively on Windows.
