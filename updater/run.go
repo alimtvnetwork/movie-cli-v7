@@ -64,12 +64,11 @@ func printBootstrapInfo(repoPath string) error {
 	return nil
 }
 
-func prepareRepoBranch(repoPath string) error {
-	gm, gmErr := readGitMapLatest(repoPath)
-	branch := ""
-	if gmErr == nil && gm.Branch != "" {
-		branch = gm.Branch
-		fmt.Printf("📋 Gitmap: %s (branch: %s)\n", gm.Version, branch)
+// preflightRepo validates the repo is clean and prints gitmap version info.
+// It does NOT perform git checkout — run.ps1 handles fetch/pull/build/deploy.
+func preflightRepo(repoPath string) error {
+	if gm, gmErr := readGitMapLatest(repoPath); gmErr == nil && gm.Version != "" {
+		fmt.Printf("📋 Gitmap: %s (branch: %s)\n", gm.Version, gm.Branch)
 	}
 
 	dirty, err := gitOutput(repoPath, "status", "--porcelain")
@@ -78,23 +77,6 @@ func prepareRepoBranch(repoPath string) error {
 	}
 	if strings.TrimSpace(dirty) != "" {
 		return apperror.New("repository has local changes; commit or stash them before update")
-	}
-
-	if branch == "" {
-		return nil
-	}
-	return checkoutBranch(repoPath, branch)
-}
-
-func checkoutBranch(repoPath, branch string) error {
-	currentBranch, _ := gitOutput(repoPath, "rev-parse", "--abbrev-ref", "HEAD")
-	if currentBranch == branch {
-		return nil
-	}
-	fmt.Printf("🔀 Switching from %s to %s\n", currentBranch, branch)
-	_, checkoutErr := gitOutput(repoPath, "checkout", branch)
-	if checkoutErr != nil {
-		return apperror.Wrap("cannot checkout branch from gitmap", checkoutErr)
 	}
 	return nil
 }
