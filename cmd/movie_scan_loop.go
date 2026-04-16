@@ -167,3 +167,15 @@ func handleSkippedMedia(ctx *ScanContext, em *db.Media, opts ScanOutputOpts) {
 		printSkippedText(ctx.TotalFiles, em)
 	}
 }
+
+// printSkippedText prints a plain-text line for a skipped (already-in-db) media item.
+func printSkippedText(index int, em *db.Media) {
+	typeIcon := db.TypeIcon(em.Type)
+	yearSuffix := ""
+	if em.Year > 0 {
+		yearSuffix = fmt.Sprintf(" (%d)", em.Year)
+	}
+
+	fmt.Printf("\n  %d. %s %s%s [%s]\n", index, typeIcon, em.CleanTitle, yearSuffix, em.Type)
+	fmt.Println("     ⏩ Already in database")
+}
