@@ -515,7 +515,7 @@ function Build-Binary {
 
         $ErrorActionPreference = $prevPref
 
-        $ldflags = "-s -w -X github.com/alimtvnetwork/movie-cli-v4/version.Commit=$gitCommit -X github.com/alimtvnetwork/movie-cli-v4/version.BuildDate=$buildDate"
+        $ldflags = "-s -w -X github.com/alimtvnetwork/movie-cli-v5/version.Commit=$gitCommit -X github.com/alimtvnetwork/movie-cli-v5/version.BuildDate=$buildDate"
         Write-Info "Version: $sourceVersion | Commit: $gitCommit"
 
         # Build

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
-	"github.com/alimtvnetwork/movie-cli-v4/db"
+	"github.com/alimtvnetwork/movie-cli-v5/apperror"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
 )
 
 // scanSummary is the top-level structure written to summary.json.

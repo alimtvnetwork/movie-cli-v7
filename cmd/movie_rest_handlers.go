@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
-	"github.com/alimtvnetwork/movie-cli-v4/tmdb"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/tmdb"
 )
 
 func handleTags(w http.ResponseWriter, r *http.Request, database *db.DB) {

@@ -15,7 +15,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
+	"github.com/alimtvnetwork/movie-cli-v5/apperror"
 )
 
 // repoURL is the canonical GitHub URL used when no local repo exists.

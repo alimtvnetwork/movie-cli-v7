@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 	"github.com/spf13/cobra"
 )
 

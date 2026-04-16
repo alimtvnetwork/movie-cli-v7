@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v4/cleaner"
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/cleaner"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
 // moveItem groups data for a single batch move operation.

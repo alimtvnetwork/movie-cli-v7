@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"sort"
 
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
-	"github.com/alimtvnetwork/movie-cli-v4/tmdb"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/tmdb"
 )
 
 // genreCount holds a genre name and its frequency.

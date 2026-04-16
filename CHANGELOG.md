@@ -99,9 +99,9 @@ All notable changes to this project will be documented in this file.
 ## v2.7.0
 
 ### Fixed
-- **Updater: wrong GitHub repo URL** — `repoURL` used `movie-cli-v4.git` but actual GitHub repo is `movie-cli-v3`; sibling dir search also looked for wrong name
+- **Updater: wrong GitHub repo URL** — `repoURL` used `movie-cli-v5.git` but actual GitHub repo is `movie-cli-v3`; sibling dir search also looked for wrong name
 - **run.ps1: stale version file path** — referenced `version/version.go` (renamed to `version/info.go`), causing version detection to fail
-- **run.ps1: wrong ldflags module path** — used `movie-cli-v3` instead of `movie-cli-v4` Go module path in build ldflags
+- **run.ps1: wrong ldflags module path** — used `movie-cli-v3` instead of `movie-cli-v5` Go module path in build ldflags
 
 ### Added
 - **run.ps1: `-Deploy` and `-Update` flags** — matches gitmap-v2 pattern; `-Deploy` forces deploy, `-Update` enables rename-first PATH sync
@@ -417,7 +417,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **`movie ls`** now only shows scan-indexed items (filters by non-empty `original_file_path`)
 - **`movie suggest`** upgraded from recommendations-only to 3-phase strategy (DiscoverByGenre → Recommendations → Trending)
-- **Repository migrated** from `movie-cli-v1` to `movie-cli-v2` to `movie-cli-v4` across all imports, workflows, and docs
+- **Repository migrated** from `movie-cli-v1` to `movie-cli-v2` to `movie-cli-v5` across all imports, workflows, and docs
 
 ### Fixed
 - Timestamp bug — `saveHistoryLog` now uses `time.Now().Format(time.RFC3339)` instead of hardcoded "now"

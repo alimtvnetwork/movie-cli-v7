@@ -3,7 +3,7 @@
 **Name:** Mahin CLI (formerly Movie CLI)  
 **Type:** Go 1.22 CLI application (NOT a web app)  
 **Binary:** `mahin`  
-**Module:** `github.com/alimtvnetwork/movie-cli-v4`  
+**Module:** `github.com/alimtvnetwork/movie-cli-v5`  
 **Updated:** 2026-04-16
 
 ## Purpose

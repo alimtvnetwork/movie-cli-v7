@@ -5,8 +5,8 @@ import (
 	"bufio"
 	"fmt"
 
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
 func showUndoableList(database *db.DB) {

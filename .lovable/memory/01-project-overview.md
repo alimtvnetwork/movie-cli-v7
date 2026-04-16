@@ -8,7 +8,7 @@
 - **Type**: Go CLI application (NOT a web app)
 - **Binary**: `mahin`
 - **Language**: Go 1.22
-- **Module**: `github.com/alimtvnetwork/movie-cli-v4`
+- **Module**: `github.com/alimtvnetwork/movie-cli-v5`
 - **Framework**: Cobra (CLI), SQLite (storage), TMDb API (metadata)
 - **Current Version**: v2.23.0
 

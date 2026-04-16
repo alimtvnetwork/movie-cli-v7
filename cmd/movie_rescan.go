@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
-	"github.com/alimtvnetwork/movie-cli-v4/tmdb"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/tmdb"
 )
 
 // regenerateReports rebuilds HTML report and summary.json for every scan

@@ -2,8 +2,8 @@
 package db
 
 import (
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
-	"github.com/alimtvnetwork/movie-cli-v4/version"
+	"github.com/alimtvnetwork/movie-cli-v5/apperror"
+	"github.com/alimtvnetwork/movie-cli-v5/version"
 )
 
 // migrateSchema runs all pending migrations and stamps the app version.

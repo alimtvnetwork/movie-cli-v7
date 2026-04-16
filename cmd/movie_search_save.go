@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/alimtvnetwork/movie-cli-v4/cleaner"
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
-	"github.com/alimtvnetwork/movie-cli-v4/tmdb"
+	"github.com/alimtvnetwork/movie-cli-v5/cleaner"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/tmdb"
 )
 
 // saveSearchResult builds a Media record from the selected TMDb result,

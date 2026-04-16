@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
+	"github.com/alimtvnetwork/movie-cli-v5/apperror"
 )
 
 // createHandoffCopy creates a temporary copy of the binary for the handoff worker.

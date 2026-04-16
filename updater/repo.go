@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
+	"github.com/alimtvnetwork/movie-cli-v5/apperror"
 )
 
 // findRepoPath locates the git repository root by checking (in order):
 //  1. The directory containing the running binary
-//  2. A sibling movie-cli-v4/ clone next to the binary
+//  2. A sibling movie-cli-v5/ clone next to the binary
 //  3. The current working directory
 //  4. Bootstrap clone (fresh clone next to the binary)
 func findRepoPath() (string, bool, error) {
@@ -27,7 +27,7 @@ func findRepoPath() (string, bool, error) {
 		}
 
 		// 2. Sibling clone (check both v3 dir name and v4)
-		for _, name := range []string{"movie-cli-v3", "movie-cli-v4"} {
+		for _, name := range []string{"movie-cli-v3", "movie-cli-v5"} {
 			sibling := filepath.Join(exeDir, name)
 			if isValidRepo(sibling) {
 				return repoRoot(sibling), false, nil
@@ -55,7 +55,7 @@ func findRepoPath() (string, bool, error) {
 	return "", false, apperror.New("cannot locate the movie-cli repository")
 }
 
-// isValidRepo checks if a directory is a valid movie-cli-v4 repo
+// isValidRepo checks if a directory is a valid movie-cli-v5 repo
 // by verifying both .git and go.mod exist.
 func isValidRepo(dir string) bool {
 	gitDir := filepath.Join(dir, ".git")

@@ -17,8 +17,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
-	"github.com/alimtvnetwork/movie-cli-v4/db"
+	"github.com/alimtvnetwork/movie-cli-v5/apperror"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
 )
 
 // resolveMediaByQuery resolves a media item by numeric ID or fuzzy title query.

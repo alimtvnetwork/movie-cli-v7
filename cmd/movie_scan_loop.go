@@ -4,8 +4,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/alimtvnetwork/movie-cli-v4/db"
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
 // runMainScanLoop processes all video files: detects removals, rescans existing, processes new.

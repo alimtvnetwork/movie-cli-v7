@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
+	"github.com/alimtvnetwork/movie-cli-v5/apperror"
 )
 
 // Migration represents a single versioned schema migration.

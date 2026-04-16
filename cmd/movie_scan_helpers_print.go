@@ -4,7 +4,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/alimtvnetwork/movie-cli-v4/errlog"
+	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
 func printScanCounts(stats ScanStats) {
