@@ -2,12 +2,13 @@
 package db
 
 import (
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 	"database/sql"
 	"os"
 	"path/filepath"
 
 	_ "modernc.org/sqlite"
+
+	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 )
 
 const dbFile = "mahin.db"

@@ -2,8 +2,9 @@
 package db
 
 import (
-	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 	"strings"
+
+	"github.com/alimtvnetwork/movie-cli-v4/apperror"
 )
 
 // EnsureGenre inserts a genre if it doesn't exist, returns its GenreId.
