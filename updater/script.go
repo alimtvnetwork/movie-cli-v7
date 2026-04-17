@@ -121,20 +121,32 @@ if (-not (Test-Path $runScript)) {
 }
 
 Write-Host "  Running update via $runScript" -ForegroundColor Cyan
-$runArgs = @{ Update = $true }
+$runExit = 0
 if ($targetBinary) {
     $deployDir = Split-Path -Parent $targetBinary
     $targetName = Split-Path -Leaf $targetBinary
-    if ($deployDir) {
-        $runArgs["DeployPath"] = $deployDir
-    }
-    if ($targetName) {
-        $runArgs["BinaryNameOverride"] = $targetName
-    }
     Write-Host "  Deploy target: $targetBinary" -ForegroundColor Gray
+    if ($deployDir -and $targetName) {
+        & $runScript -Update -DeployPath $deployDir -BinaryNameOverride $targetName
+        $runExit = $LASTEXITCODE
+    }
+    if ($deployDir -and -not $targetName) {
+        & $runScript -Update -DeployPath $deployDir
+        $runExit = $LASTEXITCODE
+    }
+    if ($targetName -and -not $deployDir) {
+        & $runScript -Update -BinaryNameOverride $targetName
+        $runExit = $LASTEXITCODE
+    }
+    if (-not $deployDir -and -not $targetName) {
+        & $runScript -Update
+        $runExit = $LASTEXITCODE
+    }
 }
-& $runScript @runArgs
-$runExit = $LASTEXITCODE
+if (-not $targetBinary) {
+    & $runScript -Update
+    $runExit = $LASTEXITCODE
+}
 if ($runExit -ne 0) {
     exit $runExit
 }

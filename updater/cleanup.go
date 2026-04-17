@@ -65,27 +65,35 @@ func resolveSkipPaths(paths ...string) []string {
 	seen := map[string]struct{}{}
 	var cleaned []string
 	for _, path := range paths {
-		if strings.TrimSpace(path) == "" {
+		normalized := normalizePath(path)
+		if normalized == "" {
 			continue
 		}
-		abs, err := filepath.Abs(path)
-		if err != nil {
-			continue
-		}
-		if resolved, evalErr := filepath.EvalSymlinks(abs); evalErr == nil {
-			abs = resolved
-		}
-		key := abs
+		key := normalized
 		if runtime.GOOS == "windows" {
-			key = strings.ToLower(abs)
+			key = strings.ToLower(normalized)
 		}
 		if _, ok := seen[key]; ok {
 			continue
 		}
 		seen[key] = struct{}{}
-		cleaned = append(cleaned, abs)
+		cleaned = append(cleaned, normalized)
 	}
 	return cleaned
+}
+
+func normalizePath(path string) string {
+	if strings.TrimSpace(path) == "" {
+		return ""
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return ""
+	}
+	if resolved, evalErr := filepath.EvalSymlinks(abs); evalErr == nil {
+		return resolved
+	}
+	return abs
 }
 
 // binaryBaseName returns the running binary name without extension,
@@ -210,8 +218,8 @@ func cleanGlob(pattern string, skipPaths []string) int {
 
 // shouldSkip returns true when the match is a preserved path or a directory.
 func shouldSkip(match string, skipPaths []string) bool {
-	abs, _ := filepath.Abs(match)
-	if isPreservedPath(abs, skipPaths) {
+	normalized := normalizePath(match)
+	if normalized != "" && isPreservedPath(normalized, skipPaths) {
 		return true
 	}
 	info, err := os.Stat(match)

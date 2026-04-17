@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.99.0
+
+### Fixed
+- **The update worker now calls `run.ps1` with explicit named arguments** instead of relying on a splatted hashtable, so `-DeployPath` and `-BinaryNameOverride` always bind and the update redeploys to the exact original binary path that launched `movie update`.
+- **Cleanup skip-path comparison now normalizes both sides before matching**, so `update-cleanup` reliably preserves the still-running `movie-update-*.exe` handoff worker and no longer ends with `Access is denied` after a successful update.
+
 ## v2.98.0
 
 ### Fixed
