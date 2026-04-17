@@ -205,14 +205,6 @@ Write-Host ($P + "|  ✅ Update complete                  |") -ForegroundColor C
 Write-Host ($P + "+======================================+") -ForegroundColor Cyan
 Write-Host ""
 
-function Schedule-WorkerSelfDelete {
-    if (-not $workerBinary) { return }
-    if (-not (Test-Path $workerBinary)) { return }
-    # Spawn a hidden cmd.exe that waits ~2 s, then deletes the worker.
-    # ping is the most portable "sleep" available on a bare Windows shell.
-    $cmdLine = 'ping 127.0.0.1 -n 3 > nul & del /f /q "' + $workerBinary + '"'
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $cmdLine -WindowStyle Hidden | Out-Null
-}
 
 Schedule-WorkerSelfDelete
 
