@@ -4,6 +4,8 @@
 // without opening the SQLite file directly.
 package db
 
+import "database/sql"
+
 // ImdbCacheEntry is one row from the ImdbLookupCache table, in display form.
 type ImdbCacheEntry struct {
 	LookupKey  string
@@ -17,31 +19,35 @@ type ImdbCacheEntry struct {
 // ListImdbLookups returns every cached entry ordered by most recent first.
 // Pass limit <= 0 for "all rows".
 func (d *DB) ListImdbLookups(limit int) ([]ImdbCacheEntry, error) {
-	query := `SELECT LookupKey, CleanTitle, Year, ImdbId, IsHit, LookedUpAt
-	          FROM ImdbLookupCache
-	          ORDER BY LookedUpAt DESC`
-	if limit > 0 {
-		query += " LIMIT ?"
-	}
-
-	var rows interface {
-		Close() error
-	}
-	var err error
-
-	if limit > 0 {
-		r, qErr := d.Query(query, limit)
-		rows, err = r, qErr
-	} else {
-		r, qErr := d.Query(query)
-		rows, err = r, qErr
-	}
+	rows, err := queryImdbCache(d, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	return scanImdbCacheRows(rows)
+}
+
+func queryImdbCache(d *DB, limit int) (*sql.Rows, error) {
+	base := `SELECT LookupKey, CleanTitle, Year, ImdbId, IsHit, LookedUpAt
+	         FROM ImdbLookupCache
+	         ORDER BY LookedUpAt DESC`
+	if limit > 0 {
+		return d.Query(base+" LIMIT ?", limit)
+	}
+	return d.Query(base)
+}
+
+func scanImdbCacheRows(rows *sql.Rows) ([]ImdbCacheEntry, error) {
+	var out []ImdbCacheEntry
+	for rows.Next() {
+		var e ImdbCacheEntry
+		if err := rows.Scan(&e.LookupKey, &e.CleanTitle, &e.Year, &e.ImdbID, &e.IsHit, &e.LookedUpAt); err != nil {
+			return nil, err
+		}
+		out = append(out, e)
+	}
+	return out, rows.Err()
 }
 
 // CountImdbLookups returns (totalRows, hitRows). missRows = total - hits.
