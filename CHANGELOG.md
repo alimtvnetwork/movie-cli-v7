@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.110.0
+
+### Added
+- **`--keep-logs` flag on `movie scan`, `movie rescan`, and `movie rescan-failed`** — opts out of the v2.109.0 logs-folder wipe so the previous run's `error.txt` is preserved. Useful for diffing two consecutive runs or keeping a longer error history. Prints `📝 --keep-logs: appending to existing <command> log` when active.
+- **`cmd/log_init_helper.go`** — new shared `initRunLogger(outputDir, command, keepLogs)` helper that picks `errlog.Init` (append) vs `errlog.InitFresh` (wipe). Replaces the duplicated init-and-warn block in all three commands.
+
 ## v2.109.0
 
 ### Changed
