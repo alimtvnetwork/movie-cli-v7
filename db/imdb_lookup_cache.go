@@ -1,7 +1,7 @@
 // imdb_lookup_cache.go — read/write helpers for the ImdbLookupCache table.
 //
 // The cache stores the result of every DuckDuckGo→IMDb lookup performed by
-// tmdb.Client.findIMDbIDViaWeb so that repeated runs (movie scan, movie
+// tmdb.Client.tryIMDbViaWeb so that repeated runs (movie scan, movie
 // rescan, movie rescan-failed) do not re-hit the web for the same
 // (clean title, year) pair.
 //
