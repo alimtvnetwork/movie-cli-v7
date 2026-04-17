@@ -88,6 +88,25 @@ func (d *DB) ListAllMedia() ([]Media, error) {
 	return items, nil
 }
 
+// GetMediaWithMissingTmdbID returns entries that never matched a TMDb id
+// (TmdbId is NULL or 0). Used by `movie rescan-failed`.
+func (d *DB) GetMediaWithMissingTmdbID() ([]Media, error) {
+	rows, err := d.Query(`SELECT ` + mediaColumns + `
+		FROM Media WHERE OriginalFilePath != ''
+		AND COALESCE(TmdbId, 0) = 0
+		ORDER BY CleanTitle ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items, err := scanMediaRows(rows)
+	if err != nil {
+		return nil, err
+	}
+	d.populateGenres(items)
+	return items, nil
+}
+
 // GetMediaWithMissingData returns entries with no genres, no rating, or no description.
 func (d *DB) GetMediaWithMissingData() ([]Media, error) {
 	rows, err := d.Query(`SELECT ` + mediaColumns + `

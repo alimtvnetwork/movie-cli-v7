@@ -30,7 +30,7 @@ func rescanMediaEntry(database *db.DB, client *tmdb.Client, m *db.Media) bool {
 		searchQuery += " " + strconv.Itoa(m.Year)
 	}
 
-	tmdbResults, tmdbErr := client.SearchMulti(searchQuery)
+	tmdbResults, tmdbErr := client.SearchWithFallback(searchTitle, m.Year)
 	if tmdbErr != nil {
 		errlog.Warn("rescan TMDb search failed for '%s': %v", searchQuery, tmdbErr)
 		return false
