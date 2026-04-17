@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.104.0
+
+### Added
+- **`movie cache imdb` command** with subcommands:
+  - `movie cache imdb` — prints a summary (total entries, hits, misses).
+  - `movie cache imdb list [--limit N]` — lists cached lookups most recent first; use `--limit 0` for all rows.
+  - `movie cache imdb clear` — deletes every row from `ImdbLookupCache` (hits + misses).
+  - `movie cache imdb clear-misses` — deletes only cached misses so previously-failed titles are retried on the next scan, while preserving long-lived hits.
+- **`db.ListImdbLookups`, `db.CountImdbLookups`, `db.ClearImdbLookups`, `db.ClearImdbLookupMisses`** — new helpers in `db/imdb_lookup_cache_admin.go` backing the command.
+
 ## v2.103.0
 
 ### Added

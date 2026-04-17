@@ -87,6 +87,7 @@ func init() {
 		movieRescanFailedCmd,
 		moviePopoutCmd,
 		movieDiscoverCmd,
+		movieCacheCmd,
 	)
 }
 
