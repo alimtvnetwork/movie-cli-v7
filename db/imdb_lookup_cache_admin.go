@@ -12,6 +12,8 @@ type ImdbCacheEntry struct {
 	CleanTitle string
 	Year       int
 	ImdbID     string
+	MediaType  string
+	TmdbID     int
 	IsHit      bool
 	LookedUpAt string
 }
@@ -29,7 +31,7 @@ func (d *DB) ListImdbLookups(limit int) ([]ImdbCacheEntry, error) {
 }
 
 func queryImdbCache(d *DB, limit int) (*sql.Rows, error) {
-	base := `SELECT LookupKey, CleanTitle, Year, ImdbId, IsHit, LookedUpAt
+	base := `SELECT LookupKey, CleanTitle, Year, ImdbId, IsHit, LookedUpAt, TmdbId, MediaType
 	         FROM ImdbLookupCache
 	         ORDER BY LookedUpAt DESC`
 	if limit > 0 {
@@ -42,7 +44,7 @@ func scanImdbCacheRows(rows *sql.Rows) ([]ImdbCacheEntry, error) {
 	var out []ImdbCacheEntry
 	for rows.Next() {
 		var e ImdbCacheEntry
-		if err := rows.Scan(&e.LookupKey, &e.CleanTitle, &e.Year, &e.ImdbID, &e.IsHit, &e.LookedUpAt); err != nil {
+		if err := rows.Scan(&e.LookupKey, &e.CleanTitle, &e.Year, &e.ImdbID, &e.IsHit, &e.LookedUpAt, &e.TmdbID, &e.MediaType); err != nil {
 			return nil, err
 		}
 		out = append(out, e)

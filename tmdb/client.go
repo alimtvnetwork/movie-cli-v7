@@ -26,15 +26,22 @@ var (
 	ErrTimeout      = errors.New("TMDb request timed out")
 )
 
-// IMDbCache caches DuckDuckGo→IMDb id lookups for the search fallback chain.
-// It is optional; when nil the fallback always hits the web.
+// IMDbCache caches DuckDuckGo→IMDb id lookups (and the resolved TMDb id +
+// media type) for the search fallback chain. It is optional; when nil the
+// fallback always hits the web AND TMDb /find.
 //
-// Look returns (imdbID, true, true)  for a positive cached hit,
-//             ("",      false, true) for a cached "no match" (still skip the web),
-//             ("",      _,     false) when no cache entry exists.
+// Look returns (imdbID, tmdbID, mediaType, isHit, found):
+//   - (id,  >0, "movie"|"tv", true,  true)  fully warm hit — skip both web AND /find.
+//   - (id,  0,  "",           true,  true)  IMDb id cached but /find never resolved
+//     (or returned nothing) — caller still needs /find.
+//   - ("",  0,  "",           false, true)  cached "no match" — skip the web entirely.
+//   - ("",  0,  "",           _,     false) no cache entry — caller must hit the web.
+//
+// Store records a result. Pass tmdbID=0 / mediaType="" when only the IMDb id
+// is known. Pass empty imdbID to record a miss.
 type IMDbCache interface {
-	Look(cleanTitle string, year int) (imdbID string, isHit bool, found bool)
-	Store(cleanTitle string, year int, imdbID string) error
+	Look(cleanTitle string, year int) (imdbID string, tmdbID int, mediaType string, isHit, found bool)
+	Store(cleanTitle string, year int, imdbID string, tmdbID int, mediaType string) error
 }
 
 // Client interacts with the TMDb API.

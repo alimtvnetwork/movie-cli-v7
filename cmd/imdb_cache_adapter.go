@@ -26,24 +26,24 @@ func newIMDbCacheAdapter(database *db.DB) *imdbCacheAdapter {
 
 // Look returns the cached lookup, swallowing DB errors so a broken cache
 // degrades gracefully into a fresh web call rather than failing the search.
-func (a *imdbCacheAdapter) Look(cleanTitle string, year int) (string, bool, bool) {
+func (a *imdbCacheAdapter) Look(cleanTitle string, year int) (string, int, string, bool, bool) {
 	if a == nil || a.database == nil {
-		return "", false, false
+		return "", 0, "", false, false
 	}
 	res, err := a.database.GetImdbLookup(cleanTitle, year)
 	if err != nil {
 		errlog.Warn("imdb cache lookup failed for '%s' (%d): %v", cleanTitle, year, err)
-		return "", false, false
+		return "", 0, "", false, false
 	}
-	return res.ImdbID, res.IsHit, res.Found
+	return res.ImdbID, res.TmdbID, res.MediaType, res.IsHit, res.Found
 }
 
 // Store records a hit or miss; errors are logged and swallowed.
-func (a *imdbCacheAdapter) Store(cleanTitle string, year int, imdbID string) error {
+func (a *imdbCacheAdapter) Store(cleanTitle string, year int, imdbID string, tmdbID int, mediaType string) error {
 	if a == nil || a.database == nil {
 		return nil
 	}
-	if err := a.database.SetImdbLookup(cleanTitle, year, imdbID); err != nil {
+	if err := a.database.SetImdbLookup(cleanTitle, year, imdbID, tmdbID, mediaType); err != nil {
 		errlog.Warn("imdb cache store failed for '%s' (%d): %v", cleanTitle, year, err)
 		return err
 	}
