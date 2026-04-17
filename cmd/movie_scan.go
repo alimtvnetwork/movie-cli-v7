@@ -20,6 +20,7 @@ var scanDryRun bool
 var scanFormat string
 var scanRest bool
 var scanRestPort int
+var scanKeepLogs bool
 
 var movieScanCmd = &cobra.Command{
 	Use:   "scan [folder]",
@@ -60,6 +61,8 @@ func init() {
 		"watch for new files after initial scan")
 	movieScanCmd.Flags().IntVar(&scanWatchInterval, "interval", 10,
 		"polling interval in seconds for --watch mode")
+	movieScanCmd.Flags().BoolVar(&scanKeepLogs, "keep-logs", false,
+		"keep the previous run's logs instead of wiping .movie-output/logs/ on start")
 }
 
 func runMovieScan(cmd *cobra.Command, args []string) {
@@ -169,8 +172,8 @@ func finalizeScan(cmd *cobra.Command, ctx *ScanContext, input FinalizeScanInput)
 }
 
 func initScanLogger(database *db.DB, outputDir string) {
-	if initErr := errlog.InitFresh(outputDir, "scan"); initErr != nil {
-		fmt.Fprintf(os.Stderr, "⚠️  Could not init error logger: %v\n", initErr)
+	initRunLogger(outputDir, "scan", scanKeepLogs)
+	if errlog.FilePath() == "" {
 		return
 	}
 	errlog.SetDBWriter(func(e errlog.Entry) {
