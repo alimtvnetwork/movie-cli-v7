@@ -13,10 +13,10 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/tmdb"
 )
 
-// attachIMDbCacheUnless wires the persistent IMDb cache into client unless
+// attachImdbCacheUnless wires the persistent IMDb cache into client unless
 // noCache is true. When bypassed it prints a one-line notice naming the
 // command so the user can see the cache was intentionally skipped.
-func attachIMDbCacheUnless(client *tmdb.Client, database *db.DB, noCache bool, commandName string) {
+func attachImdbCacheUnless(client *tmdb.Client, database *db.DB, noCache bool, commandName string) {
 	if noCache {
 		fmt.Printf("⚠️  --no-cache: bypassing IMDb cache for this %s run (forcing fresh DuckDuckGo + /find).\n", commandName)
 		client.SetIMDbCache(nil)

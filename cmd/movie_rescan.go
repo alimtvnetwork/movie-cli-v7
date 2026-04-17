@@ -135,7 +135,7 @@ func runMovieRescan(cmd *cobra.Command, args []string) {
 	}
 
 	client := tmdb.NewClientWithToken(creds.APIKey, creds.Token)
-	attachIMDbCacheUnless(client, database, rescanNoCache, "rescan")
+	attachImdbCacheUnless(client, database, rescanNoCache, "rescan")
 	updated, failed := processRescanEntries(database, client, entries)
 	printRescanResult(updated, failed, len(entries))
 

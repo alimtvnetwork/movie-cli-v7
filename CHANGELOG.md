@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **`--no-cache` flag on `movie rescan` and `movie rescan-failed`** — detaches the persistent `ImdbLookupCache` for that single run so the search-fallback chain re-hits DuckDuckGo and TMDb `/find` from scratch. Lets users force-refresh a stale or wrong cached resolution without clearing the whole cache (and losing every other warm hit).
-- **`cmd/imdb_cache_attach.go`** — new shared `attachIMDbCacheUnless(client, db, noCache, commandName)` helper that either wires the cache or prints a one-line `--no-cache: bypassing IMDb cache for this <command> run` notice. Used by both rescan commands so the bypass behaviour stays in one place.
+- **`cmd/imdb_cache_attach.go`** — new shared `attachImdbCacheUnless(client, db, noCache, commandName)` helper that either wires the cache or prints a one-line `--no-cache: bypassing IMDb cache for this <command> run` notice. Used by both rescan commands so the bypass behaviour stays in one place.
 
 ## v2.106.0
 
