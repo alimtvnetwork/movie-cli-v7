@@ -140,3 +140,23 @@ func ToCleanFileName(title string, year int, ext string) string {
 	}
 	return title + ext
 }
+
+// cutAtDashKeepingTitle decides whether to keep just the left side of a
+// "Title - Suffix" split. If the suffix only contains junk tokens or just a
+// year, drop it. Otherwise keep the original (left + " " + right) so we don't
+// truncate legitimate subtitles like "Mad Max - Fury Road".
+func cutAtDashKeepingTitle(left, right string, year int) string {
+	stripped := right
+	for _, p := range junkPatterns {
+		stripped = p.ReplaceAllString(stripped, "")
+	}
+	if year > 0 {
+		stripped = strings.ReplaceAll(stripped, strconv.Itoa(year), "")
+	}
+	stripped = multiSpace.ReplaceAllString(stripped, " ")
+	stripped = strings.TrimSpace(stripped)
+	if stripped == "" {
+		return strings.TrimSpace(left)
+	}
+	return strings.TrimSpace(left) + " " + strings.TrimSpace(right)
+}
