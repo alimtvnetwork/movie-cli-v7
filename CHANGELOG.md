@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.106.0
+
+### Added
+- **`movie cache imdb backfill` subcommand** — walks every cached HIT row whose `TmdbId` is 0 (legacy v2 rows or partial hits where `/find` never resolved) and re-runs TMDb `/find?external_source=imdb_id` for each one. Successful resolutions are written back into the cache so the next normal scan becomes a fully warm hit and skips both DuckDuckGo AND `/find`.
+  - `--limit N` caps how many rows are processed in a single run.
+  - `--dry-run` prints what would be resolved without writing to the cache.
+  - A 250 ms pause between requests keeps the run under TMDb's rate limit.
+- **`db.ListImdbLookupsUnresolved`** — returns every cached HIT with `TmdbId = 0 AND ImdbId != ''`, ordered oldest first so the longest-stale rows are backfilled first.
+- **`tmdb.Client.LookupByIMDbID`** — exported wrapper around the existing private `lookupByIMDbID` so the cmd layer can call `/find` directly without touching the fallback chain.
+
 ## v2.105.0
 
 ### Added

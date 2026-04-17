@@ -52,6 +52,23 @@ func scanImdbCacheRows(rows *sql.Rows) ([]ImdbCacheEntry, error) {
 	return out, rows.Err()
 }
 
+// ListImdbLookupsUnresolved returns every cached HIT row whose TmdbId is 0
+// (legacy v2 entries or partial hits where /find was never called or returned
+// nothing). These are the rows that `movie cache imdb backfill` needs to
+// re-resolve via TMDb /find. Misses are skipped because they have no IMDb id
+// to look up.
+func (d *DB) ListImdbLookupsUnresolved() ([]ImdbCacheEntry, error) {
+	rows, err := d.Query(`SELECT LookupKey, CleanTitle, Year, ImdbId, IsHit, LookedUpAt, TmdbId, MediaType
+		FROM ImdbLookupCache
+		WHERE IsHit = 1 AND TmdbId = 0 AND ImdbId != ''
+		ORDER BY LookedUpAt ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanImdbCacheRows(rows)
+}
+
 // CountImdbLookups returns (totalRows, hitRows). missRows = total - hits.
 func (d *DB) CountImdbLookups() (int, int, error) {
 	var total, hits int

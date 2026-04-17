@@ -71,7 +71,7 @@ func runCacheImdbSummary(cmd *cobra.Command, args []string) {
 	defer database.Close()
 
 	printCacheImdbSummary(database)
-	fmt.Println("\n  Subcommands: list | clear | clear-misses")
+	fmt.Println("\n  Subcommands: list | clear | clear-misses | backfill")
 }
 
 func runCacheImdbList(cmd *cobra.Command, args []string) {

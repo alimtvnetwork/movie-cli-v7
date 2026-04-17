@@ -152,6 +152,14 @@ func (c *Client) fetchIMDbIDFromDuckDuckGo(title string, year int) string {
 	return imdbIDPattern.FindString(string(body))
 }
 
+// LookupByIMDbID is the exported wrapper around the TMDb /find endpoint
+// (external_source=imdb_id). Returns the same shape as a search result so
+// callers can treat it identically. Useful for cache backfill tools that
+// already have an IMDb id and only need its TMDb counterpart.
+func (c *Client) LookupByIMDbID(imdbID string) []SearchResult {
+	return c.lookupByIMDbID(imdbID)
+}
+
 func (c *Client) lookupByIMDbID(imdbID string) []SearchResult {
 	if !c.HasAuth() {
 		return nil
