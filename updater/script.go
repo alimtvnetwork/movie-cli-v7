@@ -107,6 +107,15 @@ function Resolve-VersionBinary {
     return $null
 }
 
+function Schedule-WorkerSelfDelete {
+    if (-not $workerBinary) { return }
+    if (-not (Test-Path $workerBinary)) { return }
+    # Spawn a hidden cmd.exe that waits ~2 s, then deletes the worker copy.
+    # ping is the most portable "sleep" on a bare Windows shell.
+    $cmdLine = 'ping 127.0.0.1 -n 3 > nul & del /f /q "' + $workerBinary + '"'
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $cmdLine -WindowStyle Hidden | Out-Null
+}
+
 # Capture current version
 $versionBinary = Resolve-VersionBinary
 $oldVersion = "unknown"
