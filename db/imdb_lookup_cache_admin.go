@@ -98,3 +98,16 @@ func (d *DB) ClearImdbLookupMisses() (int64, error) {
 	}
 	return res.RowsAffected()
 }
+
+// ForgetImdbLookup deletes the single cache row matching (cleanTitle, year).
+// Returns the number of rows removed (0 if no row existed). Used by
+// `movie cache imdb forget` to invalidate one stale resolution without
+// nuking the entire cache.
+func (d *DB) ForgetImdbLookup(cleanTitle string, year int) (int64, error) {
+	res, err := d.Exec(`DELETE FROM ImdbLookupCache WHERE LookupKey = ?`,
+		imdbLookupKey(cleanTitle, year))
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}

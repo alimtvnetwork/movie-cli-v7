@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.112.0
+
+### Added
+- **`movie cache imdb forget <cleanTitle> [year]` subcommand** — deletes a single row from the `ImdbLookupCache` so the next scan re-resolves that one title from scratch (DuckDuckGo + TMDb `/find`) without nuking the entire cache or having to pass `--no-cache` for every other title in the run. Year defaults to `0`. Prints a friendly warning when no matching row is found and points the user at `movie cache imdb list` for exact spellings.
+- **`db.ForgetImdbLookup(cleanTitle, year)`** — new admin helper on the `DB` type that runs `DELETE FROM ImdbLookupCache WHERE LookupKey = ?` using the same `imdbLookupKey` normalization as the read/write paths.
+
 ## v2.111.0
 
 ### Fixed
