@@ -85,21 +85,35 @@ func buildUpdateScriptContent(repoPath, targetBinary, workerBinary string) strin
 	workerBinary = powerShellString(workerBinary)
 
 	return fmt.Sprintf(`$ErrorActionPreference = "Stop"
-$repoPath = "%s"
+$repoPath     = "%s"
 $targetBinary = "%s"
 $workerBinary = "%s"
 
-function Resolve-VersionBinary {
-    if ($targetBinary) {
-        return $targetBinary
-    }
+# Indent every Write-Host line with this prefix so update output sits a
+# little further in than run.ps1's own output and is easy to scan.
+$P = "    "
 
+function Say     { param($msg, $color = "Gray")  Write-Host ($P + $msg) -ForegroundColor $color }
+function SayOk   { param($msg) Write-Host ($P + "✓ " + $msg) -ForegroundColor Green }
+function SayWarn { param($msg) Write-Host ($P + "⚠ " + $msg) -ForegroundColor Yellow }
+function SayErr  { param($msg) Write-Host ($P + "✗ " + $msg) -ForegroundColor Red }
+
+function Resolve-VersionBinary {
+    if ($targetBinary) { return $targetBinary }
     $movieBin = Get-Command movie -ErrorAction SilentlyContinue
     if ($movieBin -and $movieBin.Source -and (Test-Path $movieBin.Source)) {
         return $movieBin.Source
     }
-
     return $null
+}
+
+function Schedule-WorkerSelfDelete {
+    if (-not $workerBinary) { return }
+    if (-not (Test-Path $workerBinary)) { return }
+    # Spawn a hidden cmd.exe that waits ~2 s, then deletes the worker copy.
+    # ping is the most portable "sleep" on a bare Windows shell.
+    $cmdLine = 'ping 127.0.0.1 -n 3 > nul & del /f /q "' + $workerBinary + '"'
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $cmdLine -WindowStyle Hidden | Out-Null
 }
 
 # Capture current version
@@ -108,46 +122,46 @@ $oldVersion = "unknown"
 if ($versionBinary -and (Test-Path $versionBinary)) {
     $oldVersion = (& $versionBinary version 2>&1) -join " "
 }
-Write-Host "  Version before: $oldVersion" -ForegroundColor Gray
+Say "Version before: $oldVersion"
 
-# Wait for parent to release file handles
+# Wait for the parent process to fully exit and release its file lock on
+# $targetBinary before we ask run.ps1 to overwrite it.
 Start-Sleep -Seconds 1.2
 
 # Build and deploy from repo root via run.ps1
 $runScript = Join-Path $repoPath "run.ps1"
 if (-not (Test-Path $runScript)) {
-    Write-Host "  run.ps1 not found at $runScript" -ForegroundColor Red
+    SayErr "run.ps1 not found at $runScript"
     exit 1
 }
 
-Write-Host "  Running update via $runScript" -ForegroundColor Cyan
+Say "Running update via $runScript" "Cyan"
 $runExit = 0
 if ($targetBinary) {
-    $deployDir = Split-Path -Parent $targetBinary
-    $targetName = Split-Path -Leaf $targetBinary
-    Write-Host "  Deploy target: $targetBinary" -ForegroundColor Gray
+    $deployDir  = Split-Path -Parent $targetBinary
+    $targetName = Split-Path -Leaf   $targetBinary
+    Say "Deploy target: $targetBinary"
     if ($deployDir -and $targetName) {
         & $runScript -Update -DeployPath $deployDir -BinaryNameOverride $targetName
         $runExit = $LASTEXITCODE
-    }
-    if ($deployDir -and -not $targetName) {
+    } elseif ($deployDir) {
         & $runScript -Update -DeployPath $deployDir
         $runExit = $LASTEXITCODE
-    }
-    if ($targetName -and -not $deployDir) {
+    } elseif ($targetName) {
         & $runScript -Update -BinaryNameOverride $targetName
         $runExit = $LASTEXITCODE
-    }
-    if (-not $deployDir -and -not $targetName) {
+    } else {
         & $runScript -Update
         $runExit = $LASTEXITCODE
     }
-}
-if (-not $targetBinary) {
+} else {
     & $runScript -Update
     $runExit = $LASTEXITCODE
 }
+
 if ($runExit -ne 0) {
+    SayErr "run.ps1 exited with code $runExit"
+    Schedule-WorkerSelfDelete
     exit $runExit
 }
 
@@ -160,30 +174,42 @@ if ($versionBinary -and (Test-Path $versionBinary)) {
 
 Write-Host ""
 if ($oldVersion -eq $newVersion) {
-    Write-Host "  WARNING: Version unchanged after update" -ForegroundColor Yellow
-    Write-Host "  Was version/info.go bumped?" -ForegroundColor Yellow
+    SayWarn "Version unchanged after update — was version/info.go bumped?"
 } else {
-    Write-Host "  Updated: $oldVersion -> $newVersion" -ForegroundColor Green
+    SayOk "Updated: $oldVersion → $newVersion"
 }
 
 # Show changelog from the updated target binary
 if ($versionBinary -and (Test-Path $versionBinary)) {
     Write-Host ""
+    Say "Latest changelog:" "Cyan"
     $clOutput = & $versionBinary changelog --latest 2>&1
-    foreach ($cl in $clOutput) { Write-Host "  $cl" }
+    foreach ($cl in $clOutput) { Write-Host ($P + "  " + $cl) }
 }
 
-# Auto-cleanup
+# Belt-and-braces sweeper for any older worker copies. The current worker
+# is preserved via --skip-path; the detached self-deleter below handles it.
 if ($versionBinary -and (Test-Path $versionBinary)) {
     $cleanupArgs = @("update-cleanup")
-    if ($workerBinary) {
-        $cleanupArgs += @("--skip-path", $workerBinary)
-    }
+    if ($workerBinary) { $cleanupArgs += @("--skip-path", $workerBinary) }
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     $null = & $versionBinary @cleanupArgs 2>&1
     $ErrorActionPreference = $prevPref
 }
+
+# Top-and-tail banner
+Write-Host ""
+Write-Host ($P + "+======================================+") -ForegroundColor Cyan
+Write-Host ($P + "|  ✅ Update complete                  |") -ForegroundColor Cyan
+Write-Host ($P + "+======================================+") -ForegroundColor Cyan
+Write-Host ""
+
+
+Schedule-WorkerSelfDelete
+
+# Give the user a beat to see the result before the new console window closes.
+Start-Sleep -Seconds 2
 `, repoPath, targetBinary, workerBinary)
 }
 

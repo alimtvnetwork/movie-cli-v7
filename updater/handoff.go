@@ -30,8 +30,14 @@ func createHandoffCopy(selfPath string) (string, error) {
 	return copyPath, nil
 }
 
-// launchHandoff starts the handoff binary in foreground (blocking) so
-// the terminal stays stable and the user sees all output.
+// launchHandoff starts the worker DETACHED with its own console and returns
+// immediately so the parent process can exit. Exiting the parent releases the
+// OS file lock on the original binary, which is the entire reason the
+// copy-and-handoff dance exists in the first place.
+//
+// See spec/13-self-update-app-update/03-copy-and-handoff.md and
+// HANDOFF-LESSONS.md before changing this. Do NOT switch back to a blocking
+// cmd.Run() — that re-introduces the Windows file-lock bug.
 func launchHandoff(copyPath, repoPath, targetBinary string) error {
 	args := []string{
 		"update-runner",
@@ -39,11 +45,17 @@ func launchHandoff(copyPath, repoPath, targetBinary string) error {
 		"--target-binary", targetBinary,
 	}
 
-	fmt.Printf("🚀 Update handed off to %s\n", copyPath)
+	fmt.Printf("  🚀 Update handed off to %s\n", copyPath)
+	fmt.Println("  ↪  Worker is taking over in a new window; this terminal is free.")
 
 	cmd := exec.Command(copyPath, args...)
-	if err := runAttached(cmd); err != nil {
-		return apperror.Wrap("update worker failed", err)
+	configureDetached(cmd)
+
+	if err := cmd.Start(); err != nil {
+		return apperror.Wrap("cannot start update worker", err)
+	}
+	if cmd.Process != nil {
+		_ = cmd.Process.Release()
 	}
 	return nil
 }

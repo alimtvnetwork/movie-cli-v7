@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.102.0
+
+### Fixed
+- **`movie update` handoff is now correctly DETACHED again.** The previous "fix" (iteration 3) made the parent block on the worker with `cmd.Run()` so the console stayed attached, but that kept the parent process alive — which kept the OS file lock on the active `movie.exe`. The visible symptoms were `run.ps1` printing *"Active PATH binary is in use; retrying (1..5/5)"* and the cleanup step dying with *"Could not remove movie-update-<pid>.exe: Access is denied"* (because that file was the still-running worker). The parent now spawns the worker in its own console window (`CREATE_NEW_CONSOLE` on Windows, `setsid` on Unix) and exits 0 immediately, so the lock is released before `run.ps1` deploys.
+- **Worker copy now self-deletes after the update finishes.** The temp PowerShell script ends with a hidden `cmd /c ping 127.0.0.1 -n 3 & del "<worker>"` so the `movie-update-<pid>.exe` copy is removed ~2 s after the worker exits. `update-cleanup` is still kept as a belt-and-braces sweeper for crashed/Ctrl-C runs and continues to honour `--skip-path`.
+
+### Changed
+- **Update worker output is indented and reformatted.** Every line in the worker's temp script now uses a `Say`/`SayOk`/`SayWarn`/`SayErr` helper with a consistent 4-space prefix, the closing pipe of the completion banner is aligned, and the banner uses `+======+` corners that line up. Easier to scan, no more ragged right edge.
+
+### Docs
+- **`spec/13-self-update-app-update/03-copy-and-handoff.md` rewritten** with the authoritative detached flow, a regression note explaining what went wrong in iteration 3, and an explicit "do not reintroduce `cmd.Run()`" rule.
+- **`HANDOFF-LESSONS.md` added at the repo root** — a short, AI-shareable doc explaining why the obvious blocking-handoff "fix" is wrong and what to do instead. Hand this file to any AI/contributor before they touch the updater.
+- **`.lovable/memory/issues/05-updater-async-console.md` updated** with the full 4-iteration history; the iteration-3 entry is now flagged as the cause of the bug, not the fix.
+
 ## v2.101.0
 
 ### Added
