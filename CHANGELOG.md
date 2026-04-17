@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.105.0
+
+### Added
+- **TMDb `/find` is now cached too.** `ImdbLookupCache` v3 migration adds `TmdbId INTEGER` and `MediaType TEXT` columns. On a fully warm cache hit `tmdb.SearchWithFallback` returns a synthetic `SearchResult{ID, MediaType}` immediately, skipping both the DuckDuckGo HTML scrape AND the TMDb `/find?external_source=imdb_id` round-trip. Partial hits (IMDb id known but TmdbId never resolved) still call `/find` and back-fill the cache so the next run is fully warm.
+- **`db.ImdbLookupResult` extended** with `TmdbID` and `MediaType`. `db.SetImdbLookup` signature widened to `(cleanTitle, year, imdbID, tmdbID, mediaType)`.
+- **`movie cache imdb list`** now prints the resolved `TMDb: <id> (movie|tv)` line per entry, or `(unresolved)` for legacy/partial rows.
+
+### Changed
+- **`tmdb.IMDbCache` interface widened** to surface the cached TmdbId + MediaType (`Look` now returns 5 values; `Store` takes 5 args). The `cmd.imdbCacheAdapter` was updated accordingly. There are no other implementations in-repo.
+- **`applyMovieDetails` / `applyTVDetails` now also populate `Description`, `TmdbRating`, and `Popularity`** from the `/movie/{id}` and `/tv/{id}` payloads. Previously these came only from the search result; with `/find` skipped on a warm hit they would have been lost otherwise.
+
+### Migrations
+- **v3** `ImdbLookupCache: add TmdbId + MediaType to skip /find on hit` — `ALTER TABLE ImdbLookupCache ADD COLUMN TmdbId INTEGER NOT NULL DEFAULT 0` and `... ADD COLUMN MediaType TEXT NOT NULL DEFAULT ''`. Existing rows keep working under the v2 behaviour (one `/find` call per hit) until they are re-resolved.
+
 ## v2.104.0
 
 ### Added

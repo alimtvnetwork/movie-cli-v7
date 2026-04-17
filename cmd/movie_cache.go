@@ -158,7 +158,12 @@ func printCacheImdbEntry(e db.ImdbCacheEntry) {
 		icon = "✅"
 		imdb = e.ImdbID
 	}
+	tmdb := "(unresolved)"
+	if e.TmdbID > 0 {
+		tmdb = fmt.Sprintf("%d (%s)", e.TmdbID, e.MediaType)
+	}
 	fmt.Printf("  %s %s (%d)\n", icon, e.CleanTitle, e.Year)
 	fmt.Printf("       IMDb:  %s\n", imdb)
+	fmt.Printf("       TMDb:  %s\n", tmdb)
 	fmt.Printf("       When:  %s\n\n", e.LookedUpAt)
 }

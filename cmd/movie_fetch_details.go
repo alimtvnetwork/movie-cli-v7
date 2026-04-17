@@ -62,6 +62,17 @@ func applyMovieDetails(m *db.Media, details *tmdb.MovieDetails) {
 	m.Revenue = details.Revenue
 	m.Tagline = details.Tagline
 	m.Genre = joinGenreNames(details.Genres)
+	// Also populate fields that previously came only from the search
+	// result so the IMDb-cache "skip /find" path doesn't lose them.
+	if details.Overview != "" {
+		m.Description = details.Overview
+	}
+	if details.VoteAvg > 0 {
+		m.TmdbRating = details.VoteAvg
+	}
+	if details.Popularity > 0 {
+		m.Popularity = details.Popularity
+	}
 }
 
 func joinGenreNames(genres []tmdb.Genre) string {
@@ -125,6 +136,15 @@ func applyTVDetails(m *db.Media, details *tmdb.TVDetails) {
 		m.Runtime = details.EpisodeRunTime[0]
 	}
 	m.Genre = joinGenreNames(details.Genres)
+	if details.Overview != "" {
+		m.Description = details.Overview
+	}
+	if details.VoteAvg > 0 {
+		m.TmdbRating = details.VoteAvg
+	}
+	if details.Popularity > 0 {
+		m.Popularity = details.Popularity
+	}
 }
 
 func applyTVCredits(m *db.Media, credits *tmdb.Credits) {
