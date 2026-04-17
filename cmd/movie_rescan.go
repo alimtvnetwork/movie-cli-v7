@@ -76,6 +76,7 @@ func countByType(items []db.Media) (int, int) {
 
 var rescanAll bool
 var rescanLimit int
+var rescanNoCache bool
 
 var movieRescanCmd = &cobra.Command{
 	Use:   "rescan",
@@ -89,7 +90,8 @@ retrieve complete metadata. No folder scan is needed.
 Examples:
   movie rescan              Re-fetch only entries with missing data
   movie rescan --all        Re-fetch TMDb data for ALL entries
-  movie rescan --limit 50   Process at most 50 entries`,
+  movie rescan --limit 50   Process at most 50 entries
+  movie rescan --no-cache   Bypass the IMDb cache for this run only`,
 	Run: runMovieRescan,
 }
 
@@ -98,6 +100,8 @@ func init() {
 		"re-fetch TMDb data for all entries, not just those with missing data")
 	movieRescanCmd.Flags().IntVar(&rescanLimit, "limit", 0,
 		"max number of entries to process (0 = unlimited)")
+	movieRescanCmd.Flags().BoolVar(&rescanNoCache, "no-cache", false,
+		"bypass the IMDb lookup cache for this run (forces fresh DuckDuckGo + /find)")
 }
 
 func runMovieRescan(cmd *cobra.Command, args []string) {
@@ -131,7 +135,7 @@ func runMovieRescan(cmd *cobra.Command, args []string) {
 	}
 
 	client := tmdb.NewClientWithToken(creds.APIKey, creds.Token)
-	client.SetIMDbCache(newIMDbCacheAdapter(database))
+	attachIMDbCacheUnless(client, database, rescanNoCache, "rescan")
 	updated, failed := processRescanEntries(database, client, entries)
 	printRescanResult(updated, failed, len(entries))
 

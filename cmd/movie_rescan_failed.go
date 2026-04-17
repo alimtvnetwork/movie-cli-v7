@@ -14,6 +14,7 @@ import (
 )
 
 var rescanFailedLimit int
+var rescanFailedNoCache bool
 
 var movieRescanFailedCmd = &cobra.Command{
 	Use:   "rescan-failed",
@@ -27,13 +28,16 @@ TMDb lookup using the full SearchWithFallback chain:
 
 Examples:
   movie rescan-failed              Re-fetch every row missing TmdbId
-  movie rescan-failed --limit 50   Process at most 50 entries`,
+  movie rescan-failed --limit 50   Process at most 50 entries
+  movie rescan-failed --no-cache   Bypass the IMDb cache for this run only`,
 	Run: runMovieRescanFailed,
 }
 
 func init() {
 	movieRescanFailedCmd.Flags().IntVar(&rescanFailedLimit, "limit", 0,
 		"max number of entries to process (0 = unlimited)")
+	movieRescanFailedCmd.Flags().BoolVar(&rescanFailedNoCache, "no-cache", false,
+		"bypass the IMDb lookup cache for this run (forces fresh DuckDuckGo + /find)")
 }
 
 func runMovieRescanFailed(cmd *cobra.Command, args []string) {
@@ -67,7 +71,7 @@ func runMovieRescanFailed(cmd *cobra.Command, args []string) {
 	}
 
 	client := tmdb.NewClientWithToken(creds.APIKey, creds.Token)
-	client.SetIMDbCache(newIMDbCacheAdapter(database))
+	attachIMDbCacheUnless(client, database, rescanFailedNoCache, "rescan-failed")
 	updated, failed := processRescanEntries(database, client, entries)
 	printRescanFailedResult(updated, failed, len(entries))
 
