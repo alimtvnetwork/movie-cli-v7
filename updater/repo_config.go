@@ -2,6 +2,7 @@ package updater
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/alimtvnetwork/movie-cli-v5/apperror"
 	"github.com/alimtvnetwork/movie-cli-v5/db"
@@ -17,7 +18,7 @@ func loadSavedRepoPath() (string, error) {
 	defer database.Close()
 
 	repoPath, err := database.GetConfig(repoPathConfigKey)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return "", nil
 	}
 	if err != nil {

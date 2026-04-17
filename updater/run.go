@@ -31,8 +31,8 @@ func Run(repoPathFlag string) error {
 	if err != nil {
 		return err
 	}
-	if err := saveRepoPath(repoPath); err != nil {
-		return err
+	if saveErr := saveRepoPath(repoPath); saveErr != nil {
+		return saveErr
 	}
 
 	if bootstrapped {

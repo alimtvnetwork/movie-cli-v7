@@ -39,7 +39,7 @@ var tvPattern = regexp.MustCompile(`(?i)S\d{1,2}E\d{1,2}|Season\s*\d+|Episode\s*
 var multiSpace = regexp.MustCompile(`\s{2,}`)
 var trailingJunk = regexp.MustCompile(`\s*[-–—]+\s*$`)
 var dashSeparator = regexp.MustCompile(`\s+[-–—]+\s+`)
-var duplicateYear = regexp.MustCompile(`\b((?:19|20)\d{2})(?:\s+\1)+\b`)
+var duplicateYear = regexp.MustCompile(`\b((?:19|20)\d{2})(?:\s+((?:19|20)\d{2}))+\b`)
 
 // Result holds the cleaned information extracted from a filename.
 type Result struct {

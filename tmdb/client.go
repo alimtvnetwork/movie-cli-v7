@@ -46,9 +46,9 @@ type IMDbCache interface {
 
 // Client interacts with the TMDb API.
 type Client struct {
-	HTTPClient  *http.Client
 	APIKey      string
 	AccessToken string
+	HTTPClient  *http.Client
 	IMDbCache   IMDbCache // optional; persisted lookup cache to skip the web
 }
 

@@ -10,12 +10,12 @@ import "database/sql"
 type ImdbCacheEntry struct {
 	LookupKey  string
 	CleanTitle string
-	Year       int
 	ImdbID     string
 	MediaType  string
+	LookedUpAt string
+	Year       int
 	TmdbID     int
 	IsHit      bool
-	LookedUpAt string
 }
 
 // ListImdbLookups returns every cached entry ordered by most recent first.

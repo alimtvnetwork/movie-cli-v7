@@ -32,6 +32,7 @@ type powershellConfig struct {
 //   - *.old                   rename-first deploy backups
 //   - *.bak                   legacy backup files
 //   - legacy binaries (movie*, mahin*) and their handoff copies
+//
 // skipPath is an optional extra path that must be preserved, such as the
 // currently running handoff worker binary.
 func Cleanup(skipPath string) (int, error) {

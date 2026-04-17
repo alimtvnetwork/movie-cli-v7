@@ -12,7 +12,7 @@
 //
 // SQLite ALTER TABLE only supports ADD COLUMN, which is exactly what we need
 // here. NULL defaults keep the migration safe for existing rows — those rows
-// will fall back to the V2 behaviour (one /find call) until they are
+// will fall back to the V2 behavior (one /find call) until they are
 // re-resolved and the new columns are populated.
 package db
 

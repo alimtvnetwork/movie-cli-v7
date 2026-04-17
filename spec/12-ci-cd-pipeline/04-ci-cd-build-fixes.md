@@ -266,6 +266,124 @@ type Episode struct {
 
 ---
 
+### 7. `errorlint` — comparing with == will fail on wrapped errors
+
+**Sample error:**
+```
+updater/repo_config.go:20:5: comparing with == will fail on wrapped errors. Use errors.Is to check for a specific error (errorlint)
+	if err == sql.ErrNoRows {
+```
+
+**Root cause**: When an error is wrapped (e.g., via `apperror.Wrap`), a simple `==` comparison fails because the wrapped error is a different type. `errors.Is()` unwraps the error chain before comparing.
+
+**Fix pattern**:
+```go
+// ❌ WRONG
+if err == sql.ErrNoRows {
+
+// ✅ CORRECT
+import "errors"
+if errors.Is(err, sql.ErrNoRows) {
+```
+
+**Prevention rule**: Always use `errors.Is()` when checking for sentinel errors (like `sql.ErrNoRows`, `io.EOF`, context errors) that might have been wrapped upstream.
+
+---
+
+### 8. `shadow` (govet) — variable shadows outer declaration
+
+**Sample error:**
+```
+updater/run.go:34:5: shadow: declaration of "err" shadows declaration at line 30 (govet)
+	if err := saveRepoPath(repoPath); err != nil {
+```
+
+**Root cause**: An outer `err` variable is still in scope, and an inner `if` block with `:=` redeclares it, shadowing the outer variable.
+
+**Fix pattern**:
+```go
+// ❌ WRONG
+err := doSomething()
+if err := doAnother(); err != nil { ... }  // shadows outer err
+
+// ✅ CORRECT
+err := doSomething()
+if saveErr := saveRepoPath(); saveErr != nil { ... }
+```
+
+**Prevention rule**: Inside any block where `err` is already declared, use a descriptive name (`saveErr`, `openErr`, `queryErr`) when using `:=` assignment.
+
+---
+
+### 9. `unused` — symbol is not referenced
+
+**Sample error:**
+```
+updater/gitmap.go:19:7: const `gitmapDir` is unused (unused)
+updater/gitmap.go:22:6: func `readGitMapLatest` is unused (unused)
+```
+
+**Root cause**: A package-level const or func is unexported and has no call sites within the package (yet).
+
+**Fix pattern**:
+```go
+// ❌ WRONG (unexported, flagged as unused)
+const gitmapDir = ".gitmap/release"
+func readGitMapLatest(...) { ... }
+
+// ✅ CORRECT (export for future use)
+const GitmapDir = ".gitmap/release"
+func ReadGitMapLatest(...) { ... }
+```
+
+**Prevention rule**: For infrastructure code that is planned but not yet wired up, export the symbols (capitalize) rather than deleting them. This signals intent and prevents CI failure.
+
+---
+
+### 10. `misspell` — British spelling in American codebase
+
+**Sample error:**
+```
+cmd/log_init_helper.go:1:46: `initialises` is a misspelling of `initializes` (misspell)
+db/migrate_v3.go:15:29: `behaviour` is a misspelling of `behavior` (misspell)
+```
+
+**Root cause**: This project uses American spelling conventions. CI enforces `misspell` with US locale.
+
+**Fix pattern**: Replace British spellings:
+- `initialise` → `initialize`
+- `behaviour` → `behavior`
+- `colour` → `color`
+- `favourite` → `favorite`
+
+**Prevention rule**: Use American spellings in all comments, variable names, and user-facing strings.
+
+---
+
+### 11. `SA1000` (staticcheck) — invalid escape sequence in regexp
+
+**Sample error:**
+```
+cleaner/parse.go:42:40: SA1000: error parsing regexp: invalid escape sequence: `\1` (staticcheck)
+	var duplicateYear = regexp.MustCompile(`\b((?:19|20)\d{2})(?:\s+\1)+\b`)
+```
+
+**Root cause**: Go's `regexp` package does NOT support backreferences (`\1`, `$1`, etc.). The `\1` inside the regex is interpreted as a literal backslash + "1", which is invalid. Additionally, backreferences inside character classes `[...]` are never valid regex syntax.
+
+**Fix pattern**:
+```go
+// ❌ WRONG — backreferences not supported in Go regexp
+var dupYear = regexp.MustCompile(`\b((?:19|20)\d{2})(?:\s+\1)+\b`)
+
+// ✅ CORRECT — match the pattern explicitly
+duplicateYear = regexp.MustCompile(`\b((?:19|20)\d{2})(?:\s+((?:19|20)\d{2}))+\b`)
+// Or handle deduplication in code rather than regex
+```
+
+**Prevention rule**: Remember: Go's `regexp` is RE2, which does NOT support backreferences. If you need to match repeated patterns, either write it out explicitly or use post-match code deduplication.
+
+---
+
 ## Recurrence Log
 
 | Date | Version | Errors fixed | Files touched |
@@ -275,6 +393,7 @@ type Episode struct {
 | 2026-04-16 | v2.83.1 | gofmt ×5, fieldalignment ×3 | cmd/, db/ |
 | 2026-04-16 | v2.83.2 | gofmt import order ×7 | db/, cmd/movie_resolve.go |
 | 2026-04-16 | v2.83.3 | gofmt struct tag + concat spacing | db/media.go, db/*query/cleanup |
+| 2026-04-17 | v2.111.0 | errorlint, shadow, unused, misspell ×2, SA1000, gofmt ×4, fieldalignment ×2 | 9 files |
 
 When a *new* error class appears that is not catalogued above, append it to the catalogue (don't just log it here) so it cannot recur silently.
 
@@ -306,4 +425,4 @@ If all four pass locally, CI will pass.
 
 ---
 
-*CI/CD build fixes spec — updated: 2026-04-16 — version: v2.83.3*
+*CI/CD build fixes spec — updated: 2026-04-17 — version: v2.111.0*

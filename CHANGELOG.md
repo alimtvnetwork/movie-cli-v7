@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.111.0
+
+### Fixed
+- **CI lint errors** — 14 golangci-lint findings resolved across the codebase:
+  - `updater/gitmap.go`: exported `gitmapDir` → `GitmapDir` and `readGitMapLatest` → `ReadGitMapLatest` (unused symbols)
+  - `updater/repo_config.go`: changed `err == sql.ErrNoRows` to `errors.Is(err, sql.ErrNoRows)` (errorlint)
+  - `updater/run.go`: renamed inner `err` → `saveErr` to avoid shadowing (govet)
+  - `tmdb/client.go`: reordered struct fields for optimal alignment (fieldalignment)
+  - `db/imdb_lookup_cache_admin.go`: reordered `ImdbCacheEntry` fields (fieldalignment)
+  - `cmd/log_init_helper.go`: fixed British spelling `initialises` → `initializes` (misspell)
+  - `db/migrate_v3.go`: fixed British spelling `behaviour` → `behavior` (misspell)
+  - `cleaner/parse.go`: removed unsupported backreference `\1` from `duplicateYear` regex (staticcheck)
+  - `version/info.go`, `updater/cleanup.go`, `updater/repo_config.go`, `updater/repo_test.go`: fixed gofmt alignment and trailing newlines
+
 ## v2.110.0
 
 ### Added

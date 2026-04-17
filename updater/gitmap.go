@@ -15,12 +15,12 @@ type GitMapRelease struct {
 	IsLatest     bool   `json:"isLatest"`
 }
 
-// gitmapDir is the relative path to the gitmap release directory.
-const gitmapDir = ".gitmap/release"
+// GitmapDir is the relative path to the gitmap release directory.
+const GitmapDir = ".gitmap/release"
 
-// readGitMapLatest reads .gitmap/release/latest.json from the given repo root.
-func readGitMapLatest(repoRoot string) (*GitMapRelease, error) {
-	path := filepath.Join(repoRoot, gitmapDir, "latest.json")
+// ReadGitMapLatest reads .gitmap/release/latest.json from the given repo root.
+func ReadGitMapLatest(repoRoot string) (*GitMapRelease, error) {
+	path := filepath.Join(repoRoot, GitmapDir, "latest.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
