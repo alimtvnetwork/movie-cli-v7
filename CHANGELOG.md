@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.103.0
+
+### Added
+- **`ImdbLookupCache` table (migration v2)** — persists every DuckDuckGo→IMDb id lookup keyed by lowercase clean title + year. Hits are valid for 180 days; misses for 7 days (so titles eventually retry as IMDb/TMDb improve).
+- **`db.GetImdbLookup` / `db.SetImdbLookup`** — TTL-aware read/write helpers returning hit / miss / expired so callers can short-circuit the web call.
+- **`tmdb.IMDbCache` interface + `Client.SetIMDbCache`** — optional persistent cache plug-in for the search fallback chain. When attached, `tmdb.Client.findIMDbIDViaWeb` consults the cache first and writes the result back (hit OR miss) so repeated `movie scan`, `movie rescan`, and `movie rescan-failed` runs no longer re-hit DuckDuckGo for the same `(clean title, year)` pair.
+- **`cmd/imdb_cache_adapter.go`** — adapts `*db.DB` to `tmdb.IMDbCache`, swallowing DB errors so a broken cache degrades to a fresh web call instead of failing the search.
+
+### Changed
+- **All command sites that build a TMDb client now attach the cache**: `movie scan`, `movie scan --watch`, `movie rescan`, `movie rescan-failed`, and the REST `similar` handler. Commands that have no DB context (one-off `movie info`, `movie search`, etc.) continue to work without a cache.
+
 ## v2.102.0
 
 ### Fixed

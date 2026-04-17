@@ -26,11 +26,29 @@ var (
 	ErrTimeout      = errors.New("TMDb request timed out")
 )
 
+// IMDbCache caches DuckDuckGo→IMDb id lookups for the search fallback chain.
+// It is optional; when nil the fallback always hits the web.
+//
+// Look returns (imdbID, true, true)  for a positive cached hit,
+//             ("",      false, true) for a cached "no match" (still skip the web),
+//             ("",      _,     false) when no cache entry exists.
+type IMDbCache interface {
+	Look(cleanTitle string, year int) (imdbID string, isHit bool, found bool)
+	Store(cleanTitle string, year int, imdbID string) error
+}
+
 // Client interacts with the TMDb API.
 type Client struct {
 	HTTPClient  *http.Client
 	APIKey      string
 	AccessToken string
+	IMDbCache   IMDbCache // optional; persisted lookup cache to skip the web
+}
+
+// SetIMDbCache attaches a persistent cache for DuckDuckGo→IMDb lookups.
+// Safe to call with nil to detach.
+func (c *Client) SetIMDbCache(cache IMDbCache) {
+	c.IMDbCache = cache
 }
 
 // NewClient creates a new TMDb client from an API key or env vars.

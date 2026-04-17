@@ -125,6 +125,7 @@ func fetchSimilarFromTMDb(database *db.DB, m *db.Media) []tmdb.SearchResult {
 	apiKey, _ := database.GetConfig("TmdbApiKey")
 	token, _ := database.GetConfig("TmdbToken")
 	client := tmdb.NewClientWithToken(apiKey, token)
+	client.SetIMDbCache(newIMDbCacheAdapter(database))
 
 	results, recErr := client.GetRecommendations(m.TmdbID, m.Type, 1)
 	if recErr != nil {

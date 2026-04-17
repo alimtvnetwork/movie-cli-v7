@@ -19,6 +19,7 @@ type Migration struct {
 func allMigrations() []Migration {
 	return []Migration{
 		{Version: 1, Description: "Initial PascalCase schema", Apply: migrateV1},
+		{Version: 2, Description: "ImdbLookupCache table for cached DuckDuckGo→IMDb lookups", Apply: migrateV2},
 	}
 }
 

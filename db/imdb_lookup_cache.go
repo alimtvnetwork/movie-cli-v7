@@ -1,0 +1,95 @@
+// imdb_lookup_cache.go — read/write helpers for the ImdbLookupCache table.
+//
+// The cache stores the result of every DuckDuckGo→IMDb lookup performed by
+// tmdb.Client.findIMDbIDViaWeb so that repeated runs (movie scan, movie
+// rescan, movie rescan-failed) do not re-hit the web for the same
+// (clean title, year) pair.
+//
+// Hits and misses are both cached. Misses use a shorter TTL so that titles
+// that were previously unmatched eventually get retried as TMDb / IMDb data
+// improves over time.
+package db
+
+import (
+	"database/sql"
+	"errors"
+	"strconv"
+	"strings"
+	"time"
+)
+
+// ImdbCacheTTLHit is how long a positive ImdbId lookup stays valid.
+// IMDb ids are stable so this can be very long.
+const ImdbCacheTTLHit = 180 * 24 * time.Hour // 180 days
+
+// ImdbCacheTTLMiss is how long a "no match" result stays valid before we
+// allow another web lookup. Shorter so we eventually retry.
+const ImdbCacheTTLMiss = 7 * 24 * time.Hour // 7 days
+
+// ImdbLookupResult is the outcome of a cache lookup.
+type ImdbLookupResult struct {
+	ImdbID string // empty when IsHit is false
+	IsHit  bool   // true when the cached entry recorded a real IMDb id
+	Found  bool   // true when an unexpired cache entry exists at all
+}
+
+// imdbLookupKey returns the canonical cache key for (cleanTitle, year).
+func imdbLookupKey(cleanTitle string, year int) string {
+	normalized := strings.ToLower(strings.TrimSpace(cleanTitle))
+	return normalized + "|" + strconv.Itoa(year)
+}
+
+// GetImdbLookup returns any unexpired cached result for the title/year.
+// Found=false means the caller should perform a fresh web lookup.
+func (d *DB) GetImdbLookup(cleanTitle string, year int) (ImdbLookupResult, error) {
+	row := d.QueryRow(
+		`SELECT ImdbId, IsHit, LookedUpAt FROM ImdbLookupCache WHERE LookupKey = ?`,
+		imdbLookupKey(cleanTitle, year),
+	)
+
+	var imdbID, lookedUpAt string
+	var isHit bool
+	if err := row.Scan(&imdbID, &isHit, &lookedUpAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ImdbLookupResult{}, nil
+		}
+		return ImdbLookupResult{}, err
+	}
+
+	if isCacheEntryExpired(lookedUpAt, isHit) {
+		return ImdbLookupResult{}, nil
+	}
+
+	return ImdbLookupResult{ImdbID: imdbID, IsHit: isHit, Found: true}, nil
+}
+
+// SetImdbLookup upserts a cache entry. Pass empty imdbID to record a miss.
+func (d *DB) SetImdbLookup(cleanTitle string, year int, imdbID string) error {
+	key := imdbLookupKey(cleanTitle, year)
+	isHit := imdbID != ""
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	_, err := d.Exec(`
+		INSERT INTO ImdbLookupCache (LookupKey, CleanTitle, Year, ImdbId, IsHit, LookedUpAt)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON CONFLICT(LookupKey) DO UPDATE SET
+			CleanTitle = excluded.CleanTitle,
+			Year       = excluded.Year,
+			ImdbId     = excluded.ImdbId,
+			IsHit      = excluded.IsHit,
+			LookedUpAt = excluded.LookedUpAt
+	`, key, cleanTitle, year, imdbID, isHit, now)
+	return err
+}
+
+func isCacheEntryExpired(lookedUpAt string, isHit bool) bool {
+	stamp, err := time.Parse(time.RFC3339, lookedUpAt)
+	if err != nil {
+		return true
+	}
+	ttl := ImdbCacheTTLMiss
+	if isHit {
+		ttl = ImdbCacheTTLHit
+	}
+	return time.Since(stamp) > ttl
+}

@@ -72,7 +72,8 @@ func (c *Client) tryProgressiveTrim(title string, year int) []SearchResult {
 var imdbIDPattern = regexp.MustCompile(`tt\d{7,10}`)
 
 // tryIMDbViaWeb does a DuckDuckGo HTML search for "<title> <year> imdb",
-// extracts the first IMDb id, and resolves it via TMDb /find.
+// extracts the first IMDb id, and resolves it via TMDb /find. Cached when
+// a Client.IMDbCache is attached.
 func (c *Client) tryIMDbViaWeb(title string, year int) []SearchResult {
 	imdbID := c.findIMDbIDViaWeb(title, year)
 	if imdbID == "" {
@@ -81,7 +82,26 @@ func (c *Client) tryIMDbViaWeb(title string, year int) []SearchResult {
 	return c.lookupByIMDbID(imdbID)
 }
 
+// findIMDbIDViaWeb returns the cached id when available, otherwise fetches
+// from DuckDuckGo and writes the result (hit or miss) back to the cache.
 func (c *Client) findIMDbIDViaWeb(title string, year int) string {
+	if c.IMDbCache != nil {
+		if id, _, found := c.IMDbCache.Look(title, year); found {
+			return id
+		}
+	}
+
+	id := c.fetchIMDbIDFromDuckDuckGo(title, year)
+
+	if c.IMDbCache != nil {
+		_ = c.IMDbCache.Store(title, year, id)
+	}
+	return id
+}
+
+// fetchIMDbIDFromDuckDuckGo performs the actual HTTP scrape. Always hits the
+// network; callers should consult the cache via findIMDbIDViaWeb instead.
+func (c *Client) fetchIMDbIDFromDuckDuckGo(title string, year int) string {
 	query := title + " imdb"
 	if year > 0 {
 		query = title + " " + strconv.Itoa(year) + " imdb"
@@ -106,8 +126,7 @@ func (c *Client) findIMDbIDViaWeb(title string, year int) string {
 	if readErr != nil {
 		return ""
 	}
-	match := imdbIDPattern.FindString(string(body))
-	return match
+	return imdbIDPattern.FindString(string(body))
 }
 
 func (c *Client) lookupByIMDbID(imdbID string) []SearchResult {
