@@ -66,6 +66,9 @@ func resolveSkipPaths(paths ...string) []string {
 	seen := map[string]struct{}{}
 	var cleaned []string
 	for _, path := range paths {
+		path = strings.TrimSpace(path)
+		path = strings.Trim(path, `"'`)
+		path = strings.TrimSpace(path)
 		normalized := normalizePath(path)
 		if normalized == "" {
 			continue

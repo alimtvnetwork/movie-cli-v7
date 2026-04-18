@@ -30,6 +30,7 @@ param(
     [switch]$NoDeploy,
     [switch]$ForcePull,
     [string]$DeployPath = "",
+    [string]$TargetBinaryPath = "",
     [string]$BinaryNameOverride = "",
     [Alias("d")]
     [switch]$Deploy,
@@ -43,6 +44,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+} catch {
+}
 
 # -- Logging helpers -------------------------------------------
 
@@ -83,6 +90,21 @@ function Write-ErrorAndExit {
     Write-Fail $Message
     if ($Hint) { Write-Info $Hint }
     exit 1
+}
+
+function Resolve-DeployTarget {
+    if (-not $TargetBinaryPath) {
+        return $null
+    }
+    $targetParent = Split-Path -Parent $TargetBinaryPath
+    $targetName = Split-Path -Leaf $TargetBinaryPath
+    if (-not $targetParent) {
+        Write-ErrorAndExit "TargetBinaryPath is missing a parent directory: $TargetBinaryPath"
+    }
+    if (-not $targetName) {
+        Write-ErrorAndExit "TargetBinaryPath is missing a file name: $TargetBinaryPath"
+    }
+    return @{ DeployPath = $targetParent; BinaryName = $targetName }
 }
 
 # -- Banner ----------------------------------------------------
@@ -569,7 +591,12 @@ function Deploy-Binary {
 
     Write-Step "4/4" "Deploying binary"
 
+    $deployTarget = Resolve-DeployTarget
     $deployPath = $DeployPath
+    if ($deployTarget) {
+        $deployPath = $deployTarget.DeployPath
+        Write-Info "Using target binary override: $TargetBinaryPath"
+    }
     if ($DeployPath) {
         Write-Info "Using deploy path override: $deployPath"
     }
@@ -585,6 +612,9 @@ function Deploy-Binary {
     }
 
     $binaryName = $BinaryNameOverride
+    if ($deployTarget) {
+        $binaryName = $deployTarget.BinaryName
+    }
     if ($BinaryNameOverride) {
         Write-Info "Using binary name override: $binaryName"
     }
