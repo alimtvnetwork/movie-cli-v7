@@ -56,32 +56,32 @@ try {
 function Write-Step {
     param([string]$Step, [string]$Message)
     Write-Host ""
-    Write-Host " [$Step] " -ForegroundColor Magenta -NoNewline
+    Write-Host "  [$Step] " -ForegroundColor Magenta -NoNewline
     Write-Host $Message -ForegroundColor White
-    Write-Host (" " + ("-" * 50)) -ForegroundColor DarkGray
+    Write-Host ("  " + ("-" * 50)) -ForegroundColor DarkGray
 }
 
 function Write-Success {
     param([string]$Message)
-    Write-Host "  OK " -ForegroundColor Green -NoNewline
+    Write-Host "    [ OK ] " -ForegroundColor Green -NoNewline
     Write-Host $Message -ForegroundColor Green
 }
 
 function Write-Info {
     param([string]$Message)
-    Write-Host "  -> " -ForegroundColor Cyan -NoNewline
+    Write-Host "    [INFO] " -ForegroundColor Cyan -NoNewline
     Write-Host $Message -ForegroundColor Gray
 }
 
 function Write-Warn {
     param([string]$Message)
-    Write-Host "  !! " -ForegroundColor Yellow -NoNewline
+    Write-Host "    [WARN] " -ForegroundColor Yellow -NoNewline
     Write-Host $Message -ForegroundColor Yellow
 }
 
 function Write-Fail {
     param([string]$Message)
-    Write-Host "  XX " -ForegroundColor Red -NoNewline
+    Write-Host "    [FAIL] " -ForegroundColor Red -NoNewline
     Write-Host $Message -ForegroundColor Red
 }
 
@@ -169,11 +169,11 @@ function Normalize-LegacyUpdateArgs {
 
 function Show-Banner {
     Write-Host ""
-    Write-Host " +======================================+" -ForegroundColor DarkCyan
-    Write-Host " | " -ForegroundColor DarkCyan -NoNewline
+    Write-Host "  +--------------------------------------+" -ForegroundColor DarkCyan
+    Write-Host "  | " -ForegroundColor DarkCyan -NoNewline
     Write-Host "movie-cli builder" -ForegroundColor Cyan -NoNewline
-    Write-Host "                |" -ForegroundColor DarkCyan
-    Write-Host " +======================================+" -ForegroundColor DarkCyan
+    Write-Host "                     |" -ForegroundColor DarkCyan
+    Write-Host "  +--------------------------------------+" -ForegroundColor DarkCyan
     Write-Host ""
 }
 
@@ -750,7 +750,9 @@ function Deploy-Binary {
             Remove-Item -Path $backupFile -Force
             Write-Info "Cleaned up backup"
         } catch {
-            Write-Warn "Could not remove backup file '$backupFile': $_"
+            # The .bak is harmless leftover from rename-first deploy. On Windows
+            # it can be locked by a still-running parent process; the next
+            # update or 'movie update-cleanup' run will sweep it. Stay silent.
         }
     }
 
@@ -1044,15 +1046,15 @@ $boxWidth = 40
 $innerWidth = $boxWidth - 4  # account for " | " and " |"
 
 Write-Host ""
-Write-Host " +$('=' * ($boxWidth - 2))+" -ForegroundColor DarkCyan
+Write-Host "  +$('-' * ($boxWidth - 2))+" -ForegroundColor DarkCyan
 # Title line
 $title = "All done!"
 $titlePad = $innerWidth - $title.Length
 if ($titlePad -lt 0) { $titlePad = 0 }
-Write-Host " | " -ForegroundColor DarkCyan -NoNewline
+Write-Host "  | " -ForegroundColor DarkCyan -NoNewline
 Write-Host $title -ForegroundColor Green -NoNewline
 Write-Host "$(' ' * $titlePad) |" -ForegroundColor DarkCyan
-Write-Host " +$('-' * ($boxWidth - 2))+" -ForegroundColor DarkCyan
+Write-Host "  +$('-' * ($boxWidth - 2))+" -ForegroundColor DarkCyan
 
 # Version info lines
 foreach ($vLine in $versionLines) {
@@ -1062,12 +1064,12 @@ foreach ($vLine in $versionLines) {
     }
     $linePad = $innerWidth - $displayLine.Length
     if ($linePad -lt 0) { $linePad = 0 }
-    Write-Host " | " -ForegroundColor DarkCyan -NoNewline
+    Write-Host "  | " -ForegroundColor DarkCyan -NoNewline
     Write-Host $displayLine -ForegroundColor Cyan -NoNewline
     Write-Host "$(' ' * $linePad) |" -ForegroundColor DarkCyan
 }
 
-Write-Host " +$('=' * ($boxWidth - 2))+" -ForegroundColor DarkCyan
+Write-Host "  +$('-' * ($boxWidth - 2))+" -ForegroundColor DarkCyan
 Write-Host ""
 
 # -- Latest changelog ------------------------------------------

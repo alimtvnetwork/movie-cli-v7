@@ -45,8 +45,8 @@ func launchHandoff(copyPath, repoPath, targetBinary string) error {
 		"--target-binary", targetBinary,
 	}
 
-	fmt.Printf("  🚀 Update handed off to %s\n", copyPath)
-	fmt.Println("  ↪  Worker is taking over in a new window; this terminal is free.")
+	fmt.Printf("    Handoff worker : %s\n", copyPath)
+	fmt.Println("    Worker is taking over in a new window; this terminal is free.")
 
 	cmd := exec.Command(copyPath, args...)
 	configureDetached(cmd)
