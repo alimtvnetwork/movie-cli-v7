@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.121.0
+
+### Fixed
+- **Updater finally targets the active PATH binary in update mode (root-cause fix for the v2.97.0 → v2.119.0 stuck-binary loop).** When `-Update` is set and `-TargetBinaryPath` is missing (legacy worker handoffs from older versions), `run.ps1` now resolves the active `movie` from PATH and uses *that* as the deploy target — bypassing whatever `powershell.json`'s `deployPath` is set to. This breaks the failure mode where `deployPath = D:\bin-run` but PATH points at `E:\bin-run\movie.exe`, which had been freezing the active binary on an old version forever and causing every subsequent update to re-spawn an old worker.
+- **Update mode now unconditionally skips the post-deploy PATH-sync retry loop.** The "Active PATH binary is in use; retrying (1/5)..." spam, the "Could not sync active PATH binary after retries" warning, and the manual `Copy-Item` hint are now gone from `movie update` — that loop only ever produced false alarms because the deploy already replaced the right file.
+- **Cleanup permission errors no longer surface as PowerShell `NativeCommandError` red blocks.** `updater/cleanup.go` now silently skips any locked `*-update-*` worker leftover (it is always swept on a later run) and routes the remaining best-effort warnings to stdout instead of stderr, so the worker's final lines stay clean even when the cleanup pass races a still-running sibling worker.
+
 ## v2.119.0
 
 ### Fixed
