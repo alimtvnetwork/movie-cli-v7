@@ -654,6 +654,8 @@ function Deploy-Binary {
     if ($deployTarget) {
         $deployPath = $deployTarget.DeployPath
         $TargetBinaryPath = $deployTarget.TargetBinaryPath
+        # Promote to script scope so the post-deploy PATH-sync guard sees it.
+        $script:TargetBinaryPath = $deployTarget.TargetBinaryPath
         Write-Info "Using target binary override: $TargetBinaryPath"
     }
     if ($DeployPath) {
@@ -938,7 +940,12 @@ if (-not $NoDeploy) {
 # PATH sync -- never do this during update mode because the active PATH binary is
 # exactly the binary that launched the handoff and may still be winding down.
 # Update mode already deploys to the authoritative target path above.
-$skipPathSync = $Update -and $TargetBinaryPath
+# In update mode we ALWAYS skip the post-deploy PATH-sync loop -- whether or not
+# -TargetBinaryPath was provided, because Resolve-DeployTarget now falls back to
+# the active PATH binary when run under -Update, so the deploy already replaced
+# the right file. The old retry/copy loop only ever caused "Access is denied"
+# warnings against a still-running parent.
+$skipPathSync = [bool]$Update
 if ($skipPathSync) {
     Write-Info "Skipping PATH sync in update mode; deployed target already matches the handed-off binary"
 }
