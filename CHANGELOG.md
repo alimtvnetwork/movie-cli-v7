@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.125.0
+
+### Added
+- **`movie doctor` command** — diagnostic that surfaces the exact failure modes from the v2.97.0 → v2.121.0 stale-handoff loop, up front and in one place:
+  - Active PATH binary vs `powershell.json` `deployPath` mismatch
+  - Deploy directory missing from `$PATH`
+  - Stale `*-update-*` handoff workers left on disk
+  - Version drift between the active and the deployed binary
+- **`movie doctor --fix`** — auto-repairs fixable findings: calls `self-replace` for binary mismatches/version drift, sweeps stale workers (best-effort, locked files are skipped silently), and prints (never auto-applies) a PowerShell one-liner to add the deploy directory to the User PATH. Re-runs the diagnose pass after fixing so the user sees the post-repair state immediately.
+- New `doctor/` package: `diagnose.go`, `checks.go`, `paths.go`, `workers.go`, `report.go`, `fix.go`. All functions ≤15 lines, files ≤200 lines, errors via `apperror.Wrap`.
+- Output uses the v2.123.0 indent scheme (0/1/2/3 spaces, `[ OK ]`/`[WARN]`/`[ERR ]`/`[FIX ]` tags).
+
 ## v2.124.0
 
 ### Documentation
