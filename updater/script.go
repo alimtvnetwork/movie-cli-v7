@@ -95,9 +95,17 @@ try {
 } catch {
 }
 
-# Indent every Write-Host line with this prefix so update output sits a
-# little further in than run.ps1's own output and is easy to scan.
-$P = "    "
+# Indent prefix used for every line printed by THIS worker script. run.ps1
+# is invoked nested below this and uses its own one-space prefix, so the
+# overall output looks like:
+#
+#   ==> movie update                    (level 0, from updater/run.go)
+#       Active binary : ...             (level 1, 4-space)
+#     ==> Update worker started         (level 1, 4-space)
+#       Version before : ...            (level 2, 6-space)
+#       Running update via run.ps1      (level 2, 6-space)
+#  +---+ banner from run.ps1            (level 1, run.ps1 owns it)
+$P = "      "
 
 function To-ConsoleSafe {
     param([string]$Text)
@@ -113,9 +121,9 @@ function To-ConsoleSafe {
 }
 
 function Say     { param($msg, $color = "Gray")  Write-Host ($P + (To-ConsoleSafe $msg)) -ForegroundColor $color }
-function SayOk   { param($msg) Write-Host ($P + "[OK] " + (To-ConsoleSafe $msg)) -ForegroundColor Green }
+function SayOk   { param($msg) Write-Host ($P + "[ OK ] " + (To-ConsoleSafe $msg)) -ForegroundColor Green }
 function SayWarn { param($msg) Write-Host ($P + "[WARN] " + (To-ConsoleSafe $msg)) -ForegroundColor Yellow }
-function SayErr  { param($msg) Write-Host ($P + "[ERR] " + (To-ConsoleSafe $msg)) -ForegroundColor Red }
+function SayErr  { param($msg) Write-Host ($P + "[ERR ] " + (To-ConsoleSafe $msg)) -ForegroundColor Red }
 
 function Resolve-VersionBinary {
     if ($targetBinary -and (Test-Path $targetBinary)) {
@@ -139,7 +147,7 @@ $oldVersion = "unknown"
 if ($versionBinary -and (Test-Path $versionBinary)) {
     $oldVersion = (& $versionBinary version 2>&1) -join " "
 }
-Say "Version before: $oldVersion"
+Say "Version before : $oldVersion"
 
 # Wait for the parent process to fully exit and release its file lock on
 # $targetBinary before we ask run.ps1 to overwrite it.
@@ -155,7 +163,7 @@ if (-not (Test-Path $runScript)) {
 Say "Running update via $runScript" "Cyan"
 $runExit = 0
 if ($targetBinary) {
-    Say "Deploy target: $targetBinary"
+    Say "Deploy target  : $targetBinary"
     & $runScript -Update -TargetBinaryPath $targetBinary
     $runExit = $LASTEXITCODE
 } else {
@@ -180,7 +188,9 @@ Write-Host ""
 if ($oldVersion -eq $newVersion) {
     SayWarn "Version unchanged after update - was version/info.go bumped?"
 } else {
-    SayOk "Updated: $oldVersion -> $newVersion"
+    SayOk "Updated"
+    Say   "  from : $oldVersion"
+    Say   "  to   : $newVersion"
 }
 
 # Show changelog from the updated target binary
@@ -204,9 +214,9 @@ if ($versionBinary -and (Test-Path $versionBinary)) {
 
 # Top-and-tail banner
 Write-Host ""
-Write-Host ($P + "+======================================+") -ForegroundColor Cyan
-Write-Host ($P + "|  [OK] Update complete               |") -ForegroundColor Cyan
-Write-Host ($P + "+======================================+") -ForegroundColor Cyan
+Write-Host ($P + "+--------------------------------------+") -ForegroundColor Cyan
+Write-Host ($P + "|  Update complete                     |") -ForegroundColor Cyan
+Write-Host ($P + "+--------------------------------------+") -ForegroundColor Cyan
 Write-Host ""
 
 
