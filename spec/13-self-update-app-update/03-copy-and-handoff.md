@@ -77,6 +77,11 @@ movie-update-12345.exe update-runner --repo-path <repo> --target-binary <orig>
   re-resolve it.
 - `--target-binary` is the **original** `movie.exe` path the user
   launched, so `run.ps1` can deploy back to the exact same location.
+- The worker must pass that path forward to `run.ps1` as a single
+  authoritative `-TargetBinaryPath <full-path>` value. Do **not** split it
+  back into separate deploy-dir and binary-name arguments during handoff.
+  One exact path avoids accidental fallback to config values or the wrong
+  PATH-resolved binary.
 
 ---
 
@@ -219,6 +224,10 @@ synchronous variant cannot satisfy both constraints on Windows.
 - Any future "console looks weird" complaint must be solved inside the
   new worker console (e.g. `Write-Host` formatting), not by making the
   parent block.
+- Update-mode deploy targeting must stay single-path and explicit:
+  `update-runner --target-binary <full-path>` -> `run.ps1 -TargetBinaryPath <full-path>`.
+  Never reconstruct the destination from partial arguments if the full path
+  is already known.
 
 ---
 
