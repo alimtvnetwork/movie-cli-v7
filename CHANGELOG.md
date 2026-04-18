@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.117.0
+
+### Added
+- **bootstrap.ps1 / bootstrap.sh** — version-discovery installers per `spec/03-general/05-install-latest-sibling-repo.md`. Probes sibling repos (`-v<N+k>` for `k = 25..0`, highest first) on the same GitHub owner and delegates install to the highest existing one. Auto-upgrades stale install URLs (e.g. user pastes `…/movie-cli-v5` but v7 exists → bootstrap picks v7).
+  - Algorithm: parse URL → probe `raw.githubusercontent.com/<owner>/<base>-v<N+k>/main/install.{ps1,sh}` with 5s timeout, no retries → first HTTP 200 wins → `irm | iex` (PS) or `curl | bash` (Bash) the winner.
+  - Edge cases: trailing `.git` stripped; URLs without `-v<N>` suffix install as-is; all-misses fallback to starting URL; `/tree/` and `/blob/` URLs rejected.
+  - Logs every probe with verdict (`miss (404)` / `miss (timeout)` / `HIT`), final selection, and any auto-upgrade jump. Persistent log at `$env:TEMP/movie-bootstrap.log` (Win) or `/tmp/movie-bootstrap.log` (Unix).
+  - End-to-end tested against `alimtvnetwork/movie-cli-v5` — probes v30→v5, hits v5, delegates to its install.sh.
+  - New public install one-liners (paste forever, auto-upgrade silently):
+    - PS: `irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v5/main/bootstrap.ps1 | iex`
+    - Bash: `curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v5/main/bootstrap.sh | bash`
+
 ## v2.116.0
 
 ### Added
