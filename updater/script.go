@@ -118,10 +118,8 @@ function SayWarn { param($msg) Write-Host ($P + "[WARN] " + (To-ConsoleSafe $msg
 function SayErr  { param($msg) Write-Host ($P + "[ERR] " + (To-ConsoleSafe $msg)) -ForegroundColor Red }
 
 function Resolve-VersionBinary {
-    if ($targetBinary) { return $targetBinary }
-    $movieBin = Get-Command movie -ErrorAction SilentlyContinue
-    if ($movieBin -and $movieBin.Source -and (Test-Path $movieBin.Source)) {
-        return $movieBin.Source
+    if ($targetBinary -and (Test-Path $targetBinary)) {
+        return $targetBinary
     }
     return $null
 }
@@ -200,7 +198,7 @@ if ($versionBinary -and (Test-Path $versionBinary)) {
     if ($workerBinary) { $cleanupArgs += @("--skip-path", $workerBinary) }
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    $null = & $versionBinary @cleanupArgs 2>&1
+    $null = & $versionBinary @cleanupArgs *> $null
     $ErrorActionPreference = $prevPref
 }
 
