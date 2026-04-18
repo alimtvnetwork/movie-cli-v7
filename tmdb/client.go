@@ -48,8 +48,8 @@ type IMDbCache interface {
 type Client struct {
 	APIKey      string
 	AccessToken string
-	HTTPClient  *http.Client
 	IMDbCache   IMDbCache // optional; persisted lookup cache to skip the web
+	HTTPClient  *http.Client
 }
 
 // SetIMDbCache attaches a persistent cache for DuckDuckGo→IMDb lookups.

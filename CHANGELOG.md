@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.113.0
+
+### Fixed
+- **tmdb/client.go struct alignment** — reordered `Client` struct fields (`HTTPClient` moved after `IMDbCache`) to eliminate 8 bytes of padding, reducing size from 56 to 48 bytes (govet fieldalignment).
+
 ## v2.112.0
 
 ### Added
