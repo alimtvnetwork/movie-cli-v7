@@ -96,15 +96,20 @@ function Resolve-DeployTarget {
     if (-not $TargetBinaryPath) {
         return $null
     }
-    $targetParent = Split-Path -Parent $TargetBinaryPath
-    $targetName = Split-Path -Leaf $TargetBinaryPath
+    $resolvedTarget = $TargetBinaryPath
+    try {
+        $resolvedTarget = (Resolve-Path -LiteralPath $TargetBinaryPath -ErrorAction Stop).Path
+    } catch {
+    }
+    $targetParent = Split-Path -Parent $resolvedTarget
+    $targetName = Split-Path -Leaf $resolvedTarget
     if (-not $targetParent) {
-        Write-ErrorAndExit "TargetBinaryPath is missing a parent directory: $TargetBinaryPath"
+        Write-ErrorAndExit "TargetBinaryPath is missing a parent directory: $resolvedTarget"
     }
     if (-not $targetName) {
-        Write-ErrorAndExit "TargetBinaryPath is missing a file name: $TargetBinaryPath"
+        Write-ErrorAndExit "TargetBinaryPath is missing a file name: $resolvedTarget"
     }
-    return @{ DeployPath = $targetParent; BinaryName = $targetName }
+    return @{ DeployPath = $targetParent; BinaryName = $targetName; TargetBinaryPath = $resolvedTarget }
 }
 
 # -- Banner ----------------------------------------------------
@@ -595,6 +600,7 @@ function Deploy-Binary {
     $deployPath = $DeployPath
     if ($deployTarget) {
         $deployPath = $deployTarget.DeployPath
+        $TargetBinaryPath = $deployTarget.TargetBinaryPath
         Write-Info "Using target binary override: $TargetBinaryPath"
     }
     if ($DeployPath) {
@@ -875,9 +881,17 @@ if (-not $NoDeploy) {
     $deployedBinary = $builtBinary
 }
 
+# PATH sync -- never do this during update mode because the active PATH binary is
+# exactly the binary that launched the handoff and may still be winding down.
+# Update mode already deploys to the authoritative target path above.
+$skipPathSync = $Update -and $TargetBinaryPath
+if ($skipPathSync) {
+    Write-Info "Skipping PATH sync in update mode; deployed target already matches the handed-off binary"
+}
+
 # PATH sync -- if deployed binary differs from PATH binary, sync it (like gitmap-v2)
 $activeCmd = Get-Command movie -ErrorAction SilentlyContinue
-if ($activeCmd -and $activeCmd.Source -and (Test-Path $activeCmd.Source) -and $deployedBinary -and (Test-Path $deployedBinary)) {
+if (-not $skipPathSync -and $activeCmd -and $activeCmd.Source -and (Test-Path $activeCmd.Source) -and $deployedBinary -and (Test-Path $deployedBinary)) {
     $activePath = (Resolve-Path $activeCmd.Source).Path
     $deployedPath = (Resolve-Path $deployedBinary).Path
     if ($activePath -ne $deployedPath) {

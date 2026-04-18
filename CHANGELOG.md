@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.119.0
+
+### Fixed
+- **Windows updater handoff now stops re-touching the active PATH binary during update mode** — `run.ps1` now treats `-TargetBinaryPath` as the single source of truth and skips the old post-deploy PATH sync/copy loop when running under `-Update`, so the worker no longer tries to overwrite a still-running `movie.exe` in a second location.
+- **Worker post-update checks now stay pinned to the handed-off target binary** — the temp script no longer falls back to `Get-Command movie`, which prevented stale PATH resolution from reintroducing wrong-binary version checks or cleanup calls.
+- **Cleanup error output no longer leaks PowerShell native-command gibberish** — the worker now fully suppresses cleanup command stderr/stdout during the best-effort sweep, leaving only the updater's own ASCII-safe messages.
+
 ## v2.118.0
 
 ### Fixed
