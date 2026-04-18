@@ -121,7 +121,12 @@ func hasExpectedModule(goModPath string) bool {
 }
 
 func normalizeRepoPath(raw string) (string, error) {
-	path := strings.TrimSpace(strings.Trim(raw, `"'`))
+	// Order matters: trim outer whitespace first, then strip surrounding
+	// quotes (e.g. when a Windows path was pasted with quotes), then trim
+	// any whitespace that was inside the quotes.
+	path := strings.TrimSpace(raw)
+	path = strings.Trim(path, `"'`)
+	path = strings.TrimSpace(path)
 	if path == "" {
 		return "", apperror.New("repository path is empty")
 	}
