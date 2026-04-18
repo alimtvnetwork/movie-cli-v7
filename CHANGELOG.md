@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.118.0
+
+### Fixed
+- **Updater handoff target-path regression** — the worker now passes the original executable path to `run.ps1` as one authoritative `-TargetBinaryPath` value instead of reconstructing the destination from split pieces. This keeps update-mode deploys pinned to the exact binary the user launched and prevents fallback to the wrong config or PATH-resolved location.
+- **Worker cleanup preservation** — `update-cleanup --skip-path` now trims quotes and whitespace before path comparison, so the live handoff worker is reliably preserved and is no longer treated as a removable artifact.
+- **Garbled Windows updater output** — the temp PowerShell update script now sets UTF-8 console encodings and updater status/error prefixes were normalized to ASCII-safe labels (`[OK]`, `[WARN]`, `[ERR]`) so warning lines no longer degrade into gibberish in PowerShell.
+
 ## v2.117.1
 
 ### Fixed
