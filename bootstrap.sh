@@ -77,7 +77,10 @@ probe_install_script() {
     local owner="$1" base="$2" version="$3"
     local url="https://raw.githubusercontent.com/${owner}/${base}-v${version}/${PROBE_BRANCH}/install.sh"
     local http_code
-    http_code=$(curl -fsS -o /dev/null -w '%{http_code}' \
+    # -f makes curl exit non-zero on 4xx/5xx, but we still want the code
+    # captured by -w. Drop -f so the body is suppressed (-o /dev/null) but
+    # the status line is always written.
+    http_code=$(curl -sS -o /dev/null -w '%{http_code}' \
                      --max-time "$PROBE_TIMEOUT_SEC" \
                      "$url" 2>/dev/null || echo "000")
     if [[ "$http_code" == "200" ]]; then
