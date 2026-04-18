@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.114.0
+
+### Fixed
+- **tmdb/client.go fieldalignment (real fix)** — v2.113.0 moved `HTTPClient` to the end, but govet still reported 56→48 because every field contained pointers, so the GC pointer-scan prefix still ran to offset 48. Reordered to `HTTPClient` (8 ptr bytes) → `IMDbCache` (16 ptr bytes) → `APIKey` (string) → `AccessToken` (string). The trailing string `len` words are non-pointer, so the pointer scan now stops at offset 40, giving the required 48 pointer bytes.
+
+### Added
+- **spec/03-general/05-install-latest-sibling-repo.md** — generic "find latest sibling repo + delegate to its installer" bootstrap spec. Parses `…-v<N>` URLs, probes `v(N+25)…v(N+0)` highest-first via raw.githubusercontent.com `install.ps1` (5s timeout, fail-fast, no retries), delegates to the winner via `irm | iex`, falls back to the starting URL if all candidates miss. Includes full PowerShell sketch, Bash notes, logging format, and acceptance criteria.
+
 ## v2.113.0
 
 ### Fixed
