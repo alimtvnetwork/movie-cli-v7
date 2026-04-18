@@ -56,32 +56,32 @@ try {
 function Write-Step {
     param([string]$Step, [string]$Message)
     Write-Host ""
-    Write-Host " [$Step] " -ForegroundColor Magenta -NoNewline
+    Write-Host "  [$Step] " -ForegroundColor Magenta -NoNewline
     Write-Host $Message -ForegroundColor White
-    Write-Host (" " + ("-" * 50)) -ForegroundColor DarkGray
+    Write-Host ("  " + ("-" * 50)) -ForegroundColor DarkGray
 }
 
 function Write-Success {
     param([string]$Message)
-    Write-Host "  OK " -ForegroundColor Green -NoNewline
+    Write-Host "    [ OK ] " -ForegroundColor Green -NoNewline
     Write-Host $Message -ForegroundColor Green
 }
 
 function Write-Info {
     param([string]$Message)
-    Write-Host "  -> " -ForegroundColor Cyan -NoNewline
+    Write-Host "    [INFO] " -ForegroundColor Cyan -NoNewline
     Write-Host $Message -ForegroundColor Gray
 }
 
 function Write-Warn {
     param([string]$Message)
-    Write-Host "  !! " -ForegroundColor Yellow -NoNewline
+    Write-Host "    [WARN] " -ForegroundColor Yellow -NoNewline
     Write-Host $Message -ForegroundColor Yellow
 }
 
 function Write-Fail {
     param([string]$Message)
-    Write-Host "  XX " -ForegroundColor Red -NoNewline
+    Write-Host "    [FAIL] " -ForegroundColor Red -NoNewline
     Write-Host $Message -ForegroundColor Red
 }
 
@@ -169,11 +169,11 @@ function Normalize-LegacyUpdateArgs {
 
 function Show-Banner {
     Write-Host ""
-    Write-Host " +======================================+" -ForegroundColor DarkCyan
-    Write-Host " | " -ForegroundColor DarkCyan -NoNewline
+    Write-Host "  +--------------------------------------+" -ForegroundColor DarkCyan
+    Write-Host "  | " -ForegroundColor DarkCyan -NoNewline
     Write-Host "movie-cli builder" -ForegroundColor Cyan -NoNewline
-    Write-Host "                |" -ForegroundColor DarkCyan
-    Write-Host " +======================================+" -ForegroundColor DarkCyan
+    Write-Host "                     |" -ForegroundColor DarkCyan
+    Write-Host "  +--------------------------------------+" -ForegroundColor DarkCyan
     Write-Host ""
 }
 
@@ -750,7 +750,9 @@ function Deploy-Binary {
             Remove-Item -Path $backupFile -Force
             Write-Info "Cleaned up backup"
         } catch {
-            Write-Warn "Could not remove backup file '$backupFile': $_"
+            # The .bak is harmless leftover from rename-first deploy. On Windows
+            # it can be locked by a still-running parent process; the next
+            # update or 'movie update-cleanup' run will sweep it. Stay silent.
         }
     }
 
