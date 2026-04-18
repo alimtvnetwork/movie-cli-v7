@@ -66,6 +66,9 @@ func resolveSkipPaths(paths ...string) []string {
 	seen := map[string]struct{}{}
 	var cleaned []string
 	for _, path := range paths {
+		path = strings.TrimSpace(path)
+		path = strings.Trim(path, `"'`)
+		path = strings.TrimSpace(path)
 		normalized := normalizePath(path)
 		if normalized == "" {
 			continue
@@ -208,7 +211,7 @@ func cleanGlob(pattern string, skipPaths []string) int {
 			continue
 		}
 		if err := os.Remove(match); err != nil {
-			fmt.Fprintf(os.Stderr, "  ⚠ Could not remove %s: %v\n", filepath.Base(match), err)
+			fmt.Fprintf(os.Stderr, "  [WARN] Could not remove %s: %v\n", filepath.Base(match), err)
 			continue
 		}
 		fmt.Printf("  Removed: %s\n", filepath.Base(match))

@@ -62,18 +62,18 @@ var updateCleanupCmd = &cobra.Command{
   - Handoff binary copies (movie-update-*.exe)
   - Backup binaries (*.bak)`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("🧹 Cleaning update artifacts...")
+		fmt.Println("Cleaning update artifacts...")
 		skipPath, _ := cmd.Flags().GetString("skip-path")
 		cleaned, err := updater.Cleanup(skipPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "❌ Cleanup failed: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Cleanup failed: %v\n", err)
 			os.Exit(1)
 		}
 		if cleaned > 0 {
-			fmt.Printf("✔ Cleaned %d artifact(s)\n", cleaned)
+			fmt.Printf("Cleaned %d artifact(s)\n", cleaned)
 			return
 		}
-		fmt.Println("✔ No update artifacts found")
+		fmt.Println("No update artifacts found")
 	},
 }
 
@@ -94,6 +94,6 @@ func exitOnUpdateError(label string, err error) {
 		os.Exit(exitErr.ExitCode())
 	}
 
-	fmt.Fprintf(os.Stderr, "❌ %s: %v\n", label, err)
+	fmt.Fprintf(os.Stderr, "%s: %v\n", label, err)
 	os.Exit(1)
 }

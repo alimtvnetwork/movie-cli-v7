@@ -27,6 +27,7 @@ Centralized issue tracking and resolution for the `movie-cli` application. Each 
 | 03 | [03-large-file-refactor.md](./03-large-file-refactor.md) | ✅ Resolved | Medium |
 | 04 | [04-wrong-project-context.md](./04-wrong-project-context.md) | ✅ Resolved | High |
 | 05 | [05-code-hygiene-audit.md](./05-code-hygiene-audit.md) | ✅ Resolved | Low |
+| 06 | [06-updater-handoff-target-path-regression.md](./06-updater-handoff-target-path-regression.md) | ✅ Resolved | High |
 
 ---
 

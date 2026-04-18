@@ -89,14 +89,33 @@ $repoPath     = "%s"
 $targetBinary = "%s"
 $workerBinary = "%s"
 
+try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+} catch {
+}
+
 # Indent every Write-Host line with this prefix so update output sits a
 # little further in than run.ps1's own output and is easy to scan.
 $P = "    "
 
-function Say     { param($msg, $color = "Gray")  Write-Host ($P + $msg) -ForegroundColor $color }
-function SayOk   { param($msg) Write-Host ($P + "✓ " + $msg) -ForegroundColor Green }
-function SayWarn { param($msg) Write-Host ($P + "⚠ " + $msg) -ForegroundColor Yellow }
-function SayErr  { param($msg) Write-Host ($P + "✗ " + $msg) -ForegroundColor Red }
+function To-ConsoleSafe {
+    param([string]$Text)
+    if ($null -eq $Text) { return "" }
+    $Text = $Text.Replace([string][char]0x2014, " - ")
+    $Text = $Text.Replace([string][char]0x2013, "-")
+    $Text = $Text.Replace([string][char]0x2192, "->")
+    $Text = $Text.Replace([string][char]0x2018, "'")
+    $Text = $Text.Replace([string][char]0x2019, "'")
+    $Text = $Text.Replace([string][char]0x201C, '"')
+    $Text = $Text.Replace([string][char]0x201D, '"')
+    return $Text
+}
+
+function Say     { param($msg, $color = "Gray")  Write-Host ($P + (To-ConsoleSafe $msg)) -ForegroundColor $color }
+function SayOk   { param($msg) Write-Host ($P + "[OK] " + (To-ConsoleSafe $msg)) -ForegroundColor Green }
+function SayWarn { param($msg) Write-Host ($P + "[WARN] " + (To-ConsoleSafe $msg)) -ForegroundColor Yellow }
+function SayErr  { param($msg) Write-Host ($P + "[ERR] " + (To-ConsoleSafe $msg)) -ForegroundColor Red }
 
 function Resolve-VersionBinary {
     if ($targetBinary) { return $targetBinary }
@@ -138,22 +157,9 @@ if (-not (Test-Path $runScript)) {
 Say "Running update via $runScript" "Cyan"
 $runExit = 0
 if ($targetBinary) {
-    $deployDir  = Split-Path -Parent $targetBinary
-    $targetName = Split-Path -Leaf   $targetBinary
     Say "Deploy target: $targetBinary"
-    if ($deployDir -and $targetName) {
-        & $runScript -Update -DeployPath $deployDir -BinaryNameOverride $targetName
-        $runExit = $LASTEXITCODE
-    } elseif ($deployDir) {
-        & $runScript -Update -DeployPath $deployDir
-        $runExit = $LASTEXITCODE
-    } elseif ($targetName) {
-        & $runScript -Update -BinaryNameOverride $targetName
-        $runExit = $LASTEXITCODE
-    } else {
-        & $runScript -Update
-        $runExit = $LASTEXITCODE
-    }
+    & $runScript -Update -TargetBinaryPath $targetBinary
+    $runExit = $LASTEXITCODE
 } else {
     & $runScript -Update
     $runExit = $LASTEXITCODE
@@ -174,9 +180,9 @@ if ($versionBinary -and (Test-Path $versionBinary)) {
 
 Write-Host ""
 if ($oldVersion -eq $newVersion) {
-    SayWarn "Version unchanged after update — was version/info.go bumped?"
+    SayWarn "Version unchanged after update - was version/info.go bumped?"
 } else {
-    SayOk "Updated: $oldVersion → $newVersion"
+    SayOk "Updated: $oldVersion -> $newVersion"
 }
 
 # Show changelog from the updated target binary
@@ -184,7 +190,7 @@ if ($versionBinary -and (Test-Path $versionBinary)) {
     Write-Host ""
     Say "Latest changelog:" "Cyan"
     $clOutput = & $versionBinary changelog --latest 2>&1
-    foreach ($cl in $clOutput) { Write-Host ($P + "  " + $cl) }
+    foreach ($cl in $clOutput) { Write-Host ($P + "  " + (To-ConsoleSafe "$cl")) }
 }
 
 # Belt-and-braces sweeper for any older worker copies. The current worker
@@ -201,7 +207,7 @@ if ($versionBinary -and (Test-Path $versionBinary)) {
 # Top-and-tail banner
 Write-Host ""
 Write-Host ($P + "+======================================+") -ForegroundColor Cyan
-Write-Host ($P + "|  ✅ Update complete                  |") -ForegroundColor Cyan
+Write-Host ($P + "|  [OK] Update complete               |") -ForegroundColor Cyan
 Write-Host ($P + "+======================================+") -ForegroundColor Cyan
 Write-Host ""
 

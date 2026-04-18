@@ -1,12 +1,12 @@
 # Issue: Updater Async Console — Two-Iteration Saga
 
-> **Status**: ✅ Resolved (correctly this time, iteration 4)
+> **Status**: ✅ Resolved (correctly this time, iteration 5)
 > **Severity**: High
 > **Files**: `updater/handoff.go`, `updater/handoff_windows.go`,
 > `updater/handoff_unix.go`, `updater/script.go`, `updater/run.go`,
 > `cmd/update.go`, `spec/13-self-update-app-update/03-copy-and-handoff.md`,
 > `HANDOFF-LESSONS.md`
-> **Iterations**: 4 (final fix 17-Apr-2026)
+> **Iterations**: 5 (final fix 19-Apr-2026)
 
 ## TL;DR
 
@@ -21,7 +21,8 @@ detached behaviour and adds a self-deleter for the worker binary.
 | 1 | early | `cmd.Start()` + `os.Exit(0)` | Worked; console looked detached. |
 | 2 | early | Added cleanup command for stray workers | OK. |
 | 3 | 16-Apr-2026 | Switched to `cmd.Run()` (blocking) so console stayed attached | **BROKE Windows updates** — parent kept lock on `movie.exe`. |
-| 4 | 17-Apr-2026 | Reverted to detached spawn + parent exits 0; worker self-deletes via detached `cmd /c del`; new console window keeps output visible | ✅ Fixed end-to-end. |
+| 4 | 17-Apr-2026 | Reverted to detached spawn + parent exits 0; worker self-deletes via detached `cmd /c del`; new console window keeps output visible | ✅ Fixed the blocking-lock regression. |
+| 5 | 19-Apr-2026 | Passed the full original binary path through to `run.ps1` as `-TargetBinaryPath`; normalized cleanup skip-path; replaced fragile updater glyphs with ASCII-safe labels | ✅ Fixed mixed-path Windows handoff/cleanup regression and garbled output. |
 
 ## Root cause of iteration 3 regression
 
@@ -62,6 +63,37 @@ what iteration 3 had stopped doing.
 - ❌ Never trust a self-update test that only checks "deploy printed OK"
   — also verify the active PATH binary was replaced and no stray
   `movie-update-*.exe` remains.
+- ❌ Never split a known full target-binary path back into separate deploy
+  arguments for `run.ps1`. Pass the exact path through unchanged.
+
+## Additional root cause found in iteration 5
+
+The detached handoff itself was correct again, but one more bug remained in
+the worker stage on Windows machines with multiple deployed `movie.exe`
+copies.
+
+The worker already knew the exact original binary path from
+`--target-binary <full-path>`, but `updater/script.go` split it into
+`-DeployPath` and `-BinaryNameOverride` before invoking `run.ps1`.
+That reconstruction left room for update-mode deploy/verify/sync behavior to
+drift toward config or PATH-resolved locations instead of staying pinned to
+the exact binary the user launched.
+
+At the same time, cleanup preservation depended on a raw `--skip-path`
+string match, so quoted or padded values were more fragile than they needed
+to be, and the Unicode glyphs used in updater status lines were getting
+garbled in some PowerShell consoles.
+
+## Prevention rule added in iteration 5
+
+- `update-runner --target-binary <full-path>` must forward the **same full
+  path** into `run.ps1 -TargetBinaryPath <full-path>`.
+- If the updater already knows the exact executable path, later stages must
+  not reconstruct it from directory + filename pieces.
+- Cleanup path comparisons must normalize quotes and surrounding whitespace
+  before equality checks.
+- Updater-facing Windows console messages should prefer ASCII-safe status
+  markers unless a UTF-8-safe path is guaranteed end-to-end.
 
 ## See also
 
