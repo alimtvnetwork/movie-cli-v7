@@ -99,6 +99,32 @@ jobs:
           sha256sum * > checksums.txt
           cat checksums.txt
 
+      - name: Verify all 6 archives are present
+        working-directory: dist
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REQUIRED=(
+            "movie-${VERSION}-windows-amd64.zip"
+            "movie-${VERSION}-windows-arm64.zip"
+            "movie-${VERSION}-linux-amd64.tar.gz"
+            "movie-${VERSION}-linux-arm64.tar.gz"
+            "movie-${VERSION}-darwin-amd64.tar.gz"
+            "movie-${VERSION}-darwin-arm64.tar.gz"
+          )
+          MISSING=()
+          for f in "${REQUIRED[@]}"; do
+            if [[ ! -f "$f" ]]; then
+              MISSING+=("$f")
+            fi
+          done
+          if [[ ${#MISSING[@]} -gt 0 ]]; then
+            echo "::error::Release is missing required archives — refusing to publish a partial release:"
+            for f in "${MISSING[@]}"; do echo "::error::  missing: $f"; done
+            echo "::error::See spec/12-ci-cd-pipeline/05-ci-cd-issues/06-release-missing-asset-404.md"
+            exit 1
+          fi
+          echo "OK — all 6 archives present"
+
       - name: Generate version-specific install script (PowerShell)
         run: |
           VERSION="${{ steps.version.outputs.version }}"
