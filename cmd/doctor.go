@@ -7,8 +7,15 @@
 //
 // Usage:
 //
-//	movie doctor          # diagnose only
+//	movie doctor          # diagnose only (human output)
 //	movie doctor --fix    # diagnose + auto-repair fixable findings
+//	movie doctor --json   # machine-readable JSON for CI/scripts
+//
+// Exit codes:
+//
+//	0 = all OK
+//	2 = errors found
+//	3 = fixable warnings only (no errors)
 package cmd
 
 import (
@@ -20,11 +27,14 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/doctor"
 )
 
-var doctorFix bool
+var (
+	doctorFix  bool
+	doctorJSON bool
+)
 
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
-	Short: "Diagnose updater/PATH issues; --fix to auto-repair",
+	Short: "Diagnose updater/PATH issues; --fix to auto-repair, --json for CI",
 	Long: `Surfaces the exact failure modes from the v2.97.0 → v2.121.0 stale-handoff
 loop:
 
@@ -35,7 +45,10 @@ loop:
 
 By default, doctor only reports. Pass --fix to auto-repair: calls
 self-replace for binary mismatches, sweeps stale workers, and prints
-PATH-edit instructions (PATH editing is never automated).`,
+PATH-edit instructions (PATH editing is never automated).
+
+Use --json to emit a stable machine-readable schema (movie-doctor/v1)
+for CI pipelines. Exit codes: 0 = ok, 2 = errors, 3 = fixable warnings.`,
 	Run: runDoctor,
 }
 
@@ -44,6 +57,10 @@ func runDoctor(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "doctor: %v\n", err)
 		os.Exit(1)
+	}
+	if doctorJSON {
+		emitJSON(report)
+		return
 	}
 	report.Print()
 	if !doctorFix {
@@ -56,9 +73,20 @@ func runDoctor(cmd *cobra.Command, args []string) {
 	rerunDiagnose()
 }
 
+func emitJSON(report *doctor.Report) {
+	if err := report.PrintJSON(); err != nil {
+		fmt.Fprintf(os.Stderr, "doctor --json: %v\n", err)
+		os.Exit(1)
+	}
+	exitForReport(report)
+}
+
 func exitForReport(report *doctor.Report) {
 	if report.HasErrors() {
 		os.Exit(2)
+	}
+	if report.HasFixable() {
+		os.Exit(3)
 	}
 	os.Exit(0)
 }
@@ -77,4 +105,5 @@ func rerunDiagnose() {
 
 func init() {
 	doctorCmd.Flags().BoolVar(&doctorFix, "fix", false, "Auto-repair fixable findings (self-replace, sweep workers, print PATH instructions)")
+	doctorCmd.Flags().BoolVar(&doctorJSON, "json", false, "Emit report as JSON (schema: movie-doctor/v1) for scripting/CI")
 }

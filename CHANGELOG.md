@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.127.0
+
+### Added
+- **`movie doctor --json`** — emits the doctor report as a stable JSON document (`schema: "movie-doctor/v1"`) for scripting and CI pipelines. Includes resolved paths (`deploy_source`, `active_binary`, `deploy_dir`), aggregate flags (`has_errors`, `has_fixable`), and a `findings[]` array with `id`, `title`, `severity`, `detail`, `fix_hint`, `is_fixable`.
+- **Documented exit codes for `movie doctor`**: `0` = all OK, `2` = errors found, `3` = fixable warnings only (no errors). Applies to both human and JSON output modes. Previously fixable warnings exited 0 — CI pipelines can now branch on the warning state.
+- New `doctor/json.go` with `Report.PrintJSON()` and stable `JSONReport`/`JSONFinding` wire types (snake_case fields).
+
 ## v2.126.0
 
 ### Added
