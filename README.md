@@ -11,7 +11,8 @@
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v5)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![License](https://img.shields.io/badge/license-Private-red?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v5)
+[![Go Report Card](https://goreportcard.com/badge/github.com/alimtvnetwork/movie-cli-v5?style=flat-square)](https://goreportcard.com/report/github.com/alimtvnetwork/movie-cli-v5)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v5/blob/main/LICENSE)
 
 _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track your collection._
 
