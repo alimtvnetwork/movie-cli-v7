@@ -44,12 +44,12 @@ jobs:
       - name: Resolve version
         id: version
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION="${GITHUB_REF_NAME}"
-          elif [[ "$GITHUB_REF" == refs/heads/release/* ]]; then
+          ## Tags are NOT a trigger anymore (see top of file). The release
+          ## tag is CREATED by softprops/action-gh-release at publish time.
+          if [[ "$GITHUB_REF" == refs/heads/release/* ]]; then
             VERSION="${GITHUB_REF_NAME#release/}"
           else
-            echo "::error::Unexpected ref: $GITHUB_REF"
+            echo "::error::Unexpected ref: $GITHUB_REF (this workflow only runs on release/** branches)"
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
