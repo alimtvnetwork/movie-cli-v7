@@ -27,20 +27,21 @@ const (
 
 // Finding is the result of one diagnostic check.
 type Finding struct {
-	ID       string
-	Title    string
-	Severity Severity
-	Detail   string
-	FixHint  string
+	ID        string
+	Title     string
+	Severity  Severity
+	Detail    string
+	FixHint   string
 	IsFixable bool
 }
 
 // Report bundles all findings from a Diagnose run.
+// Field order optimised for govet fieldalignment (strings first, slice last).
 type Report struct {
-	Findings []Finding
-	Source   string // resolved deploy source path
-	Target   string // resolved active PATH binary
+	Source    string
+	Target    string
 	DeployDir string
+	Findings  []Finding
 }
 
 // Diagnose runs every check and returns the aggregated report.

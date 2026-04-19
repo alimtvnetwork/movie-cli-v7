@@ -28,7 +28,7 @@ import (
 // SelfReplace copies sourcePath over targetPath using rename-first semantics.
 // Both paths are resolved to absolute, symlink-evaluated forms before work.
 //
-// Behaviour:
+// Behavior:
 //   - sourcePath defaults to the deployPath from powershell.json + binaryName
 //     when empty.
 //   - targetPath defaults to the active `movie` on PATH when empty, falling

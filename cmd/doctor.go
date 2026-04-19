@@ -3,7 +3,7 @@
 // Diagnostic for the updater pipeline. Surfaces deployPath/PATH mismatches,
 // missing PATH entries, stale handoff workers, and version drift between
 // the active binary and the deployed one — exactly the failure modes
-// catalogued in spec/09-app-issues/08-updater-stale-handoff-loop-full-rca.md.
+// cataloged in spec/09-app-issues/08-updater-stale-handoff-loop-full-rca.md.
 //
 // Usage:
 //

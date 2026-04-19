@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	idPathMismatch  = "path-mismatch"
-	idDeployInPath  = "deploy-in-path"
-	idStaleWorker   = "stale-worker"
-	idVersionDrift  = "version-drift"
+	idPathMismatch = "path-mismatch"
+	idDeployInPath = "deploy-in-path"
+	idStaleWorker  = "stale-worker"
+	idVersionDrift = "version-drift"
 )
 
 func populatePaths(report *Report) error {
