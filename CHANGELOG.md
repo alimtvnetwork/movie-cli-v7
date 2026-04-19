@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.126.0
+
+### Added
+- **`movie update` now runs `movie doctor`'s checks up front** — before the handoff copy is created and before `run.ps1` is invoked, the updater calls `doctor.Preflight()` and prints any PATH/deploy mismatches, missing PATH entries, stale `*-update-*` workers, or version drift. Users see the warnings *before* a full build cycle, with a hint to run `movie doctor --fix` afterwards. Preflight failures are non-fatal (the update still proceeds) but they make the v2.97.0 → v2.121.0 stuck-binary class of problems impossible to miss.
+- New `doctor/preflight.go` with a compact banner printer that reuses the standard finding renderer; OK passes print a single `[ OK ] Preflight checks passed` line.
+
 ## v2.125.0
 
 ### Added
