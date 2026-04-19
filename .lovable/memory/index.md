@@ -23,6 +23,7 @@ Updater rule: never write expected os.Remove failures on *-update-* artifacts to
 American English ONLY in code/comments/CHANGELOG/spec — misspell uses US locale. behaviour→behavior, optimised→optimized, catalogued→cataloged. Full table in ci-cd playbook.
 Acronym MixedCaps: Json/Imdb/Tmdb/Api/Http/Url/Sql/Html/Xml in Go identifiers — NEVER JSON/IMDb/TMDb/API/HTTP/URL/SQL/HTML/XML. Project rule overrides Effective Go. Bare 2-letter `ID` and trailing locals (`imdbID`, `tmdbID`, `imgURL`) exempted.
 CI lint failures: every recurring lint error is logged in spec/12-ci-cd-pipeline/05-ci-cd-issues/ — read before fixing similar errors.
+Release workflow MUST verify all 6 archives present before upload (see spec/12-ci-cd-pipeline/05-ci-cd-issues/06). Never publish partial releases.
 
 
 ## Memories

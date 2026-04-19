@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.128.4
+
+### Fixed
+- **Install script 404 on `irm | iex` for v2.97.0** — user reported `Download failed: Not Found` when running the documented one-liner. Root cause: the v2.97.0 GitHub Release was published with a partial asset set (Windows amd64/arm64 + linux-amd64 archives never uploaded; `install.ps1` and `checksums.txt` were uploaded). The release workflow had no guard against partial uploads.
+- **Repo-root `install.ps1`** — `RepoUrl` was pointing at the deleted `movie-cli-v3.git`. Updated to `movie-cli-v5.git` so the build-from-source fallback actually works.
+
+### Changed
+- **`.github/workflows/release.yml`** — added `Verify all 6 archives are present` step after compress/checksum and BEFORE the GitHub Release upload. Enumerates the 6 expected filenames and exits non-zero with `::error::` annotations if any are missing. Prevents future partial releases.
+- **Generated `install.ps1`** — 404-aware error handler. When the binary archive returns HTTP 404, prints the exact missing URL, an explanation that this is a publisher-side issue, and two recovery commands (try a different release tag; build from source via `git clone … && ./run.ps1`).
+
+### Documentation
+- **New `spec/12-ci-cd-pipeline/05-ci-cd-issues/06-release-missing-asset-404.md`** — full RCA, prevention rule, and acceptance criteria for the partial-release class of issues.
+
 ## v2.128.3
 
 ### Fixed
