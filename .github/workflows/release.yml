@@ -99,6 +99,32 @@ jobs:
           sha256sum * > checksums.txt
           cat checksums.txt
 
+      - name: Verify all 6 archives are present
+        working-directory: dist
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REQUIRED=(
+            "movie-${VERSION}-windows-amd64.zip"
+            "movie-${VERSION}-windows-arm64.zip"
+            "movie-${VERSION}-linux-amd64.tar.gz"
+            "movie-${VERSION}-linux-arm64.tar.gz"
+            "movie-${VERSION}-darwin-amd64.tar.gz"
+            "movie-${VERSION}-darwin-arm64.tar.gz"
+          )
+          MISSING=()
+          for f in "${REQUIRED[@]}"; do
+            if [[ ! -f "$f" ]]; then
+              MISSING+=("$f")
+            fi
+          done
+          if [[ ${#MISSING[@]} -gt 0 ]]; then
+            echo "::error::Release is missing required archives — refusing to publish a partial release:"
+            for f in "${MISSING[@]}"; do echo "::error::  missing: $f"; done
+            echo "::error::See spec/12-ci-cd-pipeline/05-ci-cd-issues/06-release-missing-asset-404.md"
+            exit 1
+          fi
+          echo "OK — all 6 archives present"
+
       - name: Generate version-specific install script (PowerShell)
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -148,8 +174,25 @@ jobs:
                   Invoke-WebRequest -Uri $checksumUrl -OutFile $checksumPath -UseBasicParsing
               }
               catch {
-                  Write-Err "Download failed: $_"
+                  $statusCode = $null
+                  if ($_.Exception.Response) { $statusCode = [int]$_.Exception.Response.StatusCode }
                   Remove-Item $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
+                  if ($statusCode -eq 404) {
+                      Write-Err "Download failed: Not Found (HTTP 404)"
+                      Write-Err "  $assetUrl"
+                      Write-Host ""
+                      Write-Host "  This release is missing the Windows archive for your architecture." -ForegroundColor Yellow
+                      Write-Host "  This is a publisher-side issue (the release was uploaded incomplete)." -ForegroundColor Yellow
+                      Write-Host ""
+                      Write-Host "  Workarounds:" -ForegroundColor Cyan
+                      Write-Host "    1. Try a different release tag:" -ForegroundColor Gray
+                      Write-Host "       https://github.com/$Repo/releases" -ForegroundColor White
+                      Write-Host "    2. Build from source:" -ForegroundColor Gray
+                      Write-Host "       git clone https://github.com/$Repo.git; cd $($Repo.Split('/')[-1]); ./run.ps1" -ForegroundColor White
+                      Write-Host ""
+                  } else {
+                      Write-Err "Download failed: $_"
+                  }
                   exit 1
               }
 
