@@ -36,7 +36,7 @@ type Finding struct {
 }
 
 // Report bundles all findings from a Diagnose run.
-// Field order optimised for govet fieldalignment (strings first, slice last).
+// Field order optimized for govet fieldalignment (strings first, slice last).
 type Report struct {
 	Source    string
 	Target    string

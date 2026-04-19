@@ -9,14 +9,15 @@ import (
 
 // JSONReport is the stable wire-format for `movie doctor --json`.
 // Field names are snake_case for cross-language consumers.
+// Field order optimized for govet fieldalignment (strings, slice, bools last).
 type JSONReport struct {
-	Schema    string         `json:"schema"`
-	Source    string         `json:"deploy_source"`
-	Target    string         `json:"active_binary"`
-	DeployDir string         `json:"deploy_dir"`
-	HasErr    bool           `json:"has_errors"`
-	HasFix    bool           `json:"has_fixable"`
-	Findings  []JSONFinding  `json:"findings"`
+	Schema    string        `json:"schema"`
+	Source    string        `json:"deploy_source"`
+	Target    string        `json:"active_binary"`
+	DeployDir string        `json:"deploy_dir"`
+	Findings  []JSONFinding `json:"findings"`
+	HasErr    bool          `json:"has_errors"`
+	HasFix    bool          `json:"has_fixable"`
 }
 
 // JSONFinding mirrors Finding with snake_case JSON tags.

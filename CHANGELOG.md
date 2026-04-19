@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.128.2
+
+### Fixed
+- **golangci-lint clean (round 2)** — three remaining lint failures from v2.127.0/v2.128.1:
+  - `doctor/json.go`: gofmt — collapsed extra padding in struct tag column.
+  - `doctor/json.go`: govet fieldalignment — reordered `JSONReport` (strings, slice, bools last) to drop padding from 80 → 72 pointer bytes.
+  - `doctor/diagnose.go`: misspell — `optimised` → `optimized`.
+
 ## v2.128.1
 
 ### Fixed
