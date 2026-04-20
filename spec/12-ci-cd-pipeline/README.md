@@ -15,6 +15,7 @@ Generic, portable documentation for the project's CI/CD pipeline architecture. T
 | [02-release-pipeline.md](./02-release-pipeline.md) | Release automation: version resolution, binary packaging, install scripts, GitHub releases |
 | [03-vulnerability-scanning.md](./03-vulnerability-scanning.md) | Standalone vulnerability scanning: scheduled and manual |
 | [04-ci-cd-build-fixes.md](./04-ci-cd-build-fixes.md) | **Recurring lint/build failure playbook** — root cause + fix pattern + prevention rule for every CI error class |
+| [06-version-pinned-install-scripts.md](./06-version-pinned-install-scripts.md) | **Version-pinning contract** for `install.ps1` / `install.sh` attached to each release — must install the exact tag, never "latest", never delegate to `bootstrap.*` |
 
 
 ---
@@ -26,7 +27,7 @@ Generic, portable documentation for the project's CI/CD pipeline architecture. T
 | Workflow | Trigger | Branch/Tag |
 |----------|---------|------------|
 | CI | Push, Pull Request | `main` |
-| Release | Push | `release/**`, `v*` tags |
+| Release | Push | `release/**` (tag triggers REMOVED to prevent dual-trigger race — see issue 07) |
 | Vulnerability Scan | Weekly schedule, Manual | Any (default branch) |
 
 ### Shared Conventions

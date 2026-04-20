@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.129.0
+
+### Documentation
+- **New `spec/12-ci-cd-pipeline/06-version-pinned-install-scripts.md`** — formal contract spec stating that `install.ps1` and `install.sh` attached to a GitHub Release MUST install that exact release version. Documents the `VERSION_PLACEHOLDER` → literal `$PinnedVersion` / `$PINNED_VERSION` substitution, forbids `releases/latest/`, forbids any sibling-repo probing or `bootstrap.*` delegation inside the per-release scripts, and lists acceptance criteria + prevention rules so future AI edits cannot regress this guarantee.
+- **`spec/12-ci-cd-pipeline/README.md`** — added the new doc to the documents table; corrected the "Release trigger" row to reflect that `v*` tag triggers were removed in v2.128.5.
+
+### Verified (no code change needed)
+- `.github/workflows/release.yml` already generates both install scripts with `PINNED_VERSION`/`$PinnedVersion` baked in via `sed` substitution at release time, and the release page one-liner already references `/releases/download/$VERSION/install.{ps1,sh}` (NOT `/latest/`). The pinning contract was already implemented; this version formalises it as a spec so it cannot be silently regressed.
+
 ## v2.128.7
 
 ### Changed
