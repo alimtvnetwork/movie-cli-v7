@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.130.0
+
+### Added
+- **CI enforcement of the version-pinning contract** — new `Enforce version-pinning contract on install scripts` step in `.github/workflows/release.yml`, runs immediately after `install.ps1` and `install.sh` are generated and BEFORE the release upload. It hard-fails the workflow if either generated script contains any forbidden string (`releases/latest/`, `bootstrap.sh`, `bootstrap.ps1`) or if the `$PinnedVersion` / `PINNED_VERSION` literal is missing or does not equal the resolved release version. Errors are surfaced as `::error file=...::` annotations with the offending line numbers and a pointer to spec 06. This makes spec/12-ci-cd-pipeline/06-version-pinned-install-scripts.md unbreakable in CI — the contract can no longer be silently regressed by future edits to the script generators.
+
 ## v2.129.0
 
 ### Documentation

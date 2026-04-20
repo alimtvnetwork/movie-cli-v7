@@ -529,6 +529,59 @@ jobs:
           sed -i "s|REPO_PLACEHOLDER|$REPO|g" dist/install.sh
           chmod +x dist/install.sh
 
+      - name: Enforce version-pinning contract on install scripts
+        ## Hard gate per spec/12-ci-cd-pipeline/06-version-pinned-install-scripts.md.
+        ## The install.ps1 / install.sh attached to a release MUST install the
+        ## EXACT release tag — never `latest`, never via bootstrap.* delegation,
+        ## never via sibling-repo probing. Any of those strings in the generated
+        ## scripts means a future user copying the release-page one-liner could
+        ## end up with the wrong version. Fail the release loudly instead.
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FORBIDDEN=(
+            "releases/latest/"
+            "bootstrap.sh"
+            "bootstrap.ps1"
+          )
+          SCRIPTS=(
+            "dist/install.ps1"
+            "dist/install.sh"
+          )
+
+          FAIL=0
+          for script in "${SCRIPTS[@]}"; do
+            if [[ ! -f "$script" ]]; then
+              echo "::error file=$script::install script missing — generation step did not produce it"
+              FAIL=1
+              continue
+            fi
+
+            for needle in "${FORBIDDEN[@]}"; do
+              if grep -nF "$needle" "$script" > /tmp/hits.txt; then
+                echo "::error file=$script::forbidden string '$needle' found — violates spec/12-ci-cd-pipeline/06-version-pinned-install-scripts.md"
+                while IFS= read -r hit; do
+                  echo "::error file=$script::  $hit"
+                done < /tmp/hits.txt
+                FAIL=1
+              fi
+            done
+
+            ## The pinned literal must be present and equal to $VERSION.
+            ## install.ps1 uses: $PinnedVersion = "vX.Y.Z"
+            ## install.sh  uses: PINNED_VERSION="vX.Y.Z"
+            if ! grep -qE "(PinnedVersion|PINNED_VERSION)\s*=\s*\"${VERSION}\"" "$script"; then
+              echo "::error file=$script::pinned version literal not found or does not match $VERSION"
+              FAIL=1
+            fi
+          done
+
+          if [[ $FAIL -ne 0 ]]; then
+            echo "::error::Version-pinning contract violated — refusing to publish release."
+            echo "::error::See spec/12-ci-cd-pipeline/06-version-pinned-install-scripts.md"
+            exit 1
+          fi
+          echo "OK — install scripts are version-pinned to $VERSION and contain no forbidden strings."
+
       - name: Extract changelog entry
         id: changelog
         run: |
