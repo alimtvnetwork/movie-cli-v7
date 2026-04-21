@@ -134,6 +134,7 @@ function buildReadmeContent(media: MediaItem[]): string {
 export function ReadmePreview({ media }: ReadmePreviewProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const content = useMemo(() => buildReadmeContent(media), [media]);
   const lineCount = content.split("\n").length;
   const charCount = content.length;
@@ -145,7 +146,7 @@ export function ReadmePreview({ media }: ReadmePreviewProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleConfirmSave = () => {
+  const handleSave = () => {
     const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -159,44 +160,53 @@ export function ReadmePreview({ media }: ReadmePreviewProps) {
   };
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-          <FileText className="h-4 w-4" />
-          README.md preview
-          {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="mt-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <div className="space-y-1">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                README.md
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Exact content that will be written · {lineCount} lines · {charCount} chars
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleCopy}>
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? "Copied" : "Copy"}
-              </Button>
-              <Button size="sm" className="gap-1.5" onClick={handleConfirmSave}>
-                <Save className="h-3.5 w-3.5" />
-                Confirm & Save
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <pre className="max-h-96 overflow-auto rounded-md border bg-muted/40 p-4 text-xs font-mono text-foreground whitespace-pre-wrap break-words">
-              {content}
-            </pre>
-          </CardContent>
-        </Card>
-      </CollapsibleContent>
-    </Collapsible>
+    <>
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+            <FileText className="h-4 w-4" />
+            README.md preview
+            {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div className="space-y-1">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  README.md
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Exact content that will be written · {lineCount} lines · {charCount} chars
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleCopy}>
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+                <Button size="sm" className="gap-1.5" onClick={() => setConfirmOpen(true)}>
+                  <Save className="h-3.5 w-3.5" />
+                  Review & Save
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <pre className="max-h-96 overflow-auto rounded-md border bg-muted/40 p-4 text-xs font-mono text-foreground whitespace-pre-wrap break-words">
+                {content}
+              </pre>
+            </CardContent>
+          </Card>
+        </CollapsibleContent>
+      </Collapsible>
+
+      <ReadmeDiffDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        newContent={content}
+        onConfirm={handleSave}
+      />
+    </>
   );
 }
