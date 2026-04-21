@@ -5,7 +5,8 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/apperror"
 )
 
-// seedFileActions inserts the 14 predefined FileAction types.
+// seedFileActions inserts the 15 predefined FileAction types.
+// Order MUST match the FileActionType enum in action_history.go (1-indexed).
 func (d *DB) seedFileActions() error {
 	actions := []string{
 		"Move", "Rename", "Delete", "Popout", "Restore",
@@ -13,6 +14,7 @@ func (d *DB) seedFileActions() error {
 		"TagAdd", "TagRemove",
 		"WatchlistAdd", "WatchlistRemove", "WatchlistStatusChange",
 		"ConfigChange",
+		"Compact", // popout cleanup: subfolder → <root>/.temp/
 	}
 	for _, name := range actions {
 		if _, err := d.Exec("INSERT OR IGNORE INTO FileAction (Name) VALUES (?)", name); err != nil {

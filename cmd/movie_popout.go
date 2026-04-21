@@ -1,14 +1,24 @@
 // movie_popout.go — movie popout: extract nested video files to root directory.
 //
 // Discovers video files inside subfolders of a target directory and moves
-// them up to the root level with clean filenames. Each move is tracked in
-// move_history and action_history for full undo support.
+// them up to the root level with clean filenames. After the moves, any
+// subfolder that has no remaining media is COMPACTED into <root>/.temp/
+// (a non-destructive replacement for the old delete-prompt). Each move and
+// each compact is tracked in move_history and action_history for full
+// undo/redo support.
+//
+// Default behavior (no [directory] argument):
+//
+//	popout uses the current working directory. It will NEVER silently exit
+//	just because no path was given — see mem://constraints/cwd-default-rule.
 //
 // Flags:
 //
-//	--dry-run      Preview without moving
-//	--no-rename    Keep original filename
-//	--depth N      Max subfolder depth (default 3)
+//	--dry-run         Preview without moving anything
+//	--no-rename       Keep original filename
+//	--depth N         Max subfolder depth (default 3)
+//	--auto-compact    Skip the y/N prompt and compact non-media folders into
+//	                  <root>/.temp/ automatically. Default: prompt with y/N.
 package cmd
 
 import (
@@ -25,10 +35,16 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
+// popoutTempDir is the destination subfolder used to hold compacted
+// (non-media-bearing or originally empty) folders after popout. Kept here as
+// a constant so tests and the compaction module agree.
+const popoutTempDir = ".temp"
+
 var (
-	popoutDryRun   bool
-	popoutNoRename bool
-	popoutDepth    int
+	popoutDryRun      bool
+	popoutNoRename    bool
+	popoutAutoCompact bool
+	popoutDepth       int
 )
 
 var moviePopoutCmd = &cobra.Command{
@@ -38,10 +54,20 @@ var moviePopoutCmd = &cobra.Command{
 parent directory with clean filenames. Useful for downloaded movies
 that come wrapped in folders with extras, samples, and subtitles.
 
-Example:
-  movie popout ~/Downloads
+If no [directory] is given, the current working directory is used.
 
-All moves are tracked for undo support (movie undo --batch).`,
+After the media files are popped out, any subfolder that no longer
+contains any media (or was originally empty) is compacted into
+<root>/.temp/ — kept around so undo can restore everything. Use
+--auto-compact to skip the confirmation prompt.
+
+Example:
+  movie popout                    # uses current working directory
+  movie popout ~/Downloads        # explicit path
+  movie popout --auto-compact     # no prompts
+
+All moves and compactions are tracked for undo support
+(movie undo --batch <id>).`,
 	Args: cobra.MaximumNArgs(1),
 	Run:  runMoviePopout,
 }
@@ -49,6 +75,8 @@ All moves are tracked for undo support (movie undo --batch).`,
 func init() {
 	moviePopoutCmd.Flags().BoolVar(&popoutDryRun, "dry-run", false, "Preview only, no file moves")
 	moviePopoutCmd.Flags().BoolVar(&popoutNoRename, "no-rename", false, "Keep original filename")
+	moviePopoutCmd.Flags().BoolVar(&popoutAutoCompact, "auto-compact", false,
+		"Skip prompt; auto-move non-media folders into <root>/.temp/")
 	moviePopoutCmd.Flags().IntVar(&popoutDepth, "depth", 3, "Max subfolder depth to search")
 }
 
@@ -85,19 +113,34 @@ func runMoviePopout(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	mc := MoveContext{Scanner: scanner, Database: database, Home: home}
-	rootDir := resolvePopoutDir(args, mc)
-	if rootDir == "" {
+	// Universal cwd-default rule. NEVER prompt silently here.
+	rootDir, resolveErr := ResolveTargetDir(args, home)
+	if resolveErr != nil {
+		errlog.Error("Cannot resolve target directory: %v", resolveErr)
 		return
 	}
+	fmt.Printf("📂 Target directory: %s\n", rootDir)
 
 	if !validateDirectory(rootDir) {
 		return
 	}
 
+	mc := MoveContext{Scanner: scanner, Database: database, Home: home, SourceDir: rootDir}
+	runPopoutPipeline(mc, rootDir)
+}
+
+// runPopoutPipeline is the orchestration step extracted from runMoviePopout
+// to keep that function under the 15-line project rule.
+func runPopoutPipeline(mc MoveContext, rootDir string) {
 	items := discoverNestedVideos(rootDir, popoutDepth)
+	allSubdirs := discoverAllSubdirs(rootDir, popoutDepth)
+
 	if len(items) == 0 {
 		fmt.Printf("📭 No nested video files found in: %s\n", rootDir)
+		// Still offer compaction for empty/non-media folders even when
+		// there are no media files to pop out — that's a valid use case
+		// (cleaning up a folder of leftover folders).
+		offerCompactionForLeftovers(mc, rootDir, allSubdirs)
 		return
 	}
 
@@ -108,14 +151,7 @@ func runMoviePopout(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	executeAndCleanupPopout(mc, items, rootDir)
-}
-
-func resolvePopoutDir(args []string, mc MoveContext) string {
-	if len(args) > 0 {
-		return expandHome(args[0], mc.Home)
-	}
-	return promptSourceDirectory(mc.Scanner, mc.Database, mc.Home)
+	executeAndCompactPopout(mc, items, rootDir, allSubdirs)
 }
 
 func validateDirectory(path string) bool {
@@ -131,7 +167,9 @@ func validateDirectory(path string) bool {
 	return true
 }
 
-func executeAndCleanupPopout(mc MoveContext, items []popoutItem, rootDir string) {
+// executeAndCompactPopout runs the move phase, then hands off to the
+// compaction phase which replaces the old destructive "remove folder" flow.
+func executeAndCompactPopout(mc MoveContext, items []popoutItem, rootDir string, allSubdirs []string) {
 	if !confirmPopout(mc.Scanner, len(items)) {
 		return
 	}
@@ -140,12 +178,25 @@ func executeAndCleanupPopout(mc MoveContext, items []popoutItem, rootDir string)
 	success, failed := executePopout(mc.Database, items, batchID)
 	printPopoutResult(success, failed, batchID)
 
-	if success > 0 {
-		fmt.Println()
-		offerFolderCleanup(CleanupContext{
-			Scanner: mc.Scanner, Database: mc.Database, BatchID: batchID,
-		}, rootDir, items)
+	if success == 0 {
+		return
 	}
+
+	fmt.Println()
+	cc := CleanupContext{Scanner: mc.Scanner, Database: mc.Database, BatchID: batchID}
+	compactNonMediaFolders(cc, rootDir, allSubdirs, popoutAutoCompact)
+}
+
+// offerCompactionForLeftovers handles the "no media to pop out, but folders
+// still exist" case. We always prompt here (no auto-compact unless flag) so
+// the user isn't surprised.
+func offerCompactionForLeftovers(mc MoveContext, rootDir string, allSubdirs []string) {
+	if len(allSubdirs) == 0 {
+		return
+	}
+	batchID := generateBatchID()
+	cc := CleanupContext{Scanner: mc.Scanner, Database: mc.Database, BatchID: batchID}
+	compactNonMediaFolders(cc, rootDir, allSubdirs, popoutAutoCompact)
 }
 
 func printPopoutPreview(items []popoutItem) {

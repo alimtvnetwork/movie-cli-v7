@@ -1,4 +1,21 @@
-// movie_popout_cleanup.go — folder cleanup phase for popout command.
+// movie_popout_cleanup.go — folder compaction phase for popout command.
+//
+// REPLACES the previous destructive "remove folder" prompt. After media
+// files are popped out to root, any subfolder that:
+//
+//   1. was originally empty, OR
+//   2. contains zero media files (only samples/subs/.nfo/.txt/etc.)
+//
+// is MOVED into <root>/.temp/ instead of deleted. Each move is recorded as
+// a FileActionCompact action so `movie undo --batch <id>` can restore the
+// folder to its original location.
+//
+// User-facing surface:
+//   - With no flag         → interactive prompt: y / s (select) / n (keep) / l (list)
+//   - With --auto-compact  → no prompt; every qualifying folder goes to .temp/
+//
+// See spec/09-app-issues/08-popout-silent-failure.md and
+// mem://features/popout-spec.
 package cmd
 
 import (
@@ -7,37 +24,75 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/alimtvnetwork/movie-cli-v5/cleaner"
 	"github.com/alimtvnetwork/movie-cli-v5/db"
 	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
-// offerFolderCleanup lists source subfolders and offers removal options.
-func offerFolderCleanup(cc CleanupContext, rootDir string, items []popoutItem) {
-	folders := collectPopoutFolders(rootDir, items)
-	if len(folders) == 0 {
+// compactNonMediaFolders is the public entry point for the compaction phase.
+// It scans every direct subfolder of rootDir, classifies each as
+// "has-media" vs "no-media", and offers (or auto-applies) compaction into
+// <root>/.temp/.
+//
+// folderNames is the pre-discovered list of direct subfolder names that
+// existed at the start of the popout run. Anything new (e.g. .temp/ itself)
+// is skipped automatically.
+func compactNonMediaFolders(cc CleanupContext, rootDir string, folderNames []string, autoCompact bool) {
+	candidates := classifyCompactCandidates(rootDir, folderNames)
+	if len(candidates) == 0 {
 		return
 	}
 
-	printFolderSummary(folders)
-	promptFolderAction(cc, folders)
+	printCompactSummary(candidates)
+
+	if autoCompact {
+		fmt.Println("\n  ⚙️  --auto-compact: moving all candidates into .temp/")
+		applyCompactAll(cc, rootDir, candidates)
+		return
+	}
+	promptCompactAction(cc, rootDir, candidates)
 }
 
-func collectPopoutFolders(rootDir string, items []popoutItem) []popoutFolderInfo {
-	subDirs := make(map[string]bool)
-	for i := range items {
-		subDirs[items[i].subDir] = true
-	}
-
-	var folders []popoutFolderInfo
-	for dir := range subDirs {
-		dirPath := filepath.Join(rootDir, dir)
+// classifyCompactCandidates returns subfolders that should be candidates
+// for compaction (no media inside, OR originally empty).
+func classifyCompactCandidates(rootDir string, folderNames []string) []popoutFolderInfo {
+	var candidates []popoutFolderInfo
+	for _, name := range folderNames {
+		if name == popoutTempDir {
+			continue
+		}
+		dirPath := filepath.Join(rootDir, name)
 		info, statErr := os.Stat(dirPath)
 		if statErr != nil || !info.IsDir() {
 			continue
 		}
-		folders = append(folders, scanFolderContents(dir, dirPath))
+		fi := scanFolderContents(name, dirPath)
+		if folderHasMedia(dirPath) {
+			continue
+		}
+		candidates = append(candidates, fi)
 	}
-	return folders
+	return candidates
+}
+
+// folderHasMedia reports whether the folder (recursively) contains any
+// video file. Used to decide whether to compact it.
+func folderHasMedia(dirPath string) bool {
+	hasMedia := false
+	_ = filepath.Walk(dirPath, func(p string, fi os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if fi.IsDir() {
+			return nil
+		}
+		if cleaner.IsVideoFile(fi.Name()) {
+			hasMedia = true
+			return filepath.SkipDir
+		}
+		return nil
+	})
+	return hasMedia
 }
 
 func scanFolderContents(name, dirPath string) popoutFolderInfo {
@@ -58,109 +113,144 @@ func scanFolderContents(name, dirPath string) popoutFolderInfo {
 	return popoutFolderInfo{name: name, path: dirPath, files: files, totalSize: totalSize}
 }
 
-func printFolderSummary(folders []popoutFolderInfo) {
-	fmt.Println("  📁 Source folders after popout:")
+func printCompactSummary(folders []popoutFolderInfo) {
+	fmt.Println("  📦 Folders eligible for .temp/ compaction:")
 	fmt.Println()
 	for i, f := range folders {
 		if len(f.files) == 0 {
-			fmt.Printf("  %d. %s/\n     └── (empty)\n", i+1, f.name)
+			fmt.Printf("  %d. %s/   (empty)\n", i+1, f.name)
 			continue
 		}
-		fmt.Printf("  %d. %s/\n     └── %d files remaining (%s)\n",
+		fmt.Printf("  %d. %s/   (%d non-media files, %s)\n",
 			i+1, f.name, len(f.files), humanSize(f.totalSize))
 	}
 }
 
-func promptFolderAction(cc CleanupContext, folders []popoutFolderInfo) {
+func promptCompactAction(cc CleanupContext, rootDir string, folders []popoutFolderInfo) {
 	fmt.Println()
 	fmt.Println("  Options:")
-	fmt.Println("    [a] Remove all listed folders")
-	fmt.Println("    [s] Select folders to remove one by one")
-	fmt.Println("    [n] Keep all folders")
+	fmt.Println("    [a] Compact ALL listed folders into .temp/")
+	fmt.Println("    [s] Select folders one by one")
 	fmt.Println("    [l] List files in each folder before deciding")
-	fmt.Print("\n  Choose [a/s/n/l]: ")
+	fmt.Println("    [n] Keep all folders in place")
+	fmt.Print("\n  Choose [a/s/l/N]: ")
 
 	if !cc.Scanner.Scan() {
+		fmt.Println("  📁 No folders compacted.")
 		return
 	}
 	choice := strings.ToLower(strings.TrimSpace(cc.Scanner.Text()))
 
 	switch choice {
 	case "a":
-		for _, f := range folders {
-			removeFolder(FolderRemoveInput{Database: cc.Database, DirPath: f.path, DirName: f.name, BatchID: cc.BatchID})
-		}
+		applyCompactAll(cc, rootDir, folders)
 	case "s":
-		selectiveFolderRemoval(cc, folders)
+		selectiveCompact(cc, rootDir, folders)
 	case "l":
-		listThenDecide(cc, folders)
-	case "n":
-		fmt.Println("  📁 All folders kept.")
+		listThenCompact(cc, rootDir, folders)
 	default:
-		fmt.Println("  📁 No folders removed.")
+		fmt.Println("  📁 All folders kept.")
 	}
 }
 
-func selectiveFolderRemoval(cc CleanupContext, folders []popoutFolderInfo) {
+func applyCompactAll(cc CleanupContext, rootDir string, folders []popoutFolderInfo) {
+	for _, f := range folders {
+		compactFolder(cc, rootDir, f)
+	}
+}
+
+func selectiveCompact(cc CleanupContext, rootDir string, folders []popoutFolderInfo) {
 	for _, f := range folders {
 		status := "empty"
 		if len(f.files) > 0 {
 			status = fmt.Sprintf("%d files (%s)", len(f.files), humanSize(f.totalSize))
 		}
 		fmt.Printf("\n  %s/ — %s\n", f.name, status)
-		if len(f.files) > 0 {
-			fmt.Println("    Files:")
-			for _, file := range f.files {
-				fmt.Printf("      - %s\n", file)
-			}
-		}
-		fmt.Print("    Remove? [y/N]: ")
+		fmt.Print("    Compact to .temp/? [y/N]: ")
 		if !cc.Scanner.Scan() {
 			return
 		}
-		answer := strings.ToLower(strings.TrimSpace(cc.Scanner.Text()))
-		if answer == "y" || answer == "yes" {
-			removeFolder(FolderRemoveInput{Database: cc.Database, DirPath: f.path, DirName: f.name, BatchID: cc.BatchID})
+		ans := strings.ToLower(strings.TrimSpace(cc.Scanner.Text()))
+		if ans == "y" || ans == "yes" {
+			compactFolder(cc, rootDir, f)
 			continue
 		}
 		fmt.Println("    Kept.")
 	}
 }
 
-func listThenDecide(cc CleanupContext, folders []popoutFolderInfo) {
+func listThenCompact(cc CleanupContext, rootDir string, folders []popoutFolderInfo) {
 	for _, f := range folders {
 		fmt.Printf("\n  📁 %s/\n", f.name)
-		if len(f.files) == 0 {
-			fmt.Println("    (empty)")
-		}
-		if len(f.files) > 0 {
-			for _, file := range f.files {
-				fmt.Printf("    - %s\n", file)
-			}
-		}
-		fmt.Print("    Remove? [y/N]: ")
+		printFolderListing(f)
+		fmt.Print("    Compact to .temp/? [y/N]: ")
 		if !cc.Scanner.Scan() {
 			return
 		}
-		answer := strings.ToLower(strings.TrimSpace(cc.Scanner.Text()))
-		if answer == "y" || answer == "yes" {
-			removeFolder(FolderRemoveInput{Database: cc.Database, DirPath: f.path, DirName: f.name, BatchID: cc.BatchID})
+		ans := strings.ToLower(strings.TrimSpace(cc.Scanner.Text()))
+		if ans == "y" || ans == "yes" {
+			compactFolder(cc, rootDir, f)
 			continue
 		}
 		fmt.Println("    Kept.")
 	}
 }
 
-func removeFolder(input FolderRemoveInput) {
-	if err := os.RemoveAll(input.DirPath); err != nil {
-		errlog.Error("Failed to remove %s: %v", input.DirPath, err)
+func printFolderListing(f popoutFolderInfo) {
+	if len(f.files) == 0 {
+		fmt.Println("    (empty)")
 		return
 	}
-	fmt.Printf("    🗑  Removed: %s/\n", input.DirName)
-	detail := fmt.Sprintf("Removed folder: %s/", input.DirName)
-	snapshot := fmt.Sprintf(`{"folder_path":"%s"}`, input.DirPath)
-	_, _ = input.Database.InsertActionSimple(db.ActionSimpleInput{
-		FileAction: db.FileActionDelete, Snapshot: snapshot,
-		Detail: detail, BatchID: input.BatchID,
-	})
+	for _, file := range f.files {
+		fmt.Printf("    - %s\n", file)
+	}
 }
+
+// compactFolder is the actual filesystem move. It is the only place that
+// performs the .temp/ destination move and the only place that records the
+// FileActionCompact history row.
+//
+// Returns the destination path (or "" on failure) so tests can assert it.
+func compactFolder(cc CleanupContext, rootDir string, f popoutFolderInfo) string {
+	tempDir := filepath.Join(rootDir, popoutTempDir)
+	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		errlog.Error("Cannot create .temp/ dir: %v", err)
+		return ""
+	}
+
+	destPath := filepath.Join(tempDir, f.name)
+	if _, statErr := os.Stat(destPath); statErr == nil {
+		// Collision — append a numeric suffix instead of overwriting.
+		destPath = uniqueTempPath(destPath)
+	}
+
+	if err := MoveFile(f.path, destPath); err != nil {
+		errlog.Error("Cannot compact %s: %v", f.name, err)
+		return ""
+	}
+	fmt.Printf("    📦 Compacted: %s/  →  .temp/%s\n", f.name, filepath.Base(destPath))
+
+	snapshot := fmt.Sprintf(`{"original_path":%q,"compact_path":%q}`, f.path, destPath)
+	detail := fmt.Sprintf("Compacted folder %s/ → .temp/%s", f.name, filepath.Base(destPath))
+	_, _ = cc.Database.InsertActionSimple(db.ActionSimpleInput{
+		FileAction: db.FileActionCompact,
+		Snapshot:   snapshot,
+		Detail:     detail,
+		BatchID:    cc.BatchID,
+	})
+	return destPath
+}
+
+// uniqueTempPath returns destPath with a -2/-3/... suffix appended until it
+// no longer exists. Defensive: avoids overwriting on collisions inside .temp/.
+func uniqueTempPath(destPath string) string {
+	for i := 2; i < 1000; i++ {
+		candidate := fmt.Sprintf("%s-%d", destPath, i)
+		if _, err := os.Stat(candidate); os.IsNotExist(err) {
+			return candidate
+		}
+	}
+	return destPath
+}
+
+// (No re-export needed — db.FileActionCompact is referenced directly above.)

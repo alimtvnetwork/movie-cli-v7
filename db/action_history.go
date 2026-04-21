@@ -26,6 +26,11 @@ const (
 	FileActionWatchlistRemove       FileActionType = 12
 	FileActionWatchlistStatusChange FileActionType = 13
 	FileActionConfigChange          FileActionType = 14
+	// FileActionCompact records a folder being moved into <root>/.temp/
+	// during the popout cleanup phase. Stored separately from Delete so
+	// undo can restore the folder back to its original location instead of
+	// having to re-create it from a snapshot.
+	FileActionCompact FileActionType = 15
 )
 
 // fileActionNames maps FileActionType to display name.
@@ -44,6 +49,7 @@ var fileActionNames = map[FileActionType]string{
 	FileActionWatchlistRemove:       "WatchlistRemove",
 	FileActionWatchlistStatusChange: "WatchlistStatusChange",
 	FileActionConfigChange:          "ConfigChange",
+	FileActionCompact:               "Compact",
 }
 
 // String returns the human-readable name for a FileActionType.

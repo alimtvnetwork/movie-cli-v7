@@ -97,8 +97,8 @@ func TestFileActionSeeded(t *testing.T) {
 	if err := d.QueryRow("SELECT COUNT(*) FROM FileAction").Scan(&count); err != nil {
 		t.Fatalf("count FileAction: %v", err)
 	}
-	if count != 14 {
-		t.Errorf("FileAction count = %d, want 14", count)
+	if count != 15 {
+		t.Errorf("FileAction count = %d, want 15", count)
 	}
 }
 
