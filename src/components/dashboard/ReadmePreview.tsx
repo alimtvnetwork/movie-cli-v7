@@ -6,6 +6,7 @@ import { FileText, ChevronDown, ChevronUp, Save, Copy, Check } from "lucide-reac
 import type { MediaItem } from "@/types/media";
 import { formatFileSize } from "@/lib/media-utils";
 import { toast } from "sonner";
+import { ReadmeDiffDialog } from "./ReadmeDiffDialog";
 
 interface ReadmePreviewProps {
   media: MediaItem[];
