@@ -96,7 +96,7 @@ jobs:
           # mahin* handoff binaries from old installs. Any other occurrence
           # is a regression — fail the build.
           set -e
-          ALLOWED_FILES='^(\./)?(db/open\.go|updater/cleanup\.go|CHANGELOG\.md|\.lovable/|\.github/workflows/ci\.yml)'
+          ALLOWED_FILES='^(\.\./)?(db/open\.go|updater/cleanup\.go|CHANGELOG\.md|\.lovable/|\.github/workflows/ci\.yml)'
           violations=$(grep -rn -i --include='*.go' --include='*.md' --include='*.mmd' \
               --include='*.json' --include='*.yml' --include='*.yaml' \
               --include='*.sh' --include='*.ps1' --include='Makefile' \
@@ -112,6 +112,33 @@ jobs:
             exit 1
           fi
           echo "✅ No 'mahin' regressions outside legacy-cleanup paths."
+
+      - name: Old module path regression guard
+        if: needs.sha-check.outputs.already-built != 'true'
+        run: |
+          # The project went through multiple module path iterations:
+          #   v2: github.com/alimtvnetwork/movie-cli-v2
+          #   v3: github.com/alimtvnetwork/movie-cli-v3
+          #   v4: github.com/alimtvnetwork/movie-cli-v4
+          # Current (v5): github.com/alimtvnetwork/movie-cli-v5
+          # Any reference to old v2/v3/v4 module paths is a regression.
+          set -e
+          PATTERNS='movie-cli-v[234]'
+          violations=$(grep -rn -E "$PATTERNS" --include='*.go' --include='*.md' --include='*.mmd' \
+              --include='*.json' --include='*.yml' --include='*.yaml' \
+              --include='*.sh' --include='*.ps1' --include='Makefile' \
+              --exclude-dir=.git --exclude-dir=.release --exclude-dir=node_modules \
+              . 2>/dev/null || true)
+          if [ -n "$violations" ]; then
+            echo "::error::Old module path references found (v2/v3/v4)"
+            echo "$violations"
+            echo ""
+            echo "Current module: github.com/alimtvnetwork/movie-cli-v5"
+            echo "Old modules v2/v3/v4 must never be referenced."
+            echo "Fix: update all imports and references to movie-cli-v5."
+            exit 1
+          fi
+          echo "✅ No old module path (v2/v3/v4) regressions."
 
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
