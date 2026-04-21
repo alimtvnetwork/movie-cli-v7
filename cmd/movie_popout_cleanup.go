@@ -37,20 +37,19 @@ import (
 // folderNames is the pre-discovered list of direct subfolder names that
 // existed at the start of the popout run. Anything new (e.g. .temp/ itself)
 // is skipped automatically.
-func compactNonMediaFolders(cc CleanupContext, rootDir string, folderNames []string, autoCompact bool) {
+func compactNonMediaFolders(cc CleanupContext, rootDir string, folderNames []string, autoCompact bool) int {
 	candidates := classifyCompactCandidates(rootDir, folderNames)
 	if len(candidates) == 0 {
-		return
+		return 0
 	}
 
 	printCompactSummary(candidates)
 
 	if autoCompact {
 		fmt.Println("\n  ⚙️  --auto-compact: moving all candidates into .temp/")
-		applyCompactAll(cc, rootDir, candidates)
-		return
+		return applyCompactAll(cc, rootDir, candidates)
 	}
-	promptCompactAction(cc, rootDir, candidates)
+	return promptCompactAction(cc, rootDir, candidates)
 }
 
 // classifyCompactCandidates returns subfolders that should be candidates
@@ -153,10 +152,14 @@ func promptCompactAction(cc CleanupContext, rootDir string, folders []popoutFold
 	}
 }
 
-func applyCompactAll(cc CleanupContext, rootDir string, folders []popoutFolderInfo) {
+func applyCompactAll(cc CleanupContext, rootDir string, folders []popoutFolderInfo) int {
+	count := 0
 	for _, f := range folders {
-		compactFolder(cc, rootDir, f)
+		if compactFolder(cc, rootDir, f) != "" {
+			count++
+		}
 	}
+	return count
 }
 
 func selectiveCompact(cc CleanupContext, rootDir string, folders []popoutFolderInfo) {
