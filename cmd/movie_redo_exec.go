@@ -63,6 +63,8 @@ func executeActionRedo(database *db.DB, a *db.ActionRecord) error {
 		// Handled via move_history; just mark restored
 	case db.FileActionRestore:
 		return redoRestore(database, a)
+	case db.FileActionCompact:
+		return redoCompact(database, a)
 	default:
 		return apperror.New("unknown action type for redo: %s", a.FileActionId)
 	}
