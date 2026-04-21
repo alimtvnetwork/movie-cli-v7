@@ -48,12 +48,16 @@ func runMovieMove(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	mc := MoveContext{Database: database, Scanner: scanner, Home: home}
-	sourceDir := resolveSourceDir(args, mc)
-	if sourceDir == "" {
+	// Universal cwd-default rule (mem://constraints/cwd-default-rule).
+	// NEVER fall back to a silent prompt that returns "" on cancel.
+	sourceDir, resolveErr := ResolveTargetDir(args, home)
+	if resolveErr != nil {
+		errlog.Error("Cannot resolve source directory: %v", resolveErr)
 		return
 	}
+	fmt.Printf("📂 Source directory: %s\n", sourceDir)
 
+	mc := MoveContext{Database: database, Scanner: scanner, Home: home}
 	files, valid := validateAndListVideos(sourceDir)
 	if !valid {
 		return
@@ -85,9 +89,14 @@ func validateAndListVideos(sourceDir string) ([]os.FileInfo, bool) {
 	return files, true
 }
 
+// resolveSourceDir is kept as a thin compatibility shim around
+// ResolveTargetDir for any future callers that already have a MoveContext
+// in hand. New code should call ResolveTargetDir directly.
 func resolveSourceDir(args []string, mc MoveContext) string {
-	if len(args) > 0 {
-		return expandHome(args[0], mc.Home)
+	dir, err := ResolveTargetDir(args, mc.Home)
+	if err != nil {
+		errlog.Error("Cannot resolve source directory: %v", err)
+		return ""
 	}
-	return promptSourceDirectory(mc.Scanner, mc.Database, mc.Home)
+	return dir
 }
