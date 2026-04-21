@@ -9,6 +9,7 @@ import type { MediaItem } from "@/types/media";
 import { formatFileSize } from "@/lib/media-utils";
 import { toast } from "sonner";
 import { ReadmeDiffDialog } from "./ReadmeDiffDialog";
+import { CommandReferencePanel } from "./CommandReferencePanel";
 
 interface ReadmePreviewProps {
   media: MediaItem[];
