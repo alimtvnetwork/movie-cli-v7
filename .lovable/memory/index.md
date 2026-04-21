@@ -40,6 +40,7 @@ Release-page install scripts MUST be version-pinned: `install.{ps1,sh}` attached
 - [Version bump rule](mem://preferences/version-bump) — Always bump version after every code change
 - [API base variable](mem://preferences/api-base-variable) — JS must use single API_BASE variable, never repeat URL
 - [Boolean naming](mem://constraints/boolean-no-negative-words) — IsUndone→IsReverted; never use un/not/no in boolean names
+- [Flat command syntax](mem://constraints/command-syntax-flat) — Always `movie <cmd>`, NEVER `movie movie <cmd>`. Recurring AI mistake.
 - [Updater scope](mem://constraints/updater-scope) — Go updater never runs git/build; all git+build belongs in run.ps1
 - [Acronym MixedCaps](mem://constraints/acronym-mixedcaps) — Json/Imdb/Tmdb/Api/Http/Url, never JSON/IMDb/etc. Spec issue 05
 - [CI/CD build fixes playbook](mem://ci-cd/01-build-fixes-playbook) — All recurring gofmt/govet/misspell/acronym errors with prevention rules
