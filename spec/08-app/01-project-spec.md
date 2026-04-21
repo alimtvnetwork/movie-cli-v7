@@ -127,7 +127,7 @@ This means:
 
 ```
 <binary-dir>/data/
-├── mahin.db                   # Single SQLite database (WAL mode)
+├── movie.db                   # Single SQLite database (WAL mode)
 ├── config/
 │   └── (CLI configuration files)
 ├── log/
@@ -157,7 +157,7 @@ regardless of which directory the user runs the command from.
 
 ### Database Schema
 
-The CLI uses a **single SQLite database** (`mahin.db`) with all tables. All databases use WAL mode.
+The CLI uses a **single SQLite database** (`movie.db`) with all tables. All databases use WAL mode.
 
 | Table Group | Key Tables |
 |-------------|------------|

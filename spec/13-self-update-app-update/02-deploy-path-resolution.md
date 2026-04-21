@@ -78,7 +78,7 @@ Platform defaults if config is missing:
 
 ---
 
-## Mahin-Specific Defaults
+## Movie-Specific Defaults
 
 | Platform | Default Deploy Path | Config Key |
 |----------|-------------------|------------|

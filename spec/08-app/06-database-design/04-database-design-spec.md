@@ -3,26 +3,26 @@
 **Version:** 1.0.0  
 **Updated:** 2026-04-15  
 **Status:** Active  
-**Scope:** Complete database design for the Movie CLI (`mahin`)
+**Scope:** Complete database design for the Movie CLI (`movie`)
 
 ---
 
 ## 1. Overview
 
-The Movie CLI uses **SQLite** with a **single database file** (`mahin.db`). All tables reside in one database — the system is small enough that splitting across multiple files adds unnecessary complexity. All naming follows **PascalCase** for tables and columns, with `{TableName}Id` primary keys.
+The Movie CLI uses **SQLite** with a **single database file** (`movie.db`). All tables reside in one database — the system is small enough that splitting across multiple files adds unnecessary complexity. All naming follows **PascalCase** for tables and columns, with `{TableName}Id` primary keys.
 
 ### 1.1 Database File
 
 | Database File | Description |
 |---------------|-------------|
-| `mahin.db` | All tables — media, lookups, tags, scan tracking, file operations, action history, watchlist, config, error log |
+| `movie.db` | All tables — media, lookups, tags, scan tracking, file operations, action history, watchlist, config, error log |
 
 ### 1.2 Data Folder Structure
 
 ```
 <cli-binary-location>/
 └── data/
-    ├── mahin.db
+    ├── movie.db
     ├── config/
     │   └── (CLI configuration files)
     └── log/
