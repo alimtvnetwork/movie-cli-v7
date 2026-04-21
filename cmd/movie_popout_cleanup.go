@@ -233,7 +233,7 @@ func compactFolder(cc CleanupContext, rootDir string, f popoutFolderInfo) string
 	snapshot := fmt.Sprintf(`{"original_path":%q,"compact_path":%q}`, f.path, destPath)
 	detail := fmt.Sprintf("Compacted folder %s/ → .temp/%s", f.name, filepath.Base(destPath))
 	_, _ = cc.Database.InsertActionSimple(db.ActionSimpleInput{
-		FileAction: FileActionCompact,
+		FileAction: db.FileActionCompact,
 		Snapshot:   snapshot,
 		Detail:     detail,
 		BatchID:    cc.BatchID,

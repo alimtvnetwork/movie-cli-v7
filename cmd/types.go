@@ -155,13 +155,8 @@ type WalkEntryInput struct {
 	MaxDepth int
 }
 
-// FolderRemoveInput groups parameters for folder removal operations.
-type FolderRemoveInput struct {
-	Database *db.DB
-	DirPath  string
-	DirName  string
-	BatchID  string
-}
+// (FolderRemoveInput removed in v2.136.0 — popout no longer deletes folders;
+// it compacts them into <root>/.temp/. See cmd/movie_popout_cleanup.go.)
 
 // MediaRequest groups database context for REST media handlers.
 type MediaRequest struct {
