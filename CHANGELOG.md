@@ -2,25 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.135.0
+
+### Removed
+- **All legacy-name references purged from the entire codebase.** Stripped the legacy DB cleanup (`legacyDBFiles` and `removeLegacyDB` removed from `db/open.go`) and the legacy binary sweep (`legacyBaseNames` slice and its `cleanDir` loop removed from `updater/cleanup.go`). Old database files and handoff binaries from the previous project name are no longer auto-deleted — users with leftover artifacts must remove them manually.
+- Updated CI guard in `.github/workflows/ci.yml` to ban the legacy term across the **entire repo with no allowlist** (previously db/open.go, updater/cleanup.go, CHANGELOG.md, and .lovable/* were exempt). Any reintroduction now fails the build immediately.
+- Cleaned all historical CHANGELOG entries, `.lovable/overview.md`, and the CI guard's own help text of the legacy term.
+
 ## v2.134.0
 
 ### Added
-- **CI guard against old module paths (v2/v3/v4)** — new `Old module path regression guard` step in `.github/workflows/ci.yml` (runs in the `lint` job, right after the Mahin guard). Greps the entire repo for any `movie-cli-v2`, `movie-cli-v3`, or `movie-cli-v4` reference and hard-fails the build if found. Current module is `github.com/alimtvnetwork/movie-cli-v5`; any stale import or documentation reference to the old iterations is a regression.
+- **CI guard against old module paths (v2/v3/v4)** — new `Old module path regression guard` step in `.github/workflows/ci.yml`. Greps the entire repo for any `movie-cli-v2`, `movie-cli-v3`, or `movie-cli-v4` reference and hard-fails the build if found. Current module is `github.com/alimtvnetwork/movie-cli-v5`; any stale import or documentation reference to the old iterations is a regression.
 
 ## v2.133.0
 
 ### Added
-- **CI guard against `mahin` regression** — new `Mahin regression guard` step in `.github/workflows/ci.yml` (runs in the `lint` job, right after the Acronym MixedCaps guard). Greps the entire repo for any case-insensitive `mahin` reference and hard-fails the build if one appears outside the explicit allowlist: `db/open.go`, `updater/cleanup.go`, `CHANGELOG.md`, and `.lovable/**` (memory + audit history). The allowed files are exactly the legacy-cleanup paths that must keep mentioning `mahin` to delete leftover `mahin.db` files and `mahin*` handoff binaries from pre-v2.132.0 installs. Any new occurrence elsewhere — Go code, specs, diagrams, scripts, workflows, Makefile — fails CI with a clear pointer to the rename and the fix instruction.
+- **CI guard against legacy-name regression** — new guard step in `.github/workflows/ci.yml` (runs in the `lint` job, right after the Acronym MixedCaps guard). Hard-fails the build if any reference to the previous project name reappears.
 
 ## v2.132.0
 
 ### Changed
-- **Reverted "mahin" branding back to "movie"** — binary name is now `movie` (`movie.exe` on Windows), database file is `movie.db`. Repository folder name remains `movie-cli`. Data folder layout unchanged: `<binary-dir>/data/{movie.db,log/,config/,thumbnails/,json/}`.
-  - `db/open.go`: `dbFile = "movie.db"`; legacy `mahin.db`, `mahin.db-wal`, `mahin.db-shm` are now auto-deleted on startup (no migration — data loss accepted, per project decision).
+- **Reverted branding back to "movie"** — binary name is now `movie` (`movie.exe` on Windows), database file is `movie.db`. Repository folder name remains `movie-cli`. Data folder layout unchanged: `<binary-dir>/data/{movie.db,log/,config/,thumbnails/,json/}`.
+  - `db/open.go`: `dbFile = "movie.db"`.
   - `Makefile`: `BINARY_NAME=movie`.
-  - `updater/cleanup.go`: comments updated; `legacyBaseNames` keeps both `movie` and `mahin` to sweep handoff leftovers from the old name.
-  - All `spec/` files, mermaid diagrams, `.lovable/memory/*`, `.lovable/overview.md`, `.lovable/strictly-avoid.md`, and `CONTRIBUTING.md` updated: `mahin` → `movie`, `Mahin CLI` → `Movie CLI`, `mahin.db` → `movie.db`.
-  - The only remaining `mahin` references in the codebase are in `db/open.go` and `updater/cleanup.go` and exist solely to clean up legacy artifacts.
+  - All `spec/` files, mermaid diagrams, `.lovable/memory/*`, `.lovable/overview.md`, `.lovable/strictly-avoid.md`, and `CONTRIBUTING.md` updated to use `movie` and `movie.db` everywhere.
 
 ## v2.130.1
 

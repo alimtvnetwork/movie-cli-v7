@@ -174,28 +174,12 @@ func cleanDir(dir, baseName string, skipPaths []string) int {
 		filepath.Join(dir, "*.old"),
 		filepath.Join(dir, "*.bak"),
 	}
-	// Legacy artifacts from previous project name (mahin).
-	// The selfPath guard in cleanGlob still protects the running binary.
-	for _, legacy := range legacyBaseNames {
-		if legacy == baseName {
-			continue
-		}
-		patterns = append(patterns,
-			filepath.Join(dir, legacy+"-update-*"),
-			filepath.Join(dir, legacy+".exe"),
-			filepath.Join(dir, legacy),
-		)
-	}
 	cleaned := 0
 	for _, pattern := range patterns {
 		cleaned += cleanGlob(pattern, skipPaths)
 	}
 	return cleaned
 }
-
-// legacyBaseNames are previous binary names whose leftovers should be swept.
-// Add new names here when the project is renamed again.
-var legacyBaseNames = []string{"movie", "mahin"}
 
 // cleanGlob removes files matching a glob pattern, skipping preserved paths.
 func cleanGlob(pattern string, skipPaths []string) int {
