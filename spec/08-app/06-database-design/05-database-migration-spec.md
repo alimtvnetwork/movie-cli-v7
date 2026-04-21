@@ -9,12 +9,12 @@
 
 ## 1. Overview
 
-The Movie CLI (`mahin`) uses an **embedded migration system** — no external migration tool is required. Migrations run automatically on startup before any command executes. The system supports two migration modes:
+The Movie CLI (`movie`) uses an **embedded migration system** — no external migration tool is required. Migrations run automatically on startup before any command executes. The system supports two migration modes:
 
 | Mode | When | Behavior |
 |------|------|----------|
-| **Fresh install** | No `data/` folder or no `mahin.db` file | Create database, tables, indexes, views, and seed data from scratch |
-| **Breaking upgrade** | Database version < minimum compatible version | Delete `mahin.db` and recreate from scratch (data loss accepted) |
+| **Fresh install** | No `data/` folder or no `movie.db` file | Create database, tables, indexes, views, and seed data from scratch |
+| **Breaking upgrade** | Database version < minimum compatible version | Delete `movie.db` and recreate from scratch (data loss accepted) |
 | **Incremental upgrade** | Database version is compatible but behind current | Run pending migrations sequentially |
 
 > **v2.0.0 rule:** The first release with this schema (v2.0.0) is a **breaking migration**. Any database created by a prior version is deleted and recreated.
@@ -84,7 +84,7 @@ On first run, the migration system creates the full folder structure:
 ```
 <cli-binary-location>/
 └── data/
-    ├── mahin.db          ← created by migration
+    ├── movie.db          ← created by migration
     ├── config/           ← created by migration
     └── log/              ← created by migration
         ├── log.txt       ← created on first log write
@@ -197,7 +197,7 @@ When the existing database version is below `DbMinCompatible`, the system perfor
 ```
 1. Log warning: "Database version X.X.X is incompatible with minimum Y.Y.Y — recreating"
 2. Close database connection
-3. Delete mahin.db, mahin.db-wal, mahin.db-shm
+3. Delete movie.db, movie.db-wal, movie.db-shm
 4. Run fresh install (Section 4)
 5. Log info: "Database recreated at version Z.Z.Z"
 ```
@@ -208,7 +208,7 @@ When the existing database version is below `DbMinCompatible`, the system perfor
 |------|-------------|
 | Never delete `data/config/` | User configuration files are preserved across resets |
 | Never delete `data/log/` | Log history is preserved across resets |
-| Only delete `mahin.db*` | The `data/` folder itself and subfolders are kept |
+| Only delete `movie.db*` | The `data/` folder itself and subfolders are kept |
 | Log before delete | Always write to `error.log` before deleting databases |
 | No user prompt | Drop-and-recreate is automatic — the CLI is the sole user |
 
@@ -231,8 +231,8 @@ func isLegacyDatabase(dataDir string) bool {
         return true
     }
 
-    // Check for SchemaVersion table in mahin.db
-    dbPath := filepath.Join(dataDir, "mahin.db")
+    // Check for SchemaVersion table in movie.db
+    dbPath := filepath.Join(dataDir, "movie.db")
     if _, err := os.Stat(dbPath); err == nil {
         if !hasSchemaVersionTable(dbPath) {
             return true

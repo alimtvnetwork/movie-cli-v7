@@ -8,7 +8,7 @@
 
 ## Overview
 
-Complete database design documentation for the Movie CLI (`mahin`). All persistent state — media metadata, file operations, scan history, user tags, watchlists, and error logs — is stored across multiple SQLite databases following the **Split DB** pattern.
+Complete database design documentation for the Movie CLI (`movie`). All persistent state — media metadata, file operations, scan history, user tags, watchlists, and error logs — is stored across multiple SQLite databases following the **Split DB** pattern.
 
 ### Split DB Layout
 

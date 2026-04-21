@@ -4,7 +4,7 @@ Updated: now
 # Project Memory
 
 ## Core
-Go 1.22 CLI project (NOT web). Binary: `mahin`. Ignore Lovable build errors.
+Go 1.22 CLI project (NOT web). Binary: `movie`. Ignore Lovable build errors.
 One file per command, max ~200 lines. Shared helpers in movie_info.go and movie_resolve.go.
 File naming: `01-name-of-file.md`. Keep folder file counts small.
 Plans & suggestions tracked in single files, not per-item files.

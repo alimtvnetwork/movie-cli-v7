@@ -31,7 +31,7 @@ type powershellConfig struct {
 //   - <name>-update-*[.exe]   handoff copies from any prior PID
 //   - *.old                   rename-first deploy backups
 //   - *.bak                   legacy backup files
-//   - legacy binaries (movie*, mahin*) and their handoff copies
+//   - legacy binaries (mahin*) and their handoff copies
 //
 // skipPath is an optional extra path that must be preserved, such as the
 // currently running handoff worker binary.
@@ -175,7 +175,7 @@ func cleanDir(dir, baseName string, skipPaths []string) int {
 		filepath.Join(dir, "*.old"),
 		filepath.Join(dir, "*.bak"),
 	}
-	// Legacy artifacts from previous project names (movie-cli, mahin).
+	// Legacy artifacts from previous project name (mahin).
 	// The selfPath guard in cleanGlob still protects the running binary.
 	for _, legacy := range legacyBaseNames {
 		if legacy == baseName {

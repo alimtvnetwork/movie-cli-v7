@@ -10,7 +10,7 @@ Explain why CLI self-update is non-trivial, what platform-specific constraints e
 
 ## The Problem
 
-When a user runs `mahin self-update`, the tool must:
+When a user runs `movie self-update`, the tool must:
 
 1. Fetch the latest source or download a pre-built binary.
 2. Build (if from source) or extract the new binary.
@@ -53,7 +53,7 @@ Used when the binary was installed from a source repository:
 9. Clean up
 ```
 
-**Current mahin implementation** (`updater/updater.go`):
+**Current movie implementation** (`updater/updater.go`):
 - Checks git is installed and in PATH
 - Resolves the repo from the binary directory, current working directory, or sibling clone path
 - Clones a fresh repo next to the binary when no local repo exists
@@ -96,11 +96,11 @@ This strategy requires no Go toolchain on the end-user's machine.
 
 ## Acceptance Criteria
 
-- GIVEN a clean existing git repo WHEN `mahin self-update` runs THEN the latest code is pulled
-- GIVEN no local repo exists WHEN `mahin self-update` runs THEN it clones a fresh repo next to the binary and reports bootstrap success
-- GIVEN local changes WHEN `mahin self-update` runs THEN it refuses with an error message
-- GIVEN git is not installed WHEN `mahin self-update` runs THEN a clear error is shown
-- GIVEN the repo is already at latest WHEN `mahin self-update` runs THEN it reports "already up to date" only for an existing repo with no new commits
+- GIVEN a clean existing git repo WHEN `movie self-update` runs THEN the latest code is pulled
+- GIVEN no local repo exists WHEN `movie self-update` runs THEN it clones a fresh repo next to the binary and reports bootstrap success
+- GIVEN local changes WHEN `movie self-update` runs THEN it refuses with an error message
+- GIVEN git is not installed WHEN `movie self-update` runs THEN a clear error is shown
+- GIVEN the repo is already at latest WHEN `movie self-update` runs THEN it reports "already up to date" only for an existing repo with no new commits
 
 ---
 

@@ -11,10 +11,12 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/apperror"
 )
 
-const dbFile = "mahin.db"
+const dbFile = "movie.db"
 
 // legacyDBFiles are old database files that should be removed on startup.
-var legacyDBFiles = []string{"movie.db", "movie.db-wal", "movie.db-shm"}
+// The project was briefly named "mahin"; any leftover mahin.db files from that
+// era are deleted with no migration (data loss accepted, per project decision).
+var legacyDBFiles = []string{"mahin.db", "mahin.db-wal", "mahin.db-shm"}
 
 // DB wraps the sql.DB connection.
 type DB struct {
@@ -35,7 +37,7 @@ func exeDir() (string, error) {
 	return filepath.Dir(exe), nil
 }
 
-// removeLegacyDB deletes old database files (movie.db) if they exist.
+// removeLegacyDB deletes old database files (mahin.db) if they exist.
 func removeLegacyDB(base string) {
 	for _, name := range legacyDBFiles {
 		p := filepath.Join(base, name)
@@ -46,7 +48,7 @@ func removeLegacyDB(base string) {
 }
 
 // Open opens (or creates) the SQLite database and runs migrations.
-// If a legacy database (movie.db) is found, it is deleted.
+// If a legacy database (mahin.db) is found, it is deleted.
 // The app version is stored in Config on every startup.
 func Open() (*DB, error) {
 	binDir, dirErr := exeDir()

@@ -41,7 +41,7 @@ make build
 Verify:
 
 ```bash
-./mahin version
+./movie version
 ```
 
 See the [Install Guide](spec/03-general/01-install-guide.md) for detailed setup instructions.

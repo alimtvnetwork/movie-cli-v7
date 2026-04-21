@@ -4,9 +4,9 @@
 
 ## Project
 
-- **Name**: Mahin CLI (formerly Movie CLI)
+- **Name**: Movie CLI
 - **Type**: Go CLI application (NOT a web app)
-- **Binary**: `mahin`
+- **Binary**: `movie`
 - **Language**: Go 1.22
 - **Module**: `github.com/alimtvnetwork/movie-cli-v5`
 - **Framework**: Cobra (CLI), SQLite (storage), TMDb API (metadata)
@@ -20,7 +20,7 @@ A cross-platform CLI tool for managing a personal movie and TV show library. It 
 
 1. **Pure-Go SQLite** (`modernc.org/sqlite`) — no CGo dependency
 2. **WAL mode** for SQLite concurrency
-3. **Single DB** — all tables in `mahin.db` (no Split DB)
+3. **Single DB** — all tables in `movie.db` (no Split DB)
 4. **TMDb API** for metadata (requires user-provided API key)
 5. **Console-safe self-update** — synchronous handoff via gitmap pattern, exit code propagation
 6. **Data folder** at `<binary-dir>/data/` resolved via `os.Executable()`
@@ -30,7 +30,7 @@ A cross-platform CLI tool for managing a personal movie and TV show library. It 
 ## Command Tree (21 commands)
 
 ```
-mahin
+movie
 ├── hello                      # Greeting with version
 ├── version                    # Version/commit/build date + Go/OS info
 ├── update                     # Console-safe self-update (gitmap handoff)

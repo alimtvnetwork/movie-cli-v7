@@ -11,7 +11,7 @@ The CLI's data folder (`data/`) is always created relative to where the binary p
 - No environment variables needed — purely resolved from binary location
 
 ### Single DB
-- `data/mahin.db` — All tables (media, config, history, tags, watchlist, error log, etc.)
+- `data/movie.db` — All tables (media, config, history, tags, watchlist, error log, etc.)
 
 ### Subfolders
 - `data/config/` — CLI configuration files (preserved across DB resets)

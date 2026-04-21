@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.132.0
+
+### Changed
+- **Reverted "mahin" branding back to "movie"** — binary name is now `movie` (`movie.exe` on Windows), database file is `movie.db`. Repository folder name remains `movie-cli`. Data folder layout unchanged: `<binary-dir>/data/{movie.db,log/,config/,thumbnails/,json/}`.
+  - `db/open.go`: `dbFile = "movie.db"`; legacy `mahin.db`, `mahin.db-wal`, `mahin.db-shm` are now auto-deleted on startup (no migration — data loss accepted, per project decision).
+  - `Makefile`: `BINARY_NAME=movie`.
+  - `updater/cleanup.go`: comments updated; `legacyBaseNames` keeps both `movie` and `mahin` to sweep handoff leftovers from the old name.
+  - All `spec/` files, mermaid diagrams, `.lovable/memory/*`, `.lovable/overview.md`, `.lovable/strictly-avoid.md`, and `CONTRIBUTING.md` updated: `mahin` → `movie`, `Mahin CLI` → `Movie CLI`, `mahin.db` → `movie.db`.
+  - The only remaining `mahin` references in the codebase are in `db/open.go` and `updater/cleanup.go` and exist solely to clean up legacy artifacts.
+
 ## v2.130.1
 
 ### Changed

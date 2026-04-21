@@ -1,6 +1,6 @@
-# Makefile for mahin CLI
+# Makefile for movie CLI
 
-BINARY_NAME=mahin
+BINARY_NAME=movie
 GO=go
 GOFLAGS=-ldflags="-s -w"
 WINRES=go-winres

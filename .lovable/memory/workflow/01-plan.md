@@ -29,7 +29,7 @@
 - [x] `movie watch` — watchlist: to-watch/watched tracking
 
 ### Infrastructure
-- [x] SQLite database with migrations (single mahin.db)
+- [x] SQLite database with migrations (single movie.db)
 - [x] TMDb API client (search, details, credits, recommendations, trending, posters, retry with backoff)
 - [x] Filename cleaner (junk removal, year extraction, TV detection, slugs)
 - [x] Makefile with build + cross-compile targets
@@ -67,7 +67,7 @@
 ### Database Redesign v2.0.0 (15-Apr-2026) ✅
 - [x] Schema diagram, design spec, state/history, popout, migration spec
 - [x] Collection table, Tag M-N via MediaTag, 14 FileAction types
-- [x] Removed Split DB — single mahin.db
+- [x] Removed Split DB — single movie.db
 
 ---
 
@@ -87,7 +87,7 @@
 ## 🔲 Pending — Prioritized Backlog
 
 ### Phase 1: Database Implementation (P0)
-- [ ] Implement new schema in Go (`db/` package) — single `mahin.db`, PascalCase tables
+- [ ] Implement new schema in Go (`db/` package) — single `movie.db`, PascalCase tables
 - [ ] Implement SchemaVersion tracking + migration runner in Go
 - [ ] Seed FileAction with 14 predefined rows
 - [ ] Create 8 database views (VwMediaFull, VwMoveHistoryDetail, etc.)
@@ -120,5 +120,5 @@ Pick one of these to implement next:
 
 1. **Guideline Phase 3** — Replace magic strings with constants
 2. **Guideline Phase 4** — Replace fmt.Errorf with apperror.Wrap()
-3. **Single DB implementation** — Create mahin.db with PascalCase schema
+3. **Single DB implementation** — Create movie.db with PascalCase schema
 4. **Migration runner** — SchemaVersion + sequential migration system

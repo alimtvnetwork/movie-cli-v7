@@ -4,7 +4,7 @@
 
 ---
 
-- **Split DB (multiple .db files):** All tables must live in single `mahin.db`. Never split into media.db, watchlist.db, config.db, etc. See: `.lovable/memory/constraints/no-split-db.md`
+- **Split DB (multiple .db files):** All tables must live in single `movie.db`. Never split into media.db, watchlist.db, config.db, etc. See: `.lovable/memory/constraints/no-split-db.md`
 - **Negative boolean names:** Never use `un/not/no` in boolean names. Use positive semantic synonyms with Is/Has prefix (e.g., IsReverted not IsUndone). See: memory index `boolean-no-negative-words`
 - **CI log commit-back:** CI must NEVER commit/push back to the repo. Kill feature entirely if loops occur. See: `.lovable/memory/issues/04-ci-log-commit-loop`
 - **Async updater handoff:** Never use `cmd.Start()` + parent exit for self-update. Must be synchronous with exit code propagation. See: gitmap console-safe-handoff spec.

@@ -100,7 +100,7 @@ if ($hasBackup -and (Test-Path $backupFile)) {
 
 ## Cross-Drive Considerations
 
-`os.Rename` (Go) and `mv` (shell) fail across filesystems with `EXDEV`. The mahin CLI already handles this in `cmd/movie_move_helpers.go` with a copy+delete fallback. The same pattern applies to deploy:
+`os.Rename` (Go) and `mv` (shell) fail across filesystems with `EXDEV`. The movie CLI already handles this in `cmd/movie_move_helpers.go` with a copy+delete fallback. The same pattern applies to deploy:
 
 ```go
 func MoveFile(src, dst string) error {
