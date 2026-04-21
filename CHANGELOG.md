@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.133.0
+
+### Added
+- **CI guard against `mahin` regression** — new `Mahin regression guard` step in `.github/workflows/ci.yml` (runs in the `lint` job, right after the Acronym MixedCaps guard). Greps the entire repo for any case-insensitive `mahin` reference and hard-fails the build if one appears outside the explicit allowlist: `db/open.go`, `updater/cleanup.go`, `CHANGELOG.md`, and `.lovable/**` (memory + audit history). The allowed files are exactly the legacy-cleanup paths that must keep mentioning `mahin` to delete leftover `mahin.db` files and `mahin*` handoff binaries from pre-v2.132.0 installs. Any new occurrence elsewhere — Go code, specs, diagrams, scripts, workflows, Makefile — fails CI with a clear pointer to the rename and the fix instruction.
+
 ## v2.132.0
 
 ### Changed

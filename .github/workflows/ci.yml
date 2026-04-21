@@ -87,6 +87,32 @@ jobs:
           fi
           echo "✅ No acronym MixedCaps violations."
 
+      - name: Mahin regression guard
+        if: needs.sha-check.outputs.already-built != 'true'
+        run: |
+          # The project was briefly named "mahin" and reverted to "movie" in
+          # v2.132.0. The ONLY files allowed to mention "mahin" are the
+          # legacy-cleanup paths that delete leftover mahin.db files and
+          # mahin* handoff binaries from old installs. Any other occurrence
+          # is a regression — fail the build.
+          set -e
+          ALLOWED_FILES='^(\./)?(db/open\.go|updater/cleanup\.go|CHANGELOG\.md|\.lovable/)'
+          violations=$(grep -rn -i --include='*.go' --include='*.md' --include='*.mmd' \
+              --include='*.json' --include='*.yml' --include='*.yaml' \
+              --include='*.sh' --include='*.ps1' --include='Makefile' \
+              --exclude-dir=.git --exclude-dir=.release --exclude-dir=node_modules \
+              'mahin' . 2>/dev/null | grep -vE "$ALLOWED_FILES" || true)
+          if [ -n "$violations" ]; then
+            echo "::error::Forbidden 'mahin' references found outside legacy-cleanup paths"
+            echo "$violations"
+            echo ""
+            echo "The project was renamed mahin → movie in v2.132.0."
+            echo "Only db/open.go, updater/cleanup.go, CHANGELOG.md, and .lovable/* may mention 'mahin'."
+            echo "Fix: rename 'mahin' → 'movie' (and 'mahin.db' → 'movie.db') in the files listed above."
+            exit 1
+          fi
+          echo "✅ No 'mahin' regressions outside legacy-cleanup paths."
+
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
     name: Vulnerability Scan
