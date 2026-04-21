@@ -255,6 +255,13 @@ export function ReadmePreview({ media }: ReadmePreviewProps) {
                 <p className="text-xs text-muted-foreground">
                   Exact content that will be written · {lineCount} lines · {charCount} chars
                 </p>
+                {sanitizedCount > 0 && (
+                  <p className="text-xs text-primary flex items-center gap-1">
+                    <ShieldCheck className="h-3 w-3" />
+                    Auto-fixed {sanitizedCount} <code className="px-1 rounded bg-muted">movie movie</code>{" "}
+                    occurrence{sanitizedCount === 1 ? "" : "s"} → <code className="px-1 rounded bg-muted">movie</code>
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={handleCopy}>
