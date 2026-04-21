@@ -179,12 +179,14 @@ func executeAndCompactPopout(mc MoveContext, items []popoutItem, rootDir string,
 	printPopoutResult(success, failed, batchID)
 
 	if success == 0 {
+		printPopoutSummary(success, failed, 0, batchID)
 		return
 	}
 
 	fmt.Println()
 	cc := CleanupContext{Scanner: mc.Scanner, Database: mc.Database, BatchID: batchID}
-	compactNonMediaFolders(cc, rootDir, allSubdirs, popoutAutoCompact)
+	compacted := compactNonMediaFolders(cc, rootDir, allSubdirs, popoutAutoCompact)
+	printPopoutSummary(success, failed, compacted, batchID)
 }
 
 // offerCompactionForLeftovers handles the "no media to pop out, but folders
@@ -196,7 +198,8 @@ func offerCompactionForLeftovers(mc MoveContext, rootDir string, allSubdirs []st
 	}
 	batchID := generateBatchID()
 	cc := CleanupContext{Scanner: mc.Scanner, Database: mc.Database, BatchID: batchID}
-	compactNonMediaFolders(cc, rootDir, allSubdirs, popoutAutoCompact)
+	compacted := compactNonMediaFolders(cc, rootDir, allSubdirs, popoutAutoCompact)
+	printPopoutSummary(0, 0, compacted, batchID)
 }
 
 func printPopoutPreview(items []popoutItem) {
