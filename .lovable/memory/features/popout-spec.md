@@ -31,6 +31,7 @@ type: feature
 - `cmd/movie_popout.go` — entry point, orchestration, preview, prompt, batch ID
 - `cmd/movie_popout_discover.go` — `discoverNestedVideos`, `discoverAllSubdirs`
 - `cmd/movie_popout_cleanup.go` — `compactNonMediaFolders`, `folderHasMedia`, `compactFolder`
+- `cmd/movie_popout_summary.go` — `printPopoutSummary` final report (files moved + folders compacted + batch undo hint)
 - `cmd/movie_popout_integration_test.go` — 7 integration tests covering discovery, classification, compaction, cwd-default
 
 ## Database
