@@ -18,11 +18,10 @@ Cross-platform CLI tool for managing a personal movie and TV show library. Scans
 - Cobra CLI framework
 - Console-safe self-update via gitmap handoff pattern
 - Data folder at `<binary-dir>/data/` (resolved via `os.Executable()`) containing `movie.db`, `log/`, `config/`, `thumbnails/`, `json/`
-- Legacy `mahin.db` is auto-deleted on startup (no migration)
 
 ## Current Version
 
-v2.132.0 — reverted "mahin" branding back to "movie" everywhere.
+v2.135.0
 
 ## Quick Links
 
