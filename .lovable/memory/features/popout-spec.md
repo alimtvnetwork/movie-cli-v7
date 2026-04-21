@@ -25,13 +25,18 @@ type: feature
 
 ## Undo / Redo
 - `movie undo --batch <id>` reverts every move + every compact in the batch.
-- `movie redo --batch <id>` re-applies them.
+  Compact rows are restored by `undoCompact` in `cmd/movie_popout_restore.go`,
+  which parses the JSON snapshot `{original_path, compact_path}` and moves
+  the folder back from `<root>/.temp/Folder` to its original location.
+  Refuses to overwrite if the original path already exists.
+- `movie redo --batch <id>` re-applies them via `redoCompact` (symmetric).
 
 ## Files
 - `cmd/movie_popout.go` — entry point, orchestration, preview, prompt, batch ID
 - `cmd/movie_popout_discover.go` — `discoverNestedVideos`, `discoverAllSubdirs`
 - `cmd/movie_popout_cleanup.go` — `compactNonMediaFolders`, `folderHasMedia`, `compactFolder`
 - `cmd/movie_popout_summary.go` — `printPopoutSummary` final report (files moved + folders compacted + batch undo hint)
+- `cmd/movie_popout_restore.go` — `undoCompact` / `redoCompact` for FileActionCompact rows; parses `{original_path, compact_path}` snapshot
 - `cmd/movie_popout_integration_test.go` — 7 integration tests covering discovery, classification, compaction, cwd-default
 
 ## Database

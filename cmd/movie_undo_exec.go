@@ -54,6 +54,8 @@ func executeActionUndo(database *db.DB, a *db.ActionRecord) error {
 		// Handled via move_history; just mark reverted
 	case db.FileActionRestore:
 		return undoRestore(database, a)
+	case db.FileActionCompact:
+		return undoCompact(database, a)
 	default:
 		return apperror.New("unknown action type for undo: %s", a.FileActionId)
 	}
