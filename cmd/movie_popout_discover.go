@@ -29,6 +29,28 @@ func discoverNestedVideos(rootDir string, maxDepth int) []popoutItem {
 	return items
 }
 
+// discoverAllSubdirs returns the names of every direct (depth-1) subfolder
+// of rootDir, excluding the popoutTempDir itself. Used by the compaction
+// phase to know which folders existed before the popout started, so we can
+// later classify each as media-bearing or compactable.
+func discoverAllSubdirs(rootDir string, _ int) []string {
+	entries, err := os.ReadDir(rootDir)
+	if err != nil {
+		return nil
+	}
+	var names []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		if e.Name() == popoutTempDir {
+			continue
+		}
+		names = append(names, e.Name())
+	}
+	return names
+}
+
 func processWalkEntry(input WalkEntryInput) error {
 	rel, relErr := filepath.Rel(input.RootDir, input.Path)
 	if relErr != nil {
