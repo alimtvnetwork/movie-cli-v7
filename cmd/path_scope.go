@@ -363,7 +363,7 @@ func ConfirmCwdScope(scanner *bufio.Scanner, f ScopeFilter, verb string) (ScopeF
 		fmt.Println("   ↳ switching to --global scope")
 		return ScopeFilter{Includes: f.Includes, Excludes: f.Excludes, UserProvidedPath: true}, true
 	default:
-		fmt.Println("   ↳ cancelled")
+		fmt.Println("   ↳ canceled")
 		return f, false
 	}
 }
