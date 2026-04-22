@@ -109,20 +109,6 @@ func redoRestore(database *db.DB, a *db.ActionRecord) error {
 	return database.MarkActionRestored(a.ActionHistoryId)
 }
 
-func findLastRevertedBatch(database *db.DB) string {
-	actions, err := database.ListActions(200)
-	if err != nil {
-		errlog.Error("Cannot read action history: %v", err)
-		return ""
-	}
-	for _, a := range actions {
-		if a.IsReverted && a.BatchId != "" {
-			return a.BatchId
-		}
-	}
-	return ""
-}
-
 func countReverted(actions []db.ActionRecord) int {
 	count := 0
 	for _, a := range actions {

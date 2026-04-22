@@ -88,15 +88,3 @@ func validateAndListVideos(sourceDir string) ([]os.FileInfo, bool) {
 	}
 	return files, true
 }
-
-// resolveSourceDir is kept as a thin compatibility shim around
-// ResolveTargetDir for any future callers that already have a MoveContext
-// in hand. New code should call ResolveTargetDir directly.
-func resolveSourceDir(args []string, mc MoveContext) string {
-	dir, err := ResolveTargetDir(args, mc.Home)
-	if err != nil {
-		errlog.Error("Cannot resolve source directory: %v", err)
-		return ""
-	}
-	return dir
-}

@@ -79,8 +79,8 @@ func classifyCompactCandidates(rootDir string, folderNames []string) []popoutFol
 func folderHasMedia(dirPath string) bool {
 	hasMedia := false
 	_ = filepath.Walk(dirPath, func(p string, fi os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return nil
+		if walkErr != nil || fi == nil {
+			return walkErr
 		}
 		if fi.IsDir() {
 			return nil
