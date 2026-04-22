@@ -354,4 +354,3 @@ func findLastRevertedBatchInScope(database *db.DB, f ScopeFilter) string {
 	}
 	return ""
 }
-

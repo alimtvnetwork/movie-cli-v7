@@ -17,7 +17,8 @@
 // every CI runner, and parallelize safely.
 //
 // Run:
-//   go test ./cmd/ -run TestPopout -v
+//
+//	go test ./cmd/ -run TestPopout -v
 package cmd
 
 import (

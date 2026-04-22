@@ -12,11 +12,11 @@
 package cmd
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
-	"bufio"
-	"strings"
 	"path/filepath"
+	"strings"
 
 	"github.com/alimtvnetwork/movie-cli-v5/db"
 )
@@ -35,9 +35,10 @@ import (
 //
 // Glob syntax is filepath.Match (POSIX shell style: *, ?, [class]).
 // Patterns are matched against:
-//   1. the full path  (e.g. "/movies/2024/Inception/*.mkv")
-//   2. the basename   (e.g. "*.srt")
-//   3. the basename of every parent directory (e.g. "Trash")
+//  1. the full path  (e.g. "/movies/2024/Inception/*.mkv")
+//  2. the basename   (e.g. "*.srt")
+//  3. the basename of every parent directory (e.g. "Trash")
+//
 // This makes both "*.mkv" and "Inception" useful without the user having
 // to know which form ended up in the snapshot.
 type ScopeFilter struct {

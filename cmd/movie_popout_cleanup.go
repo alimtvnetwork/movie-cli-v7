@@ -3,8 +3,8 @@
 // REPLACES the previous destructive "remove folder" prompt. After media
 // files are popped out to root, any subfolder that:
 //
-//   1. was originally empty, OR
-//   2. contains zero media files (only samples/subs/.nfo/.txt/etc.)
+//  1. was originally empty, OR
+//  2. contains zero media files (only samples/subs/.nfo/.txt/etc.)
 //
 // is MOVED into <root>/.temp/ instead of deleted. Each move is recorded as
 // a FileActionCompact action so `movie undo --batch <id>` can restore the
