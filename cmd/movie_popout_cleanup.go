@@ -3,8 +3,8 @@
 // REPLACES the previous destructive "remove folder" prompt. After media
 // files are popped out to root, any subfolder that:
 //
-//   1. was originally empty, OR
-//   2. contains zero media files (only samples/subs/.nfo/.txt/etc.)
+//  1. was originally empty, OR
+//  2. contains zero media files (only samples/subs/.nfo/.txt/etc.)
 //
 // is MOVED into <root>/.temp/ instead of deleted. Each move is recorded as
 // a FileActionCompact action so `movie undo --batch <id>` can restore the
@@ -79,8 +79,8 @@ func classifyCompactCandidates(rootDir string, folderNames []string) []popoutFol
 func folderHasMedia(dirPath string) bool {
 	hasMedia := false
 	_ = filepath.Walk(dirPath, func(p string, fi os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return nil
+		if walkErr != nil || fi == nil {
+			return walkErr
 		}
 		if fi.IsDir() {
 			return nil

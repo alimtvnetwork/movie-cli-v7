@@ -14,14 +14,16 @@
 // See spec/09-app-issues/08-popout-silent-failure.md.
 //
 // Project rule (mem://constraints/cwd-default-rule):
-//   "If a command takes an optional path argument and none is given, it
-//    MUST default to the current working directory. NEVER prompt silently,
-//    NEVER return empty, NEVER swallow the error."
+//
+//	"If a command takes an optional path argument and none is given, it
+//	 MUST default to the current working directory. NEVER prompt silently,
+//	 NEVER return empty, NEVER swallow the error."
 //
 // Consumers (all 21+ commands accepting an optional path):
-//   movie scan, movie move, movie popout, movie rename, movie cleanup,
-//   movie duplicates, movie rescan, movie cache, movie cache backfill,
-//   movie cache forget, ... (any command that scans or operates on files).
+//
+//	movie scan, movie move, movie popout, movie rename, movie cleanup,
+//	movie duplicates, movie rescan, movie cache, movie cache backfill,
+//	movie cache forget, ... (any command that scans or operates on files).
 //
 // Do NOT duplicate the args[0] / cwd / expandHome chain elsewhere — use
 // this helper.
