@@ -330,3 +330,39 @@ func FilterActions(actions []db.ActionRecord, scope string) []db.ActionRecord {
 	}
 	return out
 }
+
+// ConfirmCwdScope asks the user to confirm an inferred cwd scope before
+// running a destructive history operation. It is a no-op (returns the
+// original filter, true) when:
+//   - the user already passed an explicit [path] argument
+//   - the user passed --global
+//   - the scope dir is empty (== global) for any other reason
+//
+// When the scope WAS inferred from cwd, the user can:
+//
+//	[Enter] / y → proceed with the cwd scope
+//	g          → switch to --global (returns a global filter, true)
+//	n / q      → cancel (returns _, false)
+//
+// The verb is "Undo" or "Redo" — used purely for the prompt copy.
+func ConfirmCwdScope(scanner *bufio.Scanner, f ScopeFilter, verb string) (ScopeFilter, bool) {
+	if f.UserProvidedPath || f.Dir == "" {
+		return f, true
+	}
+	fmt.Printf("\n🎯 %s scope detected from current directory:\n", verb)
+	fmt.Printf("   %s\n", f.Dir)
+	fmt.Print("   Use this scope?  [Y]es / [g]lobal / [n]o : ")
+	if !scanner.Scan() {
+		return f, false
+	}
+	switch strings.ToLower(strings.TrimSpace(scanner.Text())) {
+	case "", "y", "yes":
+		return f, true
+	case "g", "global":
+		fmt.Println("   ↳ switching to --global scope")
+		return ScopeFilter{Includes: f.Includes, Excludes: f.Excludes, UserProvidedPath: true}, true
+	default:
+		fmt.Println("   ↳ cancelled")
+		return f, false
+	}
+}
