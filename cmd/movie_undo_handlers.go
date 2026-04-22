@@ -9,20 +9,24 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
-func showUndoableList(database *db.DB) {
+func showUndoableList(database *db.DB, scope string) {
 	fmt.Println("⏪ Recent undoable operations")
+	if scope != "" {
+		fmt.Printf("   scope: %s\n", scope)
+	}
 	fmt.Println()
 
-	undoableMoves := printUndoableMoves(database)
-	undoableActions := printUndoableActions(database)
+	undoableMoves := printUndoableMoves(database, scope)
+	undoableActions := printUndoableActions(database, scope)
 
 	if undoableMoves == 0 && undoableActions == 0 {
-		fmt.Println("  📭 Nothing to undo.")
+		fmt.Println("  📭 Nothing to undo in this scope.")
 	}
 }
 
-func printUndoableMoves(database *db.DB) int {
-	moves, _ := database.ListMoveHistory(10)
+func printUndoableMoves(database *db.DB, scope string) int {
+	rawMoves, _ := database.ListMoveHistory(50)
+	moves := FilterMoves(rawMoves, scope)
 	count := 0
 	for _, m := range moves {
 		if !m.IsReverted {
@@ -42,8 +46,9 @@ func printUndoableMoves(database *db.DB) int {
 	return count
 }
 
-func printUndoableActions(database *db.DB) int {
-	actions, _ := database.ListActions(20)
+func printUndoableActions(database *db.DB, scope string) int {
+	rawActions, _ := database.ListActions(100)
+	actions := FilterActions(rawActions, scope)
 	count := countNonReverted(actions)
 	if count == 0 {
 		return 0
@@ -149,10 +154,10 @@ func undoMoveByID(database *db.DB, scanner *bufio.Scanner, id int64) {
 	fmt.Printf("✅ Move %d reverted successfully.\n", target.ID)
 }
 
-func undoLastBatch(database *db.DB, scanner *bufio.Scanner) {
-	batchID := findLastUndoableBatch(database)
+func undoLastBatch(database *db.DB, scanner *bufio.Scanner, scope string) {
+	batchID := findLastUndoableBatch(database, scope)
 	if batchID == "" {
-		fmt.Println("📭 No batch operations to undo.")
+		fmt.Println("📭 No batch operations to undo in this scope.")
 		return
 	}
 
@@ -178,15 +183,15 @@ func undoLastBatch(database *db.DB, scanner *bufio.Scanner) {
 	printUndoBatchResult(batchID[:8], undoable, failed)
 }
 
-func undoLastOperation(database *db.DB, scanner *bufio.Scanner) {
-	lastMove, moveErr := database.GetLastMove()
-	lastAction, actionErr := database.GetLastRevertableAction()
+func undoLastOperation(database *db.DB, scanner *bufio.Scanner, scope string) {
+	lastMove := pickLastUndoableMove(database, scope)
+	lastAction := pickLastUndoableAction(database, scope)
 
-	haveMove := moveErr == nil && lastMove != nil
-	haveAction := actionErr == nil && lastAction != nil
+	haveMove := lastMove != nil
+	haveAction := lastAction != nil
 
 	if !haveMove && !haveAction {
-		fmt.Println("📭 No operations to undo.")
+		fmt.Println("📭 No operations to undo in this scope.")
 		return
 	}
 
@@ -205,6 +210,44 @@ func undoLastOperation(database *db.DB, scanner *bufio.Scanner) {
 		return
 	}
 	undoSingleMove(database, scanner, lastMove)
+}
+
+// pickLastUndoableMove returns the newest non-reverted move under scope.
+func pickLastUndoableMove(database *db.DB, scope string) *db.MoveRecord {
+	moves, err := database.ListMoveHistory(200)
+	if err != nil {
+		return nil
+	}
+	for i := range moves {
+		m := moves[i]
+		if m.IsReverted {
+			continue
+		}
+		if !MoveInScope(m, scope) {
+			continue
+		}
+		return &m
+	}
+	return nil
+}
+
+// pickLastUndoableAction returns the newest non-reverted action under scope.
+func pickLastUndoableAction(database *db.DB, scope string) *db.ActionRecord {
+	actions, err := database.ListActions(200)
+	if err != nil {
+		return nil
+	}
+	for i := range actions {
+		a := actions[i]
+		if a.IsReverted {
+			continue
+		}
+		if !ActionInScope(a, scope) {
+			continue
+		}
+		return &a
+	}
+	return nil
 }
 
 func undoSingleMove(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord) {
@@ -232,18 +275,40 @@ func undoSingleAction(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecor
 	fmt.Println("✅ Undo successful!")
 }
 
-func findLastUndoableBatch(database *db.DB) string {
-	actions, err := database.ListActions(100)
+func findLastUndoableBatch(database *db.DB, scope string) string {
+	actions, err := database.ListActions(200)
 	if err != nil {
 		errlog.Error("Cannot read action history: %v", err)
 		return ""
 	}
 	for _, a := range actions {
-		if !a.IsReverted && a.BatchId != "" {
-			return a.BatchId
+		if a.IsReverted || a.BatchId == "" {
+			continue
 		}
+		if !batchTouchesScope(database, a.BatchId, scope) {
+			continue
+		}
+		return a.BatchId
 	}
 	return ""
+}
+
+// batchTouchesScope returns true if any action in the batch is in scope.
+// scope == "" → always true.
+func batchTouchesScope(database *db.DB, batchID, scope string) bool {
+	if scope == "" {
+		return true
+	}
+	rows, err := database.ListActionsByBatch(batchID)
+	if err != nil {
+		return false
+	}
+	for _, a := range rows {
+		if ActionInScope(a, scope) {
+			return true
+		}
+	}
+	return false
 }
 
 func countUndoable(actions []db.ActionRecord) int {
