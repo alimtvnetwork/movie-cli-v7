@@ -24,10 +24,12 @@ func showUndoableList(database *db.DB, f ScopeFilter) {
 		fmt.Println("  📭 Nothing to undo in this scope.")
 	}
 
-	printHistorySummary(HistorySummary{
-		Verb:    "Undo (preview)",
-		Matched: undoableMoves + undoableActions,
-		Skipped: moveSkipped + actionSkipped,
+	printPreviewSummary(PreviewSummary{
+		Verb:           "Undo",
+		MatchedMoves:   undoableMoves,
+		MatchedActions: undoableActions,
+		SkippedMoves:   moveSkipped,
+		SkippedActions: actionSkipped,
 	})
 }
 

@@ -24,10 +24,12 @@ func showRedoableList(database *db.DB, f ScopeFilter) {
 		fmt.Println("  📭 Nothing to redo in this scope.")
 	}
 
-	printHistorySummary(HistorySummary{
-		Verb:    "Redo (preview)",
-		Matched: redoableMoves + redoableActions,
-		Skipped: moveSkipped + actionSkipped,
+	printPreviewSummary(PreviewSummary{
+		Verb:           "Redo",
+		MatchedMoves:   redoableMoves,
+		MatchedActions: redoableActions,
+		SkippedMoves:   moveSkipped,
+		SkippedActions: actionSkipped,
 	})
 }
 
