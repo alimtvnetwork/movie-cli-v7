@@ -24,10 +24,12 @@ func showRedoableList(database *db.DB, f ScopeFilter) {
 		fmt.Println("  📭 Nothing to redo in this scope.")
 	}
 
-	printHistorySummary(HistorySummary{
-		Verb:    "Redo (preview)",
-		Matched: redoableMoves + redoableActions,
-		Skipped: moveSkipped + actionSkipped,
+	printPreviewSummary(PreviewSummary{
+		Verb:           "Redo",
+		MatchedMoves:   redoableMoves,
+		MatchedActions: redoableActions,
+		SkippedMoves:   moveSkipped,
+		SkippedActions: actionSkipped,
 	})
 }
 
@@ -63,7 +65,7 @@ func printRedoableMoves(database *db.DB, f ScopeFilter) int {
 		}
 	}
 	if count > 0 {
-		fmt.Println("  📁 Moves / Renames:")
+		fmt.Printf("  📁 Moves / Renames  — %d ready to redo:\n", count)
 		for _, m := range moves {
 			if !m.IsReverted {
 				continue
@@ -82,7 +84,7 @@ func printRedoableActions(database *db.DB, f ScopeFilter) int {
 	if count == 0 {
 		return 0
 	}
-	fmt.Println("  📋 Actions:")
+	fmt.Printf("  📋 Actions  — %d ready to redo:\n", count)
 	for _, a := range actions {
 		if !a.IsReverted {
 			continue

@@ -94,3 +94,41 @@ nothing is executed, only matched and skipped counts are populated.
   `count*Skipped`, summary at every exit
 - `cmd/movie_redo_handlers.go` — `runSingleRedoMove/Action`,
   `count*Skipped`, summary at every exit
+
+## Cwd scope confirmation prompt (v2.143.0)
+When scope is inferred from cwd (no `[path]`, no `--global`), destructive
+flows prompt before acting:
+
+```
+🎯 Undo scope detected from current directory:
+   /home/me/movies/2024/
+   Use this scope?  [Y]es / [g]lobal / [n]o :
+```
+
+`Enter`/`y` proceed, `g` switches to `--global`, anything else cancels.
+`--list`, `--id`, `--move-id` skip the prompt. Implemented via
+`ScopeFilter.UserProvidedPath` + `ConfirmCwdScope` in `cmd/path_scope.go`.
+
+## Preview-summary block for `--list` (v2.144.0)
+`movie undo --list` / `movie redo --list` no longer reuse
+`printHistorySummary` (which printed misleading `executed: 0` /
+`failed: 0` lines in preview mode). They now use a dedicated
+`PreviewSummary` block with per-kind breakdowns:
+
+```
+📋 Undo preview (no changes made)
+   🎯 ready to undo:    4   (1 moves, 3 actions)
+   🚫 out of scope:     9   (2 moves, 7 actions)
+   ℹ️  run `movie undo` (without --list) to actually undo.
+```
+
+Per-section headers also carry the matched count, e.g.
+`📁 Moves / Renames  — 1 ready to undo:` so totals in the footer
+can be cross-checked against each section.
+
+Destructive flows (`undo`, `undo --batch`, `redo`, `redo --batch`)
+keep using `printHistorySummary` so they still report executed/failed.
+
+Implementation: `cmd/history_summary.go` — `PreviewSummary` struct,
+`printPreviewSummary`. Wired into `showUndoableList` and
+`showRedoableList`.

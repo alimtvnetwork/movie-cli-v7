@@ -24,10 +24,12 @@ func showUndoableList(database *db.DB, f ScopeFilter) {
 		fmt.Println("  📭 Nothing to undo in this scope.")
 	}
 
-	printHistorySummary(HistorySummary{
-		Verb:    "Undo (preview)",
-		Matched: undoableMoves + undoableActions,
-		Skipped: moveSkipped + actionSkipped,
+	printPreviewSummary(PreviewSummary{
+		Verb:           "Undo",
+		MatchedMoves:   undoableMoves,
+		MatchedActions: undoableActions,
+		SkippedMoves:   moveSkipped,
+		SkippedActions: actionSkipped,
 	})
 }
 
@@ -65,7 +67,7 @@ func printUndoableMoves(database *db.DB, f ScopeFilter) int {
 		}
 	}
 	if count > 0 {
-		fmt.Println("  📁 Moves / Renames:")
+		fmt.Printf("  📁 Moves / Renames  — %d ready to undo:\n", count)
 		for _, m := range moves {
 			if m.IsReverted {
 				continue
@@ -84,7 +86,7 @@ func printUndoableActions(database *db.DB, f ScopeFilter) int {
 	if count == 0 {
 		return 0
 	}
-	fmt.Println("  📋 Actions:")
+	fmt.Printf("  📋 Actions  — %d ready to undo:\n", count)
 	for _, a := range actions {
 		if a.IsReverted {
 			continue
