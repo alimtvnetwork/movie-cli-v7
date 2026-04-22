@@ -14,8 +14,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
+	"bufio"
 	"strings"
+	"path/filepath"
 
 	"github.com/alimtvnetwork/movie-cli-v5/db"
 )
