@@ -206,18 +206,39 @@ func trimEmpty(in []string) []string {
 	return out
 }
 
-// printScopeBanner prints a small "scope:" / "include:" / "exclude:" line
-// before list output so the user always sees what's being filtered.
-// Imported here to avoid duplicating the formatting in undo & redo files.
+// printScopeBanner prints a 1-3 line block describing the resolved scope,
+// includes, and excludes. Always prints a scope line — even for --global
+// — so the user can confirm what's being matched.
 func printScopeBanner(f ScopeFilter) {
-	if f.Dir != "" {
-		fmt.Printf("   scope:    %s\n", f.Dir)
-	}
+	fmt.Printf("   scope:    %s\n", scopeLabel(f.Dir))
 	if len(f.Includes) > 0 {
 		fmt.Printf("   include:  %s\n", strings.Join(f.Includes, ", "))
 	}
 	if len(f.Excludes) > 0 {
 		fmt.Printf("   exclude:  %s\n", strings.Join(f.Excludes, ", "))
+	}
+}
+
+// scopeLabel renders the scope dir for display. Empty dir → "<global>"
+// so the user never has to guess whether --global was applied.
+func scopeLabel(dir string) string {
+	if dir == "" {
+		return "<global> (no directory filter)"
+	}
+	return dir
+}
+
+// printScopeMatchedCounts prints a per-kind matched/skipped breakdown
+// just under the scope banner so the user can confirm at a glance how
+// many rows the filter kept vs dropped, before any execution.
+func printScopeMatchedCounts(matchedMoves, matchedActions, skippedMoves, skippedActions int) {
+	total := matchedMoves + matchedActions
+	totalSkipped := skippedMoves + skippedActions
+	fmt.Printf("   matched:  %d  (%d moves, %d actions)\n",
+		total, matchedMoves, matchedActions)
+	if totalSkipped > 0 {
+		fmt.Printf("   skipped:  %d  (%d moves, %d actions)\n",
+			totalSkipped, skippedMoves, skippedActions)
 	}
 }
 
