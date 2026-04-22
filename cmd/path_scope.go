@@ -205,6 +205,21 @@ func trimEmpty(in []string) []string {
 	return out
 }
 
+// printScopeBanner prints a small "scope:" / "include:" / "exclude:" line
+// before list output so the user always sees what's being filtered.
+// Imported here to avoid duplicating the formatting in undo & redo files.
+func printScopeBanner(f ScopeFilter) {
+	if f.Dir != "" {
+		fmt.Printf("   scope:    %s\n", f.Dir)
+	}
+	if len(f.Includes) > 0 {
+		fmt.Printf("   include:  %s\n", strings.Join(f.Includes, ", "))
+	}
+	if len(f.Excludes) > 0 {
+		fmt.Printf("   exclude:  %s\n", strings.Join(f.Excludes, ", "))
+	}
+}
+
 // normalizeScope returns a clean absolute-style suffix-friendly form.
 func normalizeScope(dir string) string {
 	clean := filepath.Clean(dir)
