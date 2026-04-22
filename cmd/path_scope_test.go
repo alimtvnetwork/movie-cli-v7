@@ -65,3 +65,49 @@ func TestFilterMovesAndActions(t *testing.T) {
 		t.Fatalf("FilterActions wrong: %#v", got)
 	}
 }
+
+func TestScopeFilterGlobs(t *testing.T) {
+	moves := []db.MoveRecord{
+		{ID: 1, FromPath: "/movies/2024/Inception.mkv", ToPath: "/movies/2024/Inception/Inception.mkv"},
+		{ID: 2, FromPath: "/movies/2024/Trash/junk.txt", ToPath: "/movies/2024/.temp/Trash/junk.txt"},
+		{ID: 3, FromPath: "/movies/2024/Dune.srt", ToPath: "/movies/2024/Dune/Dune.srt"},
+	}
+
+	// include only *.mkv
+	includeMkv := ScopeFilter{Dir: normalizeScope("/movies/2024"), Includes: []string{"*.mkv"}}
+	if got := FilterMovesWith(moves, includeMkv); len(got) != 1 || got[0].ID != 1 {
+		t.Fatalf("include *.mkv wrong: %#v", got)
+	}
+
+	// exclude the Trash folder by basename
+	excludeTrash := ScopeFilter{Dir: normalizeScope("/movies/2024"), Excludes: []string{"Trash"}}
+	got := FilterMovesWith(moves, excludeTrash)
+	if len(got) != 2 {
+		t.Fatalf("exclude Trash wrong count: %#v", got)
+	}
+	for _, m := range got {
+		if m.ID == 2 {
+			t.Fatalf("Trash move should have been excluded: %#v", m)
+		}
+	}
+
+	// include *.mkv AND exclude Inception → empty
+	bothFilters := ScopeFilter{
+		Dir:      normalizeScope("/movies/2024"),
+		Includes: []string{"*.mkv"},
+		Excludes: []string{"Inception"},
+	}
+	if got := FilterMovesWith(moves, bothFilters); len(got) != 0 {
+		t.Fatalf("exclude should beat include: %#v", got)
+	}
+}
+
+func TestScopeFilterGlobMatchesSnapshotPaths(t *testing.T) {
+	a := db.ActionRecord{
+		MediaSnapshot: `{"original_path":"/movies/2024/Junk","compact_path":"/movies/2024/.temp/Junk"}`,
+	}
+	f := ScopeFilter{Dir: normalizeScope("/movies/2024"), Includes: []string{".temp"}}
+	if !ActionMatchesGlobs(a, f) {
+		t.Fatalf("expected .temp basename to match snapshot compact_path")
+	}
+}
