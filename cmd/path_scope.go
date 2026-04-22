@@ -44,6 +44,11 @@ type ScopeFilter struct {
 	Dir      string   // normalized scope dir ("" → no dir filter / --global)
 	Includes []string // glob patterns
 	Excludes []string // glob patterns
+	// UserProvidedPath is true when the user passed an explicit [path]
+	// positional argument or --global. False means the scope was inferred
+	// from cwd, in which case interactive flows should confirm with the
+	// user before acting.
+	UserProvidedPath bool
 }
 
 // HasGlobs reports whether any include or exclude pattern is set.
@@ -193,6 +198,10 @@ func buildScopeFilter(args []string, home string, isGlobal bool, includes, exclu
 		Dir:      scopeFromArgs(args, home, isGlobal),
 		Includes: trimEmpty(includes),
 		Excludes: trimEmpty(excludes),
+		// User explicitly steered the scope when they passed a [path] arg
+		// or --global. Otherwise we silently fell back to cwd and need to
+		// confirm before doing anything destructive.
+		UserProvidedPath: isGlobal || len(args) > 0,
 	}
 }
 
