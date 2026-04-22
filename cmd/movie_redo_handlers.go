@@ -14,12 +14,43 @@ func showRedoableList(database *db.DB, f ScopeFilter) {
 	printScopeBanner(f)
 	fmt.Println()
 
+	moveSkipped := countRedoableMoveSkipped(database, f)
+	actionSkipped := countRedoableActionSkipped(database, f)
+
 	redoableMoves := printRedoableMoves(database, f)
 	redoableActions := printRedoableActions(database, f)
 
 	if redoableMoves == 0 && redoableActions == 0 {
 		fmt.Println("  📭 Nothing to redo in this scope.")
 	}
+
+	printHistorySummary(HistorySummary{
+		Verb:    "Redo (preview)",
+		Matched: redoableMoves + redoableActions,
+		Skipped: moveSkipped + actionSkipped,
+	})
+}
+
+func countRedoableMoveSkipped(database *db.DB, f ScopeFilter) int {
+	raw, _ := database.ListMoveHistory(50)
+	kept := FilterMovesWith(raw, f)
+	return countScopeSkipped(countRevertedMoves(raw), countRevertedMoves(kept))
+}
+
+func countRedoableActionSkipped(database *db.DB, f ScopeFilter) int {
+	raw, _ := database.ListActions(200)
+	kept := FilterActionsWith(raw, f)
+	return countScopeSkipped(countReverted(raw), countReverted(kept))
+}
+
+func countRevertedMoves(moves []db.MoveRecord) int {
+	count := 0
+	for _, m := range moves {
+		if m.IsReverted {
+			count++
+		}
+	}
+	return count
 }
 
 func printRedoableMoves(database *db.DB, f ScopeFilter) int {
@@ -137,9 +168,12 @@ func redoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
 		return
 	}
 
-	redoable := countReverted(batchActions)
+	scoped := FilterActionsWith(batchActions, f)
+	redoable := countReverted(scoped)
+	skipped := countScopeSkipped(countReverted(batchActions), redoable)
 	if redoable == 0 {
-		fmt.Println("📭 Batch has no reverted actions to redo.")
+		fmt.Println("📭 Batch has no reverted actions to redo (or all filtered out).")
+		printHistorySummary(HistorySummary{Verb: "Redo", Skipped: skipped})
 		return
 	}
 
@@ -148,44 +182,106 @@ func redoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
 		shortBatch = shortBatch[:8]
 	}
 
-	fmt.Printf("⏩ Redo batch %s (%d actions):\n", shortBatch, redoable)
-	printRevertedActions(batchActions)
+	fmt.Printf("⏩ Redo batch %s (%d actions, %d skipped by filter):\n",
+		shortBatch, redoable, skipped)
+	printRevertedActions(scoped)
 	if !confirmRedo(scanner) {
 		return
 	}
 
-	failed := executeRedoBatch(database, batchActions)
+	failed := executeRedoBatch(database, scoped)
 	printRedoBatchResult(shortBatch, redoable, failed)
+	printHistorySummary(HistorySummary{
+		Verb:     "Redo",
+		Matched:  redoable,
+		Executed: redoable - failed,
+		Failed:   failed,
+		Skipped:  skipped,
+	})
 }
 
 func redoLastOperation(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
 	lastMove := pickLastRedoableMove(database, f)
 	lastAction := pickLastRedoableAction(database, f)
+	skipped := countRedoableMoveSkipped(database, f) +
+		countRedoableActionSkipped(database, f)
 
 	haveMove := lastMove != nil
 	haveAction := lastAction != nil
 
 	if !haveMove && !haveAction {
 		fmt.Println("📭 No reverted operations to redo in this scope.")
+		printHistorySummary(HistorySummary{Verb: "Redo", Skipped: skipped})
 		return
 	}
 
 	if haveMove && !haveAction {
-		redoSingleMove(database, scanner, lastMove)
+		runSingleRedoMove(database, scanner, lastMove, skipped)
 		return
 	}
 
 	if haveAction && !haveMove {
-		redoSingleAction(database, scanner, lastAction)
+		runSingleRedoAction(database, scanner, lastAction, skipped)
 		return
 	}
 
 	// Both available — pick the newest reverted
 	if lastAction.CreatedAt >= lastMove.MovedAt {
-		redoSingleAction(database, scanner, lastAction)
+		runSingleRedoAction(database, scanner, lastAction, skipped)
 		return
 	}
-	redoSingleMove(database, scanner, lastMove)
+	runSingleRedoMove(database, scanner, lastMove, skipped)
+}
+
+func runSingleRedoMove(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord, skipped int) {
+	executed, failed := 0, 0
+	if !redoSingleMoveOK(database, scanner, m) {
+		failed = 1
+	} else {
+		executed = 1
+	}
+	printHistorySummary(HistorySummary{
+		Verb: "Redo", Matched: 1, Executed: executed, Failed: failed, Skipped: skipped,
+	})
+}
+
+func runSingleRedoAction(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord, skipped int) {
+	executed, failed := 0, 0
+	if !redoSingleActionOK(database, scanner, a) {
+		failed = 1
+	} else {
+		executed = 1
+	}
+	printHistorySummary(HistorySummary{
+		Verb: "Redo", Matched: 1, Executed: executed, Failed: failed, Skipped: skipped,
+	})
+}
+
+func redoSingleMoveOK(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord) bool {
+	fmt.Println("⏩ Redo last move:")
+	fmt.Printf("   %s → %s\n", m.FromPath, m.ToPath)
+	if !confirmRedo(scanner) {
+		return false
+	}
+	if err := executeMoveRedo(database, m); err != nil {
+		errlog.Error("Redo failed: %v", err)
+		return false
+	}
+	fmt.Println("✅ Redo successful!")
+	return true
+}
+
+func redoSingleActionOK(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord) bool {
+	printActionRedo(a)
+	if !confirmRedo(scanner) {
+		return false
+	}
+	if err := executeActionRedo(database, a); err != nil {
+		errlog.Error("Redo failed: %v", err)
+		return false
+	}
+	fmt.Println("✅ Redo successful!")
+	return true
 }
 
 // pickLastRedoableMove returns the newest reverted move under scope.
