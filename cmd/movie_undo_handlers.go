@@ -14,12 +14,45 @@ func showUndoableList(database *db.DB, f ScopeFilter) {
 	printScopeBanner(f)
 	fmt.Println()
 
+	moveSkipped := countUndoableMoveSkipped(database, f)
+	actionSkipped := countUndoableActionSkipped(database, f)
+
 	undoableMoves := printUndoableMoves(database, f)
 	undoableActions := printUndoableActions(database, f)
 
 	if undoableMoves == 0 && undoableActions == 0 {
 		fmt.Println("  📭 Nothing to undo in this scope.")
 	}
+
+	printHistorySummary(HistorySummary{
+		Verb:    "Undo (preview)",
+		Matched: undoableMoves + undoableActions,
+		Skipped: moveSkipped + actionSkipped,
+	})
+}
+
+// countUndoableMoveSkipped returns how many non-reverted moves were
+// dropped by the current filter (for list-mode summary).
+func countUndoableMoveSkipped(database *db.DB, f ScopeFilter) int {
+	raw, _ := database.ListMoveHistory(50)
+	kept := FilterMovesWith(raw, f)
+	return countScopeSkipped(countUndoableMoves(raw), countUndoableMoves(kept))
+}
+
+func countUndoableActionSkipped(database *db.DB, f ScopeFilter) int {
+	raw, _ := database.ListActions(100)
+	kept := FilterActionsWith(raw, f)
+	return countScopeSkipped(countNonReverted(raw), countNonReverted(kept))
+}
+
+func countUndoableMoves(moves []db.MoveRecord) int {
+	count := 0
+	for _, m := range moves {
+		if !m.IsReverted {
+			count++
+		}
+	}
+	return count
 }
 
 func printUndoableMoves(database *db.DB, f ScopeFilter) int {
@@ -165,49 +198,119 @@ func undoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
 		return
 	}
 
-	undoable := countUndoable(batchActions)
+	scoped := FilterActionsWith(batchActions, f)
+	undoable := countUndoable(scoped)
+	skipped := countScopeSkipped(countUndoable(batchActions), undoable)
 	if undoable == 0 {
-		fmt.Println("📭 Batch already reverted.")
+		fmt.Println("📭 Batch already reverted (or all actions filtered out).")
+		printHistorySummary(HistorySummary{Verb: "Undo", Skipped: skipped})
 		return
 	}
 
-	fmt.Printf("⏪ Undo batch %s (%d actions):\n", batchID[:8], undoable)
-	printUndoableActionsList(batchActions)
+	fmt.Printf("⏪ Undo batch %s (%d actions, %d skipped by filter):\n",
+		batchID[:8], undoable, skipped)
+	printUndoableActionsList(scoped)
 	if !confirmUndo(scanner) {
 		return
 	}
 
-	failed := executeUndoBatch(database, batchActions)
+	failed := executeUndoBatch(database, scoped)
 	printUndoBatchResult(batchID[:8], undoable, failed)
+	printHistorySummary(HistorySummary{
+		Verb:     "Undo",
+		Matched:  undoable,
+		Executed: undoable - failed,
+		Failed:   failed,
+		Skipped:  skipped,
+	})
 }
 
 func undoLastOperation(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
 	lastMove := pickLastUndoableMove(database, f)
 	lastAction := pickLastUndoableAction(database, f)
+	skipped := countUndoableMoveSkipped(database, f) +
+		countUndoableActionSkipped(database, f)
 
 	haveMove := lastMove != nil
 	haveAction := lastAction != nil
 
 	if !haveMove && !haveAction {
 		fmt.Println("📭 No operations to undo in this scope.")
+		printHistorySummary(HistorySummary{Verb: "Undo", Skipped: skipped})
 		return
 	}
 
 	if haveMove && !haveAction {
-		undoSingleMove(database, scanner, lastMove)
+		runSingleUndoMove(database, scanner, lastMove, skipped)
 		return
 	}
 
 	if haveAction && !haveMove {
-		undoSingleAction(database, scanner, lastAction)
+		runSingleUndoAction(database, scanner, lastAction, skipped)
 		return
 	}
 
 	if lastAction.CreatedAt >= lastMove.MovedAt {
-		undoSingleAction(database, scanner, lastAction)
+		runSingleUndoAction(database, scanner, lastAction, skipped)
 		return
 	}
-	undoSingleMove(database, scanner, lastMove)
+	runSingleUndoMove(database, scanner, lastMove, skipped)
+}
+
+// runSingleUndoMove wraps undoSingleMove with summary reporting.
+func runSingleUndoMove(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord, skipped int) {
+	executed, failed := 0, 0
+	if !undoSingleMoveOK(database, scanner, m) {
+		failed = 1
+	} else {
+		executed = 1
+	}
+	printHistorySummary(HistorySummary{
+		Verb: "Undo", Matched: 1, Executed: executed, Failed: failed, Skipped: skipped,
+	})
+}
+
+// runSingleUndoAction wraps undoSingleAction with summary reporting.
+func runSingleUndoAction(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord, skipped int) {
+	executed, failed := 0, 0
+	if !undoSingleActionOK(database, scanner, a) {
+		failed = 1
+	} else {
+		executed = 1
+	}
+	printHistorySummary(HistorySummary{
+		Verb: "Undo", Matched: 1, Executed: executed, Failed: failed, Skipped: skipped,
+	})
+}
+
+// undoSingleMoveOK is the bool-returning variant used by the wrapper.
+// Returns false on cancel or on filesystem failure.
+func undoSingleMoveOK(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord) bool {
+	fmt.Println("⏪ Last move operation:")
+	fmt.Printf("   %s → %s\n", m.ToPath, m.FromPath)
+	if !confirmUndo(scanner) {
+		return false
+	}
+	if err := executeMoveUndo(database, m); err != nil {
+		errlog.Error("Undo failed: %v", err)
+		return false
+	}
+	fmt.Println("✅ Undo successful!")
+	return true
+}
+
+// undoSingleActionOK is the bool-returning variant used by the wrapper.
+func undoSingleActionOK(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord) bool {
+	printActionUndo(a)
+	if !confirmUndo(scanner) {
+		return false
+	}
+	if err := executeActionUndo(database, a); err != nil {
+		errlog.Error("Undo failed: %v", err)
+		return false
+	}
+	fmt.Println("✅ Undo successful!")
+	return true
 }
 
 // pickLastUndoableMove returns the newest non-reverted move under scope.
@@ -252,31 +355,6 @@ func pickLastUndoableAction(database *db.DB, f ScopeFilter) *db.ActionRecord {
 		return &a
 	}
 	return nil
-}
-
-func undoSingleMove(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord) {
-	fmt.Println("⏪ Last move operation:")
-	fmt.Printf("   %s → %s\n", m.ToPath, m.FromPath)
-	if !confirmUndo(scanner) {
-		return
-	}
-	if err := executeMoveUndo(database, m); err != nil {
-		errlog.Error("Undo failed: %v", err)
-		return
-	}
-	fmt.Println("✅ Undo successful!")
-}
-
-func undoSingleAction(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord) {
-	printActionUndo(a)
-	if !confirmUndo(scanner) {
-		return
-	}
-	if err := executeActionUndo(database, a); err != nil {
-		errlog.Error("Undo failed: %v", err)
-		return
-	}
-	fmt.Println("✅ Undo successful!")
 }
 
 func findLastUndoableBatch(database *db.DB, f ScopeFilter) string {
