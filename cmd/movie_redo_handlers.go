@@ -156,6 +156,10 @@ func redoMoveByID(database *db.DB, scanner *bufio.Scanner, id int64) {
 }
 
 func redoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
+	f, ok := ConfirmCwdScope(scanner, f, "Redo")
+	if !ok {
+		return
+	}
 	batchID := findLastRevertedBatchInScope(database, f)
 	if batchID == "" {
 		fmt.Println("📭 No reverted batch operations to redo in this scope.")
@@ -201,6 +205,10 @@ func redoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
 }
 
 func redoLastOperation(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
+	f, ok := ConfirmCwdScope(scanner, f, "Redo")
+	if !ok {
+		return
+	}
 	lastMove := pickLastRedoableMove(database, f)
 	lastAction := pickLastRedoableAction(database, f)
 	skipped := countRedoableMoveSkipped(database, f) +

@@ -186,6 +186,10 @@ func undoMoveByID(database *db.DB, scanner *bufio.Scanner, id int64) {
 }
 
 func undoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
+	f, ok := ConfirmCwdScope(scanner, f, "Undo")
+	if !ok {
+		return
+	}
 	batchID := findLastUndoableBatch(database, f)
 	if batchID == "" {
 		fmt.Println("📭 No batch operations to undo in this scope.")
@@ -226,6 +230,10 @@ func undoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
 }
 
 func undoLastOperation(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
+	f, ok := ConfirmCwdScope(scanner, f, "Undo")
+	if !ok {
+		return
+	}
 	lastMove := pickLastUndoableMove(database, f)
 	lastAction := pickLastUndoableAction(database, f)
 	skipped := countUndoableMoveSkipped(database, f) +
