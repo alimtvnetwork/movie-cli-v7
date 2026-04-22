@@ -71,7 +71,7 @@ func runMovieRedo(cmd *cobra.Command, args []string) {
 	database, err := db.Open()
 	if err != nil {
 		errlog.Error(msgDatabaseError, err)
-		return
+		os.Exit(ExitGenericError)
 	}
 	defer database.Close()
 
@@ -79,22 +79,19 @@ func runMovieRedo(cmd *cobra.Command, args []string) {
 	home, _ := os.UserHomeDir()
 	filter := buildScopeFilter(args, home, redoGlobal, redoIncludes, redoExcludes, redoAssumeYes)
 
-	if redoListFlag {
-		showRedoableList(database, filter)
-		return
-	}
-	if redoActionID > 0 {
-		redoActionByID(database, scanner, redoActionID)
-		return
-	}
-	if redoMoveID > 0 {
-		redoMoveByID(database, scanner, redoMoveID)
-		return
-	}
-	if redoBatchFlag {
-		redoLastBatch(database, scanner, filter)
-		return
-	}
+	exitWithCode(dispatchRedo(database, scanner, filter))
+}
 
-	redoLastOperation(database, scanner, filter)
+func dispatchRedo(database *db.DB, scanner *bufio.Scanner, filter ScopeFilter) int {
+	switch {
+	case redoListFlag:
+		return showRedoableList(database, filter)
+	case redoActionID > 0:
+		return redoActionByID(database, scanner, redoActionID)
+	case redoMoveID > 0:
+		return redoMoveByID(database, scanner, redoMoveID)
+	case redoBatchFlag:
+		return redoLastBatch(database, scanner, filter)
+	}
+	return redoLastOperation(database, scanner, filter)
 }
