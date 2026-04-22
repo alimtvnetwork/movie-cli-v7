@@ -151,3 +151,23 @@ Wiring: `ScopeFilter.AssumeYes` flag + package-level `undoAssumeYes` /
 see the filter directly). `buildScopeFilter` signature now takes the
 bool. Both cobra commands register `--yes`/`-y` and `--assume-yes` as
 aliases of the same variable.
+
+## Preview/execution filter parity (v2.146.0)
+`--list` previews and the actual execution flows now scan the SAME row
+set and apply the SAME filter pipeline:
+
+1. **Unified scan limits** — `undoMoveScanLimit` (200) and
+   `undoActionScanLimit` (200) constants are used by every preview
+   counter AND every execution picker. Previously preview used 50/100
+   while execution used 200/200, so `--list` could report "0 ready"
+   while `movie undo` would still find rows.
+2. **Single filter pipeline** — `pickLastUndoableMove`,
+   `pickLastUndoableAction`, `pickLastRedoableMove`,
+   `pickLastRedoableAction` now go through `FilterMovesWith` /
+   `FilterActionsWith` (the same helpers `printUndoableMoves` etc.
+   already used). They no longer reimplement the scope+glob logic
+   inline.
+3. **Locked by tests** — `cmd/preview_parity_test.go` exercises 5 filter
+   shapes × 2 reverted states across moves and actions and asserts
+   `len(preview) == len(execution)`. `TestScanLimitsAreUnified` fails
+   the build if the constants ever drop below 200.
