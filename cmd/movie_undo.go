@@ -74,7 +74,7 @@ func runMovieUndo(cmd *cobra.Command, args []string) {
 	database, err := db.Open()
 	if err != nil {
 		errlog.Error(msgDatabaseError, err)
-		return
+		os.Exit(ExitGenericError)
 	}
 	defer database.Close()
 
@@ -82,22 +82,20 @@ func runMovieUndo(cmd *cobra.Command, args []string) {
 	home, _ := os.UserHomeDir()
 	filter := buildScopeFilter(args, home, undoGlobal, undoIncludes, undoExcludes, undoAssumeYes)
 
-	if undoListFlag {
-		showUndoableList(database, filter)
-		return
-	}
-	if undoActionID > 0 {
-		undoActionByID(database, scanner, undoActionID)
-		return
-	}
-	if undoMoveID > 0 {
-		undoMoveByID(database, scanner, undoMoveID)
-		return
-	}
-	if undoBatchFlag {
-		undoLastBatch(database, scanner, filter)
-		return
-	}
+	exitWithCode(dispatchUndo(database, scanner, filter))
+}
 
-	undoLastOperation(database, scanner, filter)
+// dispatchUndo routes to the right handler and returns its exit code.
+func dispatchUndo(database *db.DB, scanner *bufio.Scanner, filter ScopeFilter) int {
+	switch {
+	case undoListFlag:
+		return showUndoableList(database, filter)
+	case undoActionID > 0:
+		return undoActionByID(database, scanner, undoActionID)
+	case undoMoveID > 0:
+		return undoMoveByID(database, scanner, undoMoveID)
+	case undoBatchFlag:
+		return undoLastBatch(database, scanner, filter)
+	}
+	return undoLastOperation(database, scanner, filter)
 }

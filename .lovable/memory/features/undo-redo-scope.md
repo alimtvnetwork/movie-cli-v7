@@ -201,3 +201,34 @@ handlers pass `undoableCountsFn(database)` / `redoableCountsFn(database)`
 which reuse `FilterMovesWith` + the unified scan limits, so the
 previewed count matches the execution-time count exactly (parity
 contract from v2.146.0).
+
+## Distinct exit codes (v2.148.0)
+`movie undo` / `movie redo` now exit with documented, scriptable codes:
+
+| Code | Meaning |
+|------|---------|
+| `0`  | success / something was applied OR `--list` had matches |
+| `2`  | generic error (DB open, FS failure, malformed snapshot) |
+| `10` | scope rejected at cwd-confirm prompt |
+| `11` | row declined at per-row "Undo this? [y/N]" prompt (also EOF on stdin) |
+| `20` | nothing matched the current filter / scope |
+
+Range allocation: `1` and `>127` reserved (shell convention / signal
+codes). `10..19` = user decline, `20..29` = empty result.
+
+Non-zero exits print a final footer so logs and TTY both see why:
+```
+exit: 10 (scope rejected)
+```
+
+Implementation:
+- `cmd/exit_codes.go` — constants + `exitLabel` + `exitWithCode`
+  chokepoint with `osExit` / `exitFootPrintf` indirection for tests
+- All 8 undo/redo handler functions (`showUndoableList`,
+  `undoActionByID`, `undoMoveByID`, `undoLastBatch`, `undoLastOperation`,
+  + 3 redo equivalents) now return `int`
+- `runSingleUndoMove/Action` and `runSingleRedoMove/Action` propagate
+  the per-row code instead of the previous bool
+- `runMovieUndo` / `runMovieRedo` thin-wrap a `dispatchUndo` /
+  `dispatchRedo` switch and pass the result to `exitWithCode`
+- `cmd/exit_codes_test.go` locks the numeric values + footer behaviour
