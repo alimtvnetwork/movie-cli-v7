@@ -28,6 +28,8 @@ var (
 	redoGlobal    bool
 	redoActionID  int64
 	redoMoveID    int64
+	redoIncludes  []string
+	redoExcludes  []string
 )
 
 var movieRedoCmd = &cobra.Command{
@@ -45,7 +47,9 @@ Flags:
   --id <id>        Redo a specific action_history record by ID
   --move-id <id>   Redo a specific move_history record by ID
   --batch          Redo the entire last reverted batch
-  --global         Ignore the cwd / [path] scope`,
+  --global         Ignore the cwd / [path] scope
+  --include <glob> Keep only actions whose paths match this glob (repeatable)
+  --exclude <glob> Drop actions whose paths match this glob (repeatable)`,
 	Run: runMovieRedo,
 }
 
@@ -55,6 +59,8 @@ func init() {
 	movieRedoCmd.Flags().BoolVar(&redoGlobal, "global", false, "Ignore cwd / path scope")
 	movieRedoCmd.Flags().Int64Var(&redoActionID, "id", 0, "Redo specific action_history record")
 	movieRedoCmd.Flags().Int64Var(&redoMoveID, "move-id", 0, "Redo specific move_history record")
+	movieRedoCmd.Flags().StringSliceVar(&redoIncludes, "include", nil, "Glob pattern to keep (repeatable)")
+	movieRedoCmd.Flags().StringSliceVar(&redoExcludes, "exclude", nil, "Glob pattern to drop (repeatable)")
 }
 
 func runMovieRedo(cmd *cobra.Command, args []string) {
@@ -67,10 +73,10 @@ func runMovieRedo(cmd *cobra.Command, args []string) {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	home, _ := os.UserHomeDir()
-	scope := scopeFromArgs(args, home, redoGlobal)
+	filter := buildScopeFilter(args, home, redoGlobal, redoIncludes, redoExcludes)
 
 	if redoListFlag {
-		showRedoableList(database, scope)
+		showRedoableList(database, filter)
 		return
 	}
 	if redoActionID > 0 {
@@ -82,9 +88,9 @@ func runMovieRedo(cmd *cobra.Command, args []string) {
 		return
 	}
 	if redoBatchFlag {
-		redoLastBatch(database, scanner, scope)
+		redoLastBatch(database, scanner, filter)
 		return
 	}
 
-	redoLastOperation(database, scanner, scope)
+	redoLastOperation(database, scanner, filter)
 }

@@ -9,24 +9,22 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
-func showRedoableList(database *db.DB, scope string) {
+func showRedoableList(database *db.DB, f ScopeFilter) {
 	fmt.Println("⏩ Recent redoable operations")
-	if scope != "" {
-		fmt.Printf("   scope: %s\n", scope)
-	}
+	printScopeBanner(f)
 	fmt.Println()
 
-	redoableMoves := printRedoableMoves(database, scope)
-	redoableActions := printRedoableActions(database, scope)
+	redoableMoves := printRedoableMoves(database, f)
+	redoableActions := printRedoableActions(database, f)
 
 	if redoableMoves == 0 && redoableActions == 0 {
 		fmt.Println("  📭 Nothing to redo in this scope.")
 	}
 }
 
-func printRedoableMoves(database *db.DB, scope string) int {
+func printRedoableMoves(database *db.DB, f ScopeFilter) int {
 	rawMoves, _ := database.ListMoveHistory(50)
-	moves := FilterMoves(rawMoves, scope)
+	moves := FilterMovesWith(rawMoves, f)
 	count := 0
 	for _, m := range moves {
 		if m.IsReverted {
@@ -46,9 +44,9 @@ func printRedoableMoves(database *db.DB, scope string) int {
 	return count
 }
 
-func printRedoableActions(database *db.DB, scope string) int {
+func printRedoableActions(database *db.DB, f ScopeFilter) int {
 	rawActions, _ := database.ListActions(200)
-	actions := FilterActions(rawActions, scope)
+	actions := FilterActionsWith(rawActions, f)
 	count := countReverted(actions)
 	if count == 0 {
 		return 0
@@ -126,8 +124,8 @@ func redoMoveByID(database *db.DB, scanner *bufio.Scanner, id int64) {
 	fmt.Printf("✅ Move %d redone successfully.\n", target.ID)
 }
 
-func redoLastBatch(database *db.DB, scanner *bufio.Scanner, scope string) {
-	batchID := findLastRevertedBatchInScope(database, scope)
+func redoLastBatch(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
+	batchID := findLastRevertedBatchInScope(database, f)
 	if batchID == "" {
 		fmt.Println("📭 No reverted batch operations to redo in this scope.")
 		return
@@ -160,9 +158,9 @@ func redoLastBatch(database *db.DB, scanner *bufio.Scanner, scope string) {
 	printRedoBatchResult(shortBatch, redoable, failed)
 }
 
-func redoLastOperation(database *db.DB, scanner *bufio.Scanner, scope string) {
-	lastMove := pickLastRedoableMove(database, scope)
-	lastAction := pickLastRedoableAction(database, scope)
+func redoLastOperation(database *db.DB, scanner *bufio.Scanner, f ScopeFilter) {
+	lastMove := pickLastRedoableMove(database, f)
+	lastAction := pickLastRedoableAction(database, f)
 
 	haveMove := lastMove != nil
 	haveAction := lastAction != nil
@@ -191,7 +189,7 @@ func redoLastOperation(database *db.DB, scanner *bufio.Scanner, scope string) {
 }
 
 // pickLastRedoableMove returns the newest reverted move under scope.
-func pickLastRedoableMove(database *db.DB, scope string) *db.MoveRecord {
+func pickLastRedoableMove(database *db.DB, f ScopeFilter) *db.MoveRecord {
 	moves, err := database.ListMoveHistory(200)
 	if err != nil {
 		return nil
@@ -201,7 +199,10 @@ func pickLastRedoableMove(database *db.DB, scope string) *db.MoveRecord {
 		if !m.IsReverted {
 			continue
 		}
-		if !MoveInScope(m, scope) {
+		if !MoveInScope(m, f.Dir) {
+			continue
+		}
+		if f.HasGlobs() && !MoveMatchesGlobs(m, f) {
 			continue
 		}
 		return &m
@@ -210,7 +211,7 @@ func pickLastRedoableMove(database *db.DB, scope string) *db.MoveRecord {
 }
 
 // pickLastRedoableAction returns the newest reverted action under scope.
-func pickLastRedoableAction(database *db.DB, scope string) *db.ActionRecord {
+func pickLastRedoableAction(database *db.DB, f ScopeFilter) *db.ActionRecord {
 	actions, err := database.ListActions(200)
 	if err != nil {
 		return nil
@@ -220,7 +221,10 @@ func pickLastRedoableAction(database *db.DB, scope string) *db.ActionRecord {
 		if !a.IsReverted {
 			continue
 		}
-		if !ActionInScope(a, scope) {
+		if !ActionInScope(a, f.Dir) {
+			continue
+		}
+		if f.HasGlobs() && !ActionMatchesGlobs(a, f) {
 			continue
 		}
 		return &a
@@ -229,8 +233,8 @@ func pickLastRedoableAction(database *db.DB, scope string) *db.ActionRecord {
 }
 
 // findLastRevertedBatchInScope finds the most recent reverted batch where at
-// least one action touches the scope dir. scope == "" → unfiltered.
-func findLastRevertedBatchInScope(database *db.DB, scope string) string {
+// least one action passes the scope+glob filter. Empty filter → unfiltered.
+func findLastRevertedBatchInScope(database *db.DB, f ScopeFilter) string {
 	actions, err := database.ListActions(200)
 	if err != nil {
 		return ""
@@ -239,7 +243,7 @@ func findLastRevertedBatchInScope(database *db.DB, scope string) string {
 		if !a.IsReverted || a.BatchId == "" {
 			continue
 		}
-		if !batchTouchesScope(database, a.BatchId, scope) {
+		if !batchTouchesScope(database, a.BatchId, f) {
 			continue
 		}
 		return a.BatchId
