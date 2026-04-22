@@ -9,6 +9,14 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v5/errlog"
 )
 
+// History fetch limits — used by BOTH preview (--list) and execution
+// flows so they apply scope/glob filters to the same row set. Changing
+// these in one place changes the entire undo/redo experience uniformly.
+const (
+	undoMoveScanLimit   = 200
+	undoActionScanLimit = 200
+)
+
 func showUndoableList(database *db.DB, f ScopeFilter) {
 	fmt.Println("⏪ Recent undoable operations")
 	printScopeBanner(f)
@@ -36,13 +44,13 @@ func showUndoableList(database *db.DB, f ScopeFilter) {
 // countUndoableMoveSkipped returns how many non-reverted moves were
 // dropped by the current filter (for list-mode summary).
 func countUndoableMoveSkipped(database *db.DB, f ScopeFilter) int {
-	raw, _ := database.ListMoveHistory(50)
+	raw, _ := database.ListMoveHistory(undoMoveScanLimit)
 	kept := FilterMovesWith(raw, f)
 	return countScopeSkipped(countUndoableMoves(raw), countUndoableMoves(kept))
 }
 
 func countUndoableActionSkipped(database *db.DB, f ScopeFilter) int {
-	raw, _ := database.ListActions(100)
+	raw, _ := database.ListActions(undoActionScanLimit)
 	kept := FilterActionsWith(raw, f)
 	return countScopeSkipped(countNonReverted(raw), countNonReverted(kept))
 }
@@ -58,7 +66,7 @@ func countUndoableMoves(moves []db.MoveRecord) int {
 }
 
 func printUndoableMoves(database *db.DB, f ScopeFilter) int {
-	rawMoves, _ := database.ListMoveHistory(50)
+	rawMoves, _ := database.ListMoveHistory(undoMoveScanLimit)
 	moves := FilterMovesWith(rawMoves, f)
 	count := 0
 	for _, m := range moves {
@@ -80,7 +88,7 @@ func printUndoableMoves(database *db.DB, f ScopeFilter) int {
 }
 
 func printUndoableActions(database *db.DB, f ScopeFilter) int {
-	rawActions, _ := database.ListActions(100)
+	rawActions, _ := database.ListActions(undoActionScanLimit)
 	actions := FilterActionsWith(rawActions, f)
 	count := countNonReverted(actions)
 	if count == 0 {
@@ -325,21 +333,17 @@ func undoSingleActionOK(database *db.DB, scanner *bufio.Scanner, a *db.ActionRec
 
 // pickLastUndoableMove returns the newest non-reverted move under scope.
 func pickLastUndoableMove(database *db.DB, f ScopeFilter) *db.MoveRecord {
-	moves, err := database.ListMoveHistory(200)
+	moves, err := database.ListMoveHistory(undoMoveScanLimit)
 	if err != nil {
 		return nil
 	}
-	for i := range moves {
-		m := moves[i]
+	// Use the canonical filter pipeline so preview and execution agree
+	// on what "in scope" means.
+	for _, m := range FilterMovesWith(moves, f) {
 		if m.IsReverted {
 			continue
 		}
-		if !MoveInScope(m, f.Dir) {
-			continue
-		}
-		if f.HasGlobs() && !MoveMatchesGlobs(m, f) {
-			continue
-		}
+		m := m
 		return &m
 	}
 	return nil
@@ -347,21 +351,15 @@ func pickLastUndoableMove(database *db.DB, f ScopeFilter) *db.MoveRecord {
 
 // pickLastUndoableAction returns the newest non-reverted action under scope.
 func pickLastUndoableAction(database *db.DB, f ScopeFilter) *db.ActionRecord {
-	actions, err := database.ListActions(200)
+	actions, err := database.ListActions(undoActionScanLimit)
 	if err != nil {
 		return nil
 	}
-	for i := range actions {
-		a := actions[i]
+	for _, a := range FilterActionsWith(actions, f) {
 		if a.IsReverted {
 			continue
 		}
-		if !ActionInScope(a, f.Dir) {
-			continue
-		}
-		if f.HasGlobs() && !ActionMatchesGlobs(a, f) {
-			continue
-		}
+		a := a
 		return &a
 	}
 	return nil

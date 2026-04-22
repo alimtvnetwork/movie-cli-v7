@@ -34,13 +34,13 @@ func showRedoableList(database *db.DB, f ScopeFilter) {
 }
 
 func countRedoableMoveSkipped(database *db.DB, f ScopeFilter) int {
-	raw, _ := database.ListMoveHistory(50)
+	raw, _ := database.ListMoveHistory(undoMoveScanLimit)
 	kept := FilterMovesWith(raw, f)
 	return countScopeSkipped(countRevertedMoves(raw), countRevertedMoves(kept))
 }
 
 func countRedoableActionSkipped(database *db.DB, f ScopeFilter) int {
-	raw, _ := database.ListActions(200)
+	raw, _ := database.ListActions(undoActionScanLimit)
 	kept := FilterActionsWith(raw, f)
 	return countScopeSkipped(countReverted(raw), countReverted(kept))
 }
@@ -56,7 +56,7 @@ func countRevertedMoves(moves []db.MoveRecord) int {
 }
 
 func printRedoableMoves(database *db.DB, f ScopeFilter) int {
-	rawMoves, _ := database.ListMoveHistory(50)
+	rawMoves, _ := database.ListMoveHistory(undoMoveScanLimit)
 	moves := FilterMovesWith(rawMoves, f)
 	count := 0
 	for _, m := range moves {
@@ -78,7 +78,7 @@ func printRedoableMoves(database *db.DB, f ScopeFilter) int {
 }
 
 func printRedoableActions(database *db.DB, f ScopeFilter) int {
-	rawActions, _ := database.ListActions(200)
+	rawActions, _ := database.ListActions(undoActionScanLimit)
 	actions := FilterActionsWith(rawActions, f)
 	count := countReverted(actions)
 	if count == 0 {
@@ -296,21 +296,15 @@ func redoSingleActionOK(database *db.DB, scanner *bufio.Scanner, a *db.ActionRec
 
 // pickLastRedoableMove returns the newest reverted move under scope.
 func pickLastRedoableMove(database *db.DB, f ScopeFilter) *db.MoveRecord {
-	moves, err := database.ListMoveHistory(200)
+	moves, err := database.ListMoveHistory(undoMoveScanLimit)
 	if err != nil {
 		return nil
 	}
-	for i := range moves {
-		m := moves[i]
+	for _, m := range FilterMovesWith(moves, f) {
 		if !m.IsReverted {
 			continue
 		}
-		if !MoveInScope(m, f.Dir) {
-			continue
-		}
-		if f.HasGlobs() && !MoveMatchesGlobs(m, f) {
-			continue
-		}
+		m := m
 		return &m
 	}
 	return nil
@@ -318,21 +312,15 @@ func pickLastRedoableMove(database *db.DB, f ScopeFilter) *db.MoveRecord {
 
 // pickLastRedoableAction returns the newest reverted action under scope.
 func pickLastRedoableAction(database *db.DB, f ScopeFilter) *db.ActionRecord {
-	actions, err := database.ListActions(200)
+	actions, err := database.ListActions(undoActionScanLimit)
 	if err != nil {
 		return nil
 	}
-	for i := range actions {
-		a := actions[i]
+	for _, a := range FilterActionsWith(actions, f) {
 		if !a.IsReverted {
 			continue
 		}
-		if !ActionInScope(a, f.Dir) {
-			continue
-		}
-		if f.HasGlobs() && !ActionMatchesGlobs(a, f) {
-			continue
-		}
+		a := a
 		return &a
 	}
 	return nil
