@@ -62,14 +62,14 @@ func countScopeSkipped(raw, kept int) int {
 // `--include` / `--exclude` patterns.
 type PreviewSummary struct {
 	Verb            string // "Undo" or "Redo"
+	AlreadyDoneHint string // optional copy: "already reverted" / "not reverted yet"
 	MatchedMoves    int    // moves passing filter and still actionable
 	MatchedActions  int    // actions passing filter and still actionable
 	SkippedMoves    int    // moves dropped by filter
 	SkippedActions  int    // actions dropped by filter
-	AlreadyDoneHint string // optional copy: "already reverted" / "not reverted yet"
 }
 
-// printPreviewSummary writes a labelled preview block. Designed to make
+// printPreviewSummary writes a labeled preview block. Designed to make
 // it impossible for the user to confuse "what the filter matched" with
 // "what would actually be undone/redone if you ran the command".
 //

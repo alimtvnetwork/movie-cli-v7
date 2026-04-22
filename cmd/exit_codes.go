@@ -78,7 +78,7 @@ var exitFootPrintf = func(format string, a ...interface{}) {
 
 // exitWithCode is the single os.Exit chokepoint for undo/redo runners.
 // Code 0 returns silently (no extra output) so happy-path runs stay
-// clean. Non-zero codes always print a labelled footer and call
+// clean. Non-zero codes always print a labeled footer and call
 // os.Exit so the shell sees the real exit status.
 func exitWithCode(code int) {
 	if code == ExitOK {

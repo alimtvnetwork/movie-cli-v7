@@ -357,7 +357,6 @@ func pickLastUndoableMove(database *db.DB, f ScopeFilter) *db.MoveRecord {
 		if m.IsReverted {
 			continue
 		}
-		m := m
 		return &m
 	}
 	return nil
@@ -373,7 +372,6 @@ func pickLastUndoableAction(database *db.DB, f ScopeFilter) *db.ActionRecord {
 		if a.IsReverted {
 			continue
 		}
-		a := a
 		return &a
 	}
 	return nil
