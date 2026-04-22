@@ -347,27 +347,3 @@ func findLastRevertedBatchInScope(database *db.DB, f ScopeFilter) string {
 	return ""
 }
 
-func redoSingleMove(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord) {
-	fmt.Println("⏩ Redo last move:")
-	fmt.Printf("   %s → %s\n", m.FromPath, m.ToPath)
-	if !confirmRedo(scanner) {
-		return
-	}
-	if err := executeMoveRedo(database, m); err != nil {
-		errlog.Error("Redo failed: %v", err)
-		return
-	}
-	fmt.Println("✅ Redo successful!")
-}
-
-func redoSingleAction(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord) {
-	printActionRedo(a)
-	if !confirmRedo(scanner) {
-		return
-	}
-	if err := executeActionRedo(database, a); err != nil {
-		errlog.Error("Redo failed: %v", err)
-		return
-	}
-	fmt.Println("✅ Redo successful!")
-}
