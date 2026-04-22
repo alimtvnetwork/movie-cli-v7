@@ -184,6 +184,27 @@ func scopeFromArgs(args []string, home string, isGlobal bool) string {
 	return normalizeScope(dir)
 }
 
+// buildScopeFilter is the canonical builder used by undo/redo cobra runs.
+// It composes the dir scope with the user-supplied include/exclude globs.
+func buildScopeFilter(args []string, home string, isGlobal bool, includes, excludes []string) ScopeFilter {
+	return ScopeFilter{
+		Dir:      scopeFromArgs(args, home, isGlobal),
+		Includes: trimEmpty(includes),
+		Excludes: trimEmpty(excludes),
+	}
+}
+
+func trimEmpty(in []string) []string {
+	out := make([]string, 0, len(in))
+	for _, s := range in {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 // normalizeScope returns a clean absolute-style suffix-friendly form.
 func normalizeScope(dir string) string {
 	clean := filepath.Clean(dir)
