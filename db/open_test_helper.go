@@ -4,13 +4,15 @@
 // movie.db file used by the running binary.
 //
 // Why this is in a non-_test.go file:
-//   Go build tags do not let one package's _test.go expose helpers to a
-//   different package. The cmd/ integration tests need a database, so this
-//   helper has to be reachable from a regular .go file. The function name
-//   is prefixed with "Test" + suffixed with "ForTest" to make grep-ability
-//   obvious — production code MUST NOT call OpenInMemoryForTest.
+//
+//	Go build tags do not let one package's _test.go expose helpers to a
+//	different package. The cmd/ integration tests need a database, so this
+//	helper has to be reachable from a regular .go file. The function name
+//	is prefixed with "Test" + suffixed with "ForTest" to make grep-ability
+//	obvious — production code MUST NOT call OpenInMemoryForTest.
 //
 // Lint-style guarantees:
+//
 //   - Schema parity with Open(): runs the same migrateSchema() so all
 //     tables, views, indexes, and seed rows are present.
 //   - BasePath set to t.TempDir() (passed in) so any code that writes
