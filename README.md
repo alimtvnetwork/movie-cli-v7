@@ -28,19 +28,21 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 
 ### Install latest release
 
-Picks up whatever is currently tagged `latest` on GitHub. Use this for first-time installs and casual upgrades.
+Picks up whatever is currently tagged `latest` on GitHub — and if no release has been published yet, automatically falls back to a source-build from `main` so you still end up with a working binary.
 
 **Windows (PowerShell)**
 
 ```powershell
-irm https://github.com/alimtvnetwork/movie-cli-v6/releases/latest/download/install.ps1 | iex
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | iex
 ```
 
 **Linux / macOS**
 
 ```bash
-curl -fsSL https://github.com/alimtvnetwork/movie-cli-v6/releases/latest/download/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
 ```
+
+> `get.ps1` / `get.sh` first probe `releases/latest/download/install.{ps1,sh}`. If that returns 200 it installs the pre-built binary. If it 404s (no release published yet) it transparently falls back to cloning + building from source via `install.{ps1,sh}` on `main`. Either way you get a clear message telling you which path was taken and what to do next.
 
 ### Install a specific version (pinned)
 
@@ -217,16 +219,16 @@ Two flavours — pick based on whether you want auto-updates or a frozen version
 **Windows (PowerShell)**
 
 ```powershell
-irm https://github.com/alimtvnetwork/movie-cli-v6/releases/latest/download/install.ps1 | iex
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | iex
 ```
 
 **Linux / macOS (Bash)**
 
 ```bash
-curl -fsSL https://github.com/alimtvnetwork/movie-cli-v6/releases/latest/download/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
 ```
 
-GitHub's `/releases/latest/` redirect resolves to whatever tag is currently marked latest, so re-running this one-liner installs the newest version each time.
+`get.{ps1,sh}` first checks `releases/latest/download/install.{ps1,sh}`. If a release is published it installs the pre-built binary; otherwise it falls back to a source-build from `main`, prints exactly which path it took, and tells the maintainer how to publish a release so future installs skip the build step.
 
 #### Pinned to a specific release
 
