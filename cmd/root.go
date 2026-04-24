@@ -64,6 +64,7 @@ func init() {
 		updateCleanupCmd,
 		selfReplaceCmd,
 		doctorCmd,
+		preflightCmd,
 		movieScanCmd,
 		movieLsCmd,
 		movieSearchCmd,
