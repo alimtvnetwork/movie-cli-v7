@@ -460,10 +460,11 @@ function setFilter(group, value, btn) {
     btn.classList.add('active');
     activeTypeFilter = value;
   }
-  applyFilters();
+  if (dashboardMode) { refreshDashboardList(); } else { applyFilters(); }
 }
 
 function applyFilters() {
+  if (dashboardMode) { refreshDashboardList(); return; }
   var query = document.getElementById('searchInput').value.toLowerCase();
   var genre = document.getElementById('genreFilter').value;
   var minRating = parseFloat(document.getElementById('ratingFilter').value) || 0;
@@ -513,6 +514,7 @@ function updateResultsInfo(visible) {
 }
 
 function applySort() {
+  if (dashboardMode) { refreshDashboardList(); return; }
   var val = document.getElementById('sortSelect').value;
   var grid = document.getElementById('grid');
   var cards = Array.from(grid.querySelectorAll('.card'));
@@ -651,13 +653,14 @@ async function showSimilar(id, title) {
   modal.classList.add('show');
 
   try {
-    var r = await fetch(API_BASE + '/api/media/' + id + '/similar');
+    // Prefer the consolidated details endpoint (single round-trip with media + tags + similar).
+    var r = await fetch(API_BASE + '/api/media/' + id + '/details');
     if (!r.ok) {
       content.innerHTML = '<div class="similar-empty">Could not fetch recommendations (HTTP ' + r.status + ')</div>';
       return;
     }
     var data = await r.json();
-    var items = data.similar || [];
+    var items = (data && data.similar) ? data.similar : [];
     if (items.length === 0) {
       content.innerHTML = '<div class="similar-empty">No recommendations found' + (data.message ? ': ' + data.message : '') + '</div>';
       return;
