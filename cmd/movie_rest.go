@@ -150,6 +150,9 @@ func buildRESTMux(database *db.DB) *http.ServeMux {
 	mux.HandleFunc("/api/dashboard/list", corsWrap(func(w http.ResponseWriter, r *http.Request) {
 		handleDashboardList(w, r, database)
 	}))
+	mux.HandleFunc("/api/dashboard/export", corsWrap(func(w http.ResponseWriter, r *http.Request) {
+		handleDashboardExport(w, r, database)
+	}))
 
 	return mux
 }
