@@ -53,6 +53,7 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 - [Release Workflow](#release-workflow)
 - [Project Structure](#project-structure)
 - [Data Storage](#data-storage)
+- [Milestones](#milestones)
 - [Dependencies](#dependencies)
 - [Contributing](#-contributing)
 - [Author](#author)
