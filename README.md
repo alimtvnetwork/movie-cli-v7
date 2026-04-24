@@ -22,6 +22,46 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 
 <div align="center">
 
+## ✨ Highlights
+
+</div>
+
+- 🔍 **Smart scan** — recursively walks folders, cleans messy release names, and matches them against TMDb
+- 🖼️ **Posters & metadata** — automatic thumbnail downloads, ratings, genres, cast, runtime
+- 📦 **Single binary** — one statically-linked Go executable, no runtime, no dependencies
+- 🗂️ **SQLite (WAL)** — fast, durable, zero-config local database in `./data/movie.db`
+- ↩️ **Undo / redo** — every move, rename, scan, and delete is reversible
+- 🌐 **REST API + web UI** — `movie rest --open` launches a local dashboard
+- 🛠️ **Self-updating** — `movie update` pulls, rebuilds, and hands off in-place
+- 🔒 **Cross-platform** — Windows, Linux, macOS on `amd64` and `arm64`
+
+---
+
+<div align="center">
+
+## 📑 Table of Contents
+
+</div>
+
+- [Quick Start](#quick-start)
+- [Demo](#-demo)
+- [Installation](#installation)
+- [What It Does](#what-it-does)
+- [Command Reference](#command-reference)
+- [Command Tree](#command-tree)
+- [Build & Deploy](#build--deploy)
+- [Release Workflow](#release-workflow)
+- [Project Structure](#project-structure)
+- [Data Storage](#data-storage)
+- [Dependencies](#dependencies)
+- [Contributing](#-contributing)
+- [Author](#author)
+- [License](#license)
+
+---
+
+<div align="center">
+
 ## Quick Start
 
 </div>
@@ -42,7 +82,7 @@ irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | 
 curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
 ```
 
-> `get.ps1` / `get.sh` first probe `releases/latest/download/install.{ps1,sh}`. If that returns 200 it installs the pre-built binary. If it 404s (no release published yet) it transparently falls back to cloning + building from source via `install.{ps1,sh}` on `main`. Either way you get a clear message telling you which path was taken and what to do next.
+> The bootstrap probes `releases/latest/download/install.{ps1,sh}` first. If a release exists, it installs the pre-built binary. If not, it transparently falls back to cloning and building from `main` — and prints exactly which path it took. See [Installation](#installation) for flags and details.
 
 ### Install a specific version (pinned)
 
@@ -806,4 +846,10 @@ Recognized as a **top 1% talent at Crossover** and one of the top software archi
 
 </div>
 
-Private project.
+Released under the [MIT License](LICENSE) — free for personal and commercial use, with no warranty.
+
+<div align="center">
+
+_Built with ❤️ by [Md. Alim Ul Karim](https://alimkarim.com) · [Riseup Asia LLC](https://riseup-asia.com)_
+
+</div>
