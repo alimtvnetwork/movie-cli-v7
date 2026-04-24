@@ -79,8 +79,19 @@ jobs:
           PATTERN='\b(IMDb|TMDb|API|HTTP|URL|JSON|SQL|HTML|XML)[A-Z]'
           violations=$(grep -rn -E "$PATTERN" --include='*.go' . | grep -vE "$ALLOWLIST" || true)
           if [ -n "$violations" ]; then
-            echo "::error::Acronym MixedCaps violations found (see spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md)"
+            echo "Acronym MixedCaps violations (see spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md):"
             echo "$violations"
+            echo ""
+            # Emit one GitHub annotation per violation so the Files-changed
+            # view highlights the exact file:line. Format from grep -n is
+            # path:line:content.
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              file=$(printf '%s' "$line" | cut -d: -f1)
+              lineno=$(printf '%s' "$line" | cut -d: -f2)
+              content=$(printf '%s' "$line" | cut -d: -f3-)
+              echo "::error file=${file},line=${lineno}::Acronym MixedCaps: ${content}"
+            done <<< "$violations"
             echo ""
             echo "Fix: rename IMDb→Imdb, TMDb→Tmdb, API→Api, HTTP→Http, URL→Url, JSON→Json, SQL→Sql, HTML→Html, XML→Xml in identifiers."
             exit 1
