@@ -79,7 +79,7 @@ if ($releaseAvailable) {
 
 # ── 2. Fall back to source-build ──────────────────────────────
 Write-Warn "No published GitHub Release found for $Owner/$Repo."
-Write-Note "Falling back to source-build from branch '$Branch'."
+Write-Note "Falling back to source-build from branch $Branch."
 Write-Note "(This needs Git + Go 1.22+ on PATH. Build takes ~30s.)"
 Write-Host ""
 Write-Note "Tip for maintainers: publish a release at $ReleasesUI"
