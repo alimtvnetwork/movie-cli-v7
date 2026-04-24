@@ -33,6 +33,7 @@ Endpoints:
   GET    /api/media/{id}         Get a single media item
   DELETE /api/media/{id}         Remove a media item
   PATCH  /api/media/{id}         Update media fields (JSON body)
+  GET    /api/media/{id}/details Full modal payload (media + tags + similar)
   GET    /api/media/{id}/similar TMDb recommendations
   PATCH  /api/media/{id}/watched Mark as watched
   GET    /api/tags               All tags with counts
@@ -40,6 +41,8 @@ Endpoints:
   POST   /api/tags               Add a tag (JSON: media_id, tag)
   DELETE /api/tags               Remove a tag (JSON: media_id, tag)
   GET    /api/stats              Library statistics
+  GET    /api/dashboard/filters  Distinct genres, tag counts, year range, type counts
+  GET    /api/dashboard/list     Filterable + sortable + paginated card list
 
 Examples:
   movie rest              Start on port 8086
@@ -128,6 +131,9 @@ func buildRESTMux(database *db.DB) *http.ServeMux {
 			case "watched":
 				handleWatched(w, r, database)
 				return
+			case "details":
+				handleMediaDetails(w, r, database)
+				return
 			}
 		}
 		handleMediaByID(w, r, database)
@@ -137,6 +143,12 @@ func buildRESTMux(database *db.DB) *http.ServeMux {
 	}))
 	mux.HandleFunc("/api/logs", corsWrap(func(w http.ResponseWriter, r *http.Request) {
 		handleLogs(w, r, database)
+	}))
+	mux.HandleFunc("/api/dashboard/filters", corsWrap(func(w http.ResponseWriter, r *http.Request) {
+		handleDashboardFilters(w, r, database)
+	}))
+	mux.HandleFunc("/api/dashboard/list", corsWrap(func(w http.ResponseWriter, r *http.Request) {
+		handleDashboardList(w, r, database)
 	}))
 
 	return mux
@@ -152,6 +164,7 @@ func printRESTBanner() {
 	fmt.Printf("     GET    /api/media/{id}\n")
 	fmt.Printf("     DELETE /api/media/{id}\n")
 	fmt.Printf("     PATCH  /api/media/{id}\n")
+	fmt.Printf("     GET    /api/media/{id}/details\n")
 	fmt.Printf("     GET    /api/media/{id}/similar\n")
 	fmt.Printf("     PATCH  /api/media/{id}/watched\n")
 	fmt.Printf("     GET    /api/tags\n")
@@ -159,6 +172,8 @@ func printRESTBanner() {
 	fmt.Printf("     POST   /api/tags\n")
 	fmt.Printf("     DELETE /api/tags\n")
 	fmt.Printf("     GET    /api/stats\n")
+	fmt.Printf("     GET    /api/dashboard/filters\n")
+	fmt.Printf("     GET    /api/dashboard/list?type=&genre=&tag=&q=&min_rating=&year_from=&year_to=&sort=&limit=&offset=\n")
 	fmt.Printf("     GET    /api/logs?level=ERROR&limit=50\n\n")
 }
 
