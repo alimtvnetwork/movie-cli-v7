@@ -846,4 +846,10 @@ Recognized as a **top 1% talent at Crossover** and one of the top software archi
 
 </div>
 
-Private project.
+Released under the [MIT License](LICENSE) — free for personal and commercial use, with no warranty.
+
+<div align="center">
+
+_Built with ❤️ by [Md. Alim Ul Karim](https://alimkarim.com) · [Riseup Asia LLC](https://riseup-asia.com)_
+
+</div>
