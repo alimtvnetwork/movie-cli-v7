@@ -14,13 +14,13 @@ import (
 // ----- /api/dashboard/filters -----------------------------------------------
 
 type dashboardFilters struct {
-	Types      map[string]int `json:"types"`
-	Genres     []string       `json:"genres"`
-	Tags       []db.TagCount  `json:"tags"`
-	RatingMax  float64        `json:"rating_max"`
-	YearMin    int            `json:"year_min"`
-	YearMax    int            `json:"year_max"`
-	TotalItems int            `json:"total_items"`
+	Genres      []string       `json:"genres"`
+	Tags        []db.TagCount  `json:"tags"`
+	Types       map[string]int `json:"types"`
+	YearMin     int            `json:"year_min"`
+	YearMax     int            `json:"year_max"`
+	RatingMax   float64        `json:"rating_max"`
+	TotalItems  int            `json:"total_items"`
 }
 
 func handleDashboardFilters(w http.ResponseWriter, r *http.Request, database *db.DB) {
@@ -144,13 +144,13 @@ func parseDashboardListQuery(r *http.Request) dashboardListQuery {
 	return q
 }
 
-func parseLimitDefault(raw string, def, ceiling int) int {
+func parseLimitDefault(raw string, def, max int) int {
 	n, err := strconv.Atoi(raw)
 	if err != nil || n <= 0 {
 		return def
 	}
-	if n > ceiling {
-		return ceiling
+	if n > max {
+		return max
 	}
 	return n
 }
