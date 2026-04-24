@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v6/db"
 )
 
 func showMediaDetail(database *db.DB, id int64) {

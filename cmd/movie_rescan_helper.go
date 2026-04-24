@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/alimtvnetwork/movie-cli-v5/db"
-	"github.com/alimtvnetwork/movie-cli-v5/errlog"
-	"github.com/alimtvnetwork/movie-cli-v5/tmdb"
+	"github.com/alimtvnetwork/movie-cli-v6/db"
+	"github.com/alimtvnetwork/movie-cli-v6/errlog"
+	"github.com/alimtvnetwork/movie-cli-v6/tmdb"
 )
 
 // mediaNeedsRescan returns true if the entry is missing genre, rating, or description.

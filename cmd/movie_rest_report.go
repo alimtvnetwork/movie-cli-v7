@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alimtvnetwork/movie-cli-v5/db"
-	"github.com/alimtvnetwork/movie-cli-v5/errlog"
-	"github.com/alimtvnetwork/movie-cli-v5/templates"
+	"github.com/alimtvnetwork/movie-cli-v6/db"
+	"github.com/alimtvnetwork/movie-cli-v6/errlog"
+	"github.com/alimtvnetwork/movie-cli-v6/templates"
 )
 
 func handleMediaByID(w http.ResponseWriter, r *http.Request, database *db.DB) {

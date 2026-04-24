@@ -19,7 +19,7 @@ set -euo pipefail
 
 # ── Inputs ────────────────────────────────────────────────────
 # Default starting URL — overridable via first positional argument.
-REPO_URL="${1:-https://github.com/alimtvnetwork/movie-cli-v5}"
+REPO_URL="${1:-https://github.com/alimtvnetwork/movie-cli-v6}"
 
 # ── Constants (spec §3) ───────────────────────────────────────
 MAX_LOOKAHEAD=25

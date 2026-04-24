@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/alimtvnetwork/movie-cli-v5/cleaner"
-	"github.com/alimtvnetwork/movie-cli-v5/errlog"
+	"github.com/alimtvnetwork/movie-cli-v6/cleaner"
+	"github.com/alimtvnetwork/movie-cli-v6/errlog"
 )
 
 // downloadThumbnailForMedia downloads a poster and sets m.ThumbnailPath.

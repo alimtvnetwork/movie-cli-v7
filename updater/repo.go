@@ -7,19 +7,19 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v5/apperror"
+	"github.com/alimtvnetwork/movie-cli-v6/apperror"
 )
 
 const (
-	repoDirName    = "movie-cli-v5"
-	repoModulePath = "github.com/alimtvnetwork/movie-cli-v5"
+	repoDirName    = "movie-cli-v6"
+	repoModulePath = "github.com/alimtvnetwork/movie-cli-v6"
 )
 
 // findRepoPath locates the git repository root by checking (in order):
 //  1. --repo-path flag
 //  2. Saved RepoPath in the local DB
 //  3. The directory containing the running binary
-//  4. A sibling movie-cli-v5/ clone next to the binary
+//  4. A sibling movie-cli-v6/ clone next to the binary
 //  5. The current working directory
 //  6. Bootstrap clone (fresh clone next to the binary)
 func findRepoPath(flagPath string) (string, bool, error) {
@@ -89,7 +89,7 @@ func resolveCandidateRepo(path string) (string, bool) {
 	return repoRoot(repoPath), true
 }
 
-// isValidRepo checks if a directory is a valid movie-cli-v5 repo
+// isValidRepo checks if a directory is a valid movie-cli-v6 repo
 // by verifying both .git and go.mod exist and the module path matches.
 func isValidRepo(dir string) bool {
 	if strings.TrimSpace(dir) == "" {

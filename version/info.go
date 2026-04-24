@@ -5,9 +5,9 @@
 // binary carries its own version stamp:
 //
 //	go build -ldflags "
-//	  -X github.com/alimtvnetwork/movie-cli-v5/version.Version=v1.2.0
-//	  -X github.com/alimtvnetwork/movie-cli-v5/version.Commit=abc1234
-//	  -X github.com/alimtvnetwork/movie-cli-v5/version.BuildDate=2024-06-01
+//	  -X github.com/alimtvnetwork/movie-cli-v6/version.Version=v1.2.0
+//	  -X github.com/alimtvnetwork/movie-cli-v6/version.Commit=abc1234
+//	  -X github.com/alimtvnetwork/movie-cli-v6/version.BuildDate=2024-06-01
 //	" .
 //
 // During development (no -ldflags) the defaults below are used instead.
@@ -17,7 +17,7 @@ import "fmt"
 
 // These three variables are overwritten by -ldflags at build time.
 var (
-	Version   = "v2.149.0" // semver tag  e.g. "v2.99.0"
+	Version   = "v2.150.0" // semver tag  e.g. "v2.99.0"
 	Commit    = "none"     // git SHA     e.g. "abc1234"
 	BuildDate = "unknown"  // build date  e.g. "2024-06-01"
 )

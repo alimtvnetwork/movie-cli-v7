@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/alimtvnetwork/movie-cli-v5/errlog"
+	"github.com/alimtvnetwork/movie-cli-v6/errlog"
 )
 
 // initRunLogger initializes the global errlog. If keepLogs is true it appends

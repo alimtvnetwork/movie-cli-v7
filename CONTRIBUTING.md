@@ -32,8 +32,8 @@ Thank you for your interest in contributing! This guide covers everything you ne
 
 ```bash
 # Fork the repo on GitHub, then:
-git clone https://github.com/<your-username>/movie-cli-v5.git
-cd movie-cli-v5
+git clone https://github.com/<your-username>/movie-cli-v6.git
+cd movie-cli-v6
 go mod tidy
 make build
 ```
@@ -214,7 +214,7 @@ Include:
 ## Architecture Overview
 
 ```
-movie-cli-v5/
+movie-cli-v6/
 ├── main.go              # Entry point
 ├── cmd/                  # One file per CLI command
 │   ├── scan.go

@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alimtvnetwork/movie-cli-v5/apperror"
+	"github.com/alimtvnetwork/movie-cli-v6/apperror"
 )
 
 // Level represents the severity of a log entry.

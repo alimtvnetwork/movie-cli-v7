@@ -130,17 +130,15 @@ jobs:
         if: needs.sha-check.outputs.already-built != 'true'
         run: |
           # The project went through multiple module path iterations:
-          #   v2: github.com/alimtvnetwork/movie-cli-v2
-          #   v3: github.com/alimtvnetwork/movie-cli-v3
-          #   v4: github.com/alimtvnetwork/movie-cli-v4
-          # Current (v5): github.com/alimtvnetwork/movie-cli-v5
-          # Any reference to old v2/v3/v4 module paths is a regression.
+          #   v2, v3, v4, v5: all retired
+          # Current (v6): github.com/alimtvnetwork/movie-cli-v6
+          # Any reference to old v2/v3/v4/v5 module paths is a regression.
           #
           # Historical records (CHANGELOG.md, spec/, .gitmap/) and this
           # workflow file itself legitimately mention old paths and are
           # excluded from the scan.
           set -e
-          PATTERNS='movie-cli-v[234]'
+          PATTERNS='movie-cli-v[2345]'
           violations=$(grep -rn -E "$PATTERNS" --include='*.go' --include='*.md' --include='*.mmd' \
               --include='*.json' --include='*.yml' --include='*.yaml' \
               --include='*.sh' --include='*.ps1' --include='Makefile' \
@@ -149,7 +147,7 @@ jobs:
               --exclude=CHANGELOG.md --exclude=ci.yml \
               . 2>/dev/null || true)
           if [ -n "$violations" ]; then
-            echo "Old module path references found (v2/v3/v4):"
+            echo "Old module path references found (v2/v3/v4/v5):"
             echo "$violations"
             echo ""
             while IFS= read -r line; do
@@ -157,15 +155,15 @@ jobs:
               file=$(printf '%s' "$line" | cut -d: -f1)
               lineno=$(printf '%s' "$line" | cut -d: -f2)
               content=$(printf '%s' "$line" | cut -d: -f3-)
-              echo "::error file=${file},line=${lineno}::Old module path (v2/v3/v4): ${content}"
+              echo "::error file=${file},line=${lineno}::Old module path (v2/v3/v4/v5): ${content}"
             done <<< "$violations"
             echo ""
-            echo "Current module: github.com/alimtvnetwork/movie-cli-v5"
-            echo "Old modules v2/v3/v4 must never be referenced."
-            echo "Fix: update all imports and references to movie-cli-v5."
+            echo "Current module: github.com/alimtvnetwork/movie-cli-v6"
+            echo "Old modules v2/v3/v4/v5 must never be referenced."
+            echo "Fix: update all imports and references to movie-cli-v6."
             exit 1
           fi
-          echo "✅ No old module path (v2/v3/v4) regressions."
+          echo "✅ No old module path (v2/v3/v4/v5) regressions."
 
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
@@ -374,9 +372,9 @@ jobs:
         run: |
           VERSION="dev-${GITHUB_SHA::10}"
           LDFLAGS="-s -w \
-            -X 'github.com/alimtvnetwork/movie-cli-v5/version.Version=$VERSION' \
-            -X 'github.com/alimtvnetwork/movie-cli-v5/version.Commit=${GITHUB_SHA::10}' \
-            -X 'github.com/alimtvnetwork/movie-cli-v5/version.BuildDate=$(date -u +%Y-%m-%d)'"
+            -X 'github.com/alimtvnetwork/movie-cli-v6/version.Version=$VERSION' \
+            -X 'github.com/alimtvnetwork/movie-cli-v6/version.Commit=${GITHUB_SHA::10}' \
+            -X 'github.com/alimtvnetwork/movie-cli-v6/version.BuildDate=$(date -u +%Y-%m-%d)'"
           OUTPUT="movie-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}"
           CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "$LDFLAGS" -o "$OUTPUT" .
           echo "Built: $OUTPUT ($(stat --format='%s' "$OUTPUT" | numfmt --to=iec --suffix=B))"
