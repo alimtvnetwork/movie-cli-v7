@@ -1,6 +1,6 @@
 # Suggestions Tracker
 
-> **Last Updated**: 16-Apr-2026
+> **Last Updated**: 24-Apr-2026
 
 ## Status Legend
 - ✅ Done — implemented and verified
@@ -37,6 +37,13 @@
 | S23 | Console-safe updater handoff | 16-Apr-2026 | Synchronous execution, exit code propagation, gitmap pattern |
 | S24 | Guideline violations audit | 16-Apr-2026 | 280+ violations catalogued, 7-phase remediation plan |
 | S25 | Nested-if refactoring (top 20 files) | 16-Apr-2026 | Early returns, guard clauses, extracted helpers |
+| S26 | Magic strings → constants | 24-Apr-2026 | `cmd/constants.go` holds shared messages incl. `msgDatabaseError` |
+| S27 | fmt.Errorf → apperror.Wrap() | 24-Apr-2026 | Only remaining `fmt.Errorf` is inside `apperror/apperror.go` (correct) |
+| S28 | Oversized functions split | 24-Apr-2026 | Phase 5 complete — all funcs ≤15 lines |
+| S29 | Oversized files split | 24-Apr-2026 | Phase 6/7 complete — all files <300 lines |
+| S30 | Single PascalCase DB | 24-Apr-2026 | 21 tables + 8 views in `db/schema_tables.go`, `db/views.go` |
+| S31 | Migration runner + SchemaVersion | 24-Apr-2026 | `db/migrate.go`, `db/schema_version.go`, 3 versioned migrations |
+| S32 | FileAction seed (15 actions) | 24-Apr-2026 | `db/seed.go` seeds Move/Rename/Delete/Popout/Restore/etc. |
 
 ---
 
@@ -44,11 +51,10 @@
 
 | # | Suggestion | Priority | Description |
 |---|-----------|----------|-------------|
-| S26 | Magic strings → constants | High | Replace all hardcoded strings with constants/enums (guideline Phase 3) |
-| S27 | fmt.Errorf → apperror.Wrap() | High | Replace all fmt.Errorf calls (guideline Phase 4) |
-| S28 | Oversized functions split | Medium | Split functions >15 lines (guideline Phase 5) |
-| S29 | Oversized files split | Medium | Split files >300 lines (guideline Phase 6) |
+| S33 | REST API server mode | Medium | HTML dashboard over existing DB (P3) |
+| S34 | Watchlist TMDb sync | Low | Pull/push watchlist with TMDb account (P3) |
+| S35 | Acceptance criteria docs | Low | GIVEN/WHEN/THEN per command (P2) |
 
 ---
 
-*Tracker updated: 16-Apr-2026*
+*Tracker updated: 24-Apr-2026*

@@ -1,6 +1,6 @@
 # Project Plan & Status
 
-> **Last Updated**: 16-Apr-2026
+> **Last Updated**: 24-Apr-2026
 
 ## ✅ Completed
 
@@ -48,6 +48,11 @@
 - [x] Console-safe updater handoff (sync, exit code propagation) ✅ 16-Apr-2026
 - [x] Nested-if refactoring — top 20 files cleaned ✅ 16-Apr-2026
 - [x] Guideline violations audit — 280+ violations catalogued ✅ 16-Apr-2026
+- [x] Guideline Phase 3 — magic strings → constants (`cmd/constants.go`) ✅
+- [x] Guideline Phase 4 — `fmt.Errorf` → `apperror.Wrap()` (only remaining is inside apperror itself) ✅
+- [x] Guideline Phase 5 — oversized functions split ✅
+- [x] Guideline Phase 6 — >3 params → option structs ✅
+- [x] Guideline Phase 7 — final consistency pass, 0 violations ✅
 
 ### Documentation & CI
 - [x] README.md, spec.md, ai-handoff.md, development-log.md
@@ -71,38 +76,32 @@
 
 ---
 
-## 🔄 In Progress
+## ✅ Recently Completed (24-Apr-2026 audit)
 
-### Guideline Violations Remediation (Phases 3-7)
-- [x] Phase 1: Full audit (280+ violations) ✅ 16-Apr-2026
-- [x] Phase 2: Nested-if elimination (top 20 files) ✅ 16-Apr-2026
-- [ ] Phase 3: Magic strings → constants/enums
-- [ ] Phase 4: fmt.Errorf → apperror.Wrap()
-- [ ] Phase 5: Oversized functions (>15 lines) split
-- [ ] Phase 6: Oversized files (>300 lines) split
-- [ ] Phase 7: Final consistency pass
+### Database Implementation (P0) — DONE
+- [x] PascalCase schema in Go (`db/schema_tables.go`) — 21 tables, single `movie.db`
+- [x] SchemaVersion tracking + migration runner (`db/migrate.go`, `db/schema_version.go`)
+- [x] FileAction seeded with 15 predefined rows (`db/seed.go`)
+- [x] 8 database views created (`db/views.go`): VwMediaDetail, VwMediaGenreList,
+      VwMediaCastList, VwMediaFull, VwMoveHistoryDetail, VwActionHistoryDetail,
+      VwScanHistoryDetail, VwMediaTag
+- [x] 3 versioned migrations registered (v1 initial, v2 ImdbLookupCache, v3 TmdbId+MediaType)
+
+### Code Alignment (P1) — DONE
+- [x] All commands use PascalCase column names
+- [x] `movie_info.go` / `movie_resolve.go` aligned with new Media table
 
 ---
 
 ## 🔲 Pending — Prioritized Backlog
-
-### Phase 1: Database Implementation (P0)
-- [ ] Implement new schema in Go (`db/` package) — single `movie.db`, PascalCase tables
-- [ ] Implement SchemaVersion tracking + migration runner in Go
-- [ ] Seed FileAction with 14 predefined rows
-- [ ] Create 8 database views (VwMediaFull, VwMoveHistoryDetail, etc.)
-
-### Phase 2: Code Alignment (P1)
-- [ ] Update all commands to use new PascalCase column names
-- [ ] Update `movie_info.go` / `movie_resolve.go` for new Media table structure
 
 ### Phase 3: Spec Completeness (P2)
 - [ ] Acceptance criteria (GIVEN/WHEN/THEN) for all commands
 - [ ] Shared helper docs — code comments marking shared helpers
 
 ### Phase 4: Future Enhancements (P3)
-- [ ] Director normalization table
-- [ ] Season/Episode tables for TV series
+- [x] Director normalization table (`db/director.go`) ✅
+- [x] Season/Episode tables for TV series (`db/season.go`) ✅
 - [ ] REST API server mode with HTML dashboard
 - [ ] Watchlist sync with TMDb account
 
@@ -116,9 +115,9 @@
 
 ## Next Task Selection
 
-Pick one of these to implement next:
+All P0/P1 work and guideline phases 1-7 are complete. Pick from remaining P2/P3:
 
-1. **Guideline Phase 3** — Replace magic strings with constants
-2. **Guideline Phase 4** — Replace fmt.Errorf with apperror.Wrap()
-3. **Single DB implementation** — Create movie.db with PascalCase schema
-4. **Migration runner** — SchemaVersion + sequential migration system
+1. **REST API server mode** — HTML dashboard over the existing DB
+2. **Watchlist TMDb sync** — pull/push watchlist with TMDb account
+3. **Acceptance criteria docs** — GIVEN/WHEN/THEN per command (P2)
+4. **Resolve stale local repo** — user must run `git fetch origin && git reset --hard origin/main && git clean -fd`
