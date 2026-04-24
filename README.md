@@ -82,7 +82,7 @@ irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | 
 curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
 ```
 
-> `get.ps1` / `get.sh` first probe `releases/latest/download/install.{ps1,sh}`. If that returns 200 it installs the pre-built binary. If it 404s (no release published yet) it transparently falls back to cloning + building from source via `install.{ps1,sh}` on `main`. Either way you get a clear message telling you which path was taken and what to do next.
+> The bootstrap probes `releases/latest/download/install.{ps1,sh}` first. If a release exists, it installs the pre-built binary. If not, it transparently falls back to cloning and building from `main` — and prints exactly which path it took. See [Installation](#installation) for flags and details.
 
 ### Install a specific version (pinned)
 
