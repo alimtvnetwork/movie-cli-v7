@@ -72,16 +72,7 @@ func (r *Report) toJson() JsonReport {
 }
 
 func toJsonRepo(s RepoStatus) JsonRepo {
-	return JsonRepo{
-		Branch:    s.Branch,
-		Summary:   s.Summary,
-		Recovery:  s.Recovery,
-		Ahead:     s.Ahead,
-		Behind:    s.Behind,
-		IsGitRepo: s.IsGitRepo,
-		IsClean:   s.IsClean,
-		IsCurrent: s.IsCurrent,
-	}
+	return JsonRepo(s)
 }
 
 func toJsonFindings(findings []Finding) []JsonFinding {
