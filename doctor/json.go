@@ -20,6 +20,7 @@ type JsonReport struct {
 	Target    string        `json:"active_binary"`
 	DeployDir string        `json:"deploy_dir"`
 	Findings  []JsonFinding `json:"findings"`
+	Repo      JsonRepo      `json:"repo"`
 	HasErr    bool          `json:"has_errors"`
 	HasFix    bool          `json:"has_fixable"`
 }
@@ -32,6 +33,18 @@ type JsonFinding struct {
 	Detail    string `json:"detail"`
 	FixHint   string `json:"fix_hint"`
 	IsFixable bool   `json:"is_fixable"`
+}
+
+// JsonRepo is the wire-format for the one-line repo staleness summary.
+type JsonRepo struct {
+	Branch    string `json:"branch"`
+	Summary   string `json:"summary"`
+	Recovery  string `json:"recovery"`
+	Ahead     int    `json:"ahead"`
+	Behind    int    `json:"behind"`
+	IsGitRepo bool   `json:"is_git_repo"`
+	IsClean   bool   `json:"is_clean"`
+	IsCurrent bool   `json:"is_current"`
 }
 
 // PrintJson writes the report as indented JSON to stdout.
@@ -54,6 +67,20 @@ func (r *Report) toJson() JsonReport {
 		HasErr:    r.HasErrors(),
 		HasFix:    r.HasFixable(),
 		Findings:  toJsonFindings(r.Findings),
+		Repo:      toJsonRepo(r.Repo),
+	}
+}
+
+func toJsonRepo(s RepoStatus) JsonRepo {
+	return JsonRepo{
+		Branch:    s.Branch,
+		Summary:   s.Summary,
+		Recovery:  s.Recovery,
+		Ahead:     s.Ahead,
+		Behind:    s.Behind,
+		IsGitRepo: s.IsGitRepo,
+		IsClean:   s.IsClean,
+		IsCurrent: s.IsCurrent,
 	}
 }
 

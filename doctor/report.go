@@ -46,6 +46,7 @@ func printFinding(f Finding) {
 
 func printFooter(r *Report) {
 	fmt.Println("  --------------------------------------------------")
+	printRepoSummary(r)
 	if r.HasErrors() {
 		fmt.Println("  Result: errors found. Run `movie doctor --fix` to attempt repair.")
 		return
@@ -55,6 +56,16 @@ func printFooter(r *Report) {
 		return
 	}
 	fmt.Println("  Result: all good.")
+}
+
+// printRepoSummary writes the one-line repo staleness summary so users see
+// at a glance whether to run the recovery commands.
+func printRepoSummary(r *Report) {
+	tag := tagOK
+	if r.Repo.IsGitRepo && !(r.Repo.IsCurrent && r.Repo.IsClean) {
+		tag = tagWarn
+	}
+	fmt.Printf("  %s Repo: %s\n", tag, r.Repo.Summary)
 }
 
 func tagFor(sev Severity) string {
