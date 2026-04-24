@@ -734,6 +734,38 @@ All data lives in `./data/`:
 
 <div align="center">
 
+## Milestones
+
+</div>
+
+Project milestones are tracked in [`MILESTONES.md`](MILESTONES.md) at the repository root.
+
+- **Location** — `MILESTONES.md` (repo root, version-controlled)
+- **Timezone** — Malaysia time (UTC+8, `Asia/Kuala_Lumpur`)
+- **Timestamp format** — `dd-MMM-YYYY hh:mm AM/PM` (e.g. `24-Apr-2026 03:33 PM`)
+- **Entry format** — one bullet per line under the `## Log` heading:
+
+  ```
+  - <event> <dd-MMM-YYYY hh:mm AM/PM> — <short note>
+  ```
+
+Example entries:
+
+```
+- let's start now 24-Apr-2026 03:33 PM — milestone tracker initialized
+- run 24-Apr-2026 07:21 PM — app run logged
+```
+
+New entries are appended to the end of the `## Log` section. Generate the timestamp with:
+
+```bash
+TZ='Asia/Kuala_Lumpur' date '+%d-%b-%Y %I:%M %p'
+```
+
+---
+
+<div align="center">
+
 ## Dependencies
 
 </div>
