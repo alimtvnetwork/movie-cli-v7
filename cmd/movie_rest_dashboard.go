@@ -14,13 +14,13 @@ import (
 // ----- /api/dashboard/filters -----------------------------------------------
 
 type dashboardFilters struct {
-	Genres      []string       `json:"genres"`
-	Tags        []db.TagCount  `json:"tags"`
-	Types       map[string]int `json:"types"`
-	YearMin     int            `json:"year_min"`
-	YearMax     int            `json:"year_max"`
-	RatingMax   float64        `json:"rating_max"`
-	TotalItems  int            `json:"total_items"`
+	Types      map[string]int `json:"types"`
+	Genres     []string       `json:"genres"`
+	Tags       []db.TagCount  `json:"tags"`
+	RatingMax  float64        `json:"rating_max"`
+	YearMin    int            `json:"year_min"`
+	YearMax    int            `json:"year_max"`
+	TotalItems int            `json:"total_items"`
 }
 
 func handleDashboardFilters(w http.ResponseWriter, r *http.Request, database *db.DB) {
