@@ -108,7 +108,6 @@ movie-cli/
 ├── spec.md                          # Full project specification (350+ lines)
 ├── README.md                        # Project documentation
 ├── development-log.md               # Every prompt + modification recorded
-├── readm.txt                        # Session milestone marker
 ├── go.mod / go.sum                  # Go module files
 ├── spec/
 │   ├── 01-app/
