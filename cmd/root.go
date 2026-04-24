@@ -90,6 +90,7 @@ func init() {
 		moviePopoutCmd,
 		movieDiscoverCmd,
 		movieCacheCmd,
+		movieMilestonesCmd,
 	)
 }
 

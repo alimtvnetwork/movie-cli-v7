@@ -762,6 +762,22 @@ New entries are appended to the end of the `## Log` section. Generate the timest
 TZ='Asia/Kuala_Lumpur' date '+%d-%b-%Y %I:%M %p'
 ```
 
+### Listing & filtering milestones
+
+The `movie milestones` command reads `MILESTONES.md` and prints entries with
+optional date / keyword filters:
+
+```bash
+movie milestones                              # show all entries
+movie milestones --keyword scan               # case-insensitive substring
+movie milestones --date 2026-04-24            # only entries on this day
+movie milestones --since 2026-04-01           # entries on/after this day
+movie milestones --since 2026-04-01 -k run -n 20
+```
+
+Flags: `--date YYYY-MM-DD`, `--since YYYY-MM-DD`, `-k/--keyword TEXT`,
+`-n/--limit N` (0 = no cap).
+
 ### One-shot helper (append + version bump + commit)
 
 The repo ships with a script that appends a new milestone, bumps the **patch**
