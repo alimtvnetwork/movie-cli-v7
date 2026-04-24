@@ -762,6 +762,32 @@ New entries are appended to the end of the `## Log` section. Generate the timest
 TZ='Asia/Kuala_Lumpur' date '+%d-%b-%Y %I:%M %p'
 ```
 
+### One-shot helper (append + version bump + commit)
+
+The repo ships with a script that appends a new milestone, bumps the **patch**
+version in `version/info.go`, and creates a single git commit covering both
+changes:
+
+**Linux / macOS**
+
+```bash
+scripts/log-milestone.sh                       # default: "- run <ts> — app run logged"
+scripts/log-milestone.sh "kickoff complete"    # custom note
+scripts/log-milestone.sh --event start "kickoff"
+```
+
+**Windows (PowerShell)**
+
+```powershell
+pwsh scripts/log-milestone.ps1
+pwsh scripts/log-milestone.ps1 -Note "kickoff complete"
+pwsh scripts/log-milestone.ps1 -Event start -Note "kickoff"
+```
+
+Wire it into the app (e.g. at the end of `movie` startup, or as a `make run`
+target) to get a milestone + commit on every run. Commit message format:
+`chore(milestone): <event> <timestamp> — <note> (<new-version>)`.
+
 ---
 
 <div align="center">
