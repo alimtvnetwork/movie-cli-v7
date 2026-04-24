@@ -1,4 +1,4 @@
-module github.com/alimtvnetwork/movie-cli-v5
+module github.com/alimtvnetwork/movie-cli-v6
 
 go 1.22
 

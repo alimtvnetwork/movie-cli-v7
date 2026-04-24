@@ -5,9 +5,9 @@
 // binary carries its own version stamp:
 //
 //	go build -ldflags "
-//	  -X github.com/alimtvnetwork/movie-cli-v5/version.Version=v1.2.0
-//	  -X github.com/alimtvnetwork/movie-cli-v5/version.Commit=abc1234
-//	  -X github.com/alimtvnetwork/movie-cli-v5/version.BuildDate=2024-06-01
+//	  -X github.com/alimtvnetwork/movie-cli-v6/version.Version=v1.2.0
+//	  -X github.com/alimtvnetwork/movie-cli-v6/version.Commit=abc1234
+//	  -X github.com/alimtvnetwork/movie-cli-v6/version.BuildDate=2024-06-01
 //	" .
 //
 // During development (no -ldflags) the defaults below are used instead.

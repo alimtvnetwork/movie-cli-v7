@@ -19,7 +19,7 @@
     "**Comprehensive CLI help** — root command shows version + categorized help with examples; `movie --version` flag; `movie version` shows Go/OS/arch",
     "**`movie ls`** now only shows scan-indexed items (filters by non-empty `original_file_path`)",
     "**`movie suggest`** upgraded from recommendations-only to 3-phase strategy (DiscoverByGenre → Recommendations → Trending)",
-    "**Repository migrated** from `movie-cli-v1` to `movie-cli-v2` across all imports, workflows, and docs",
+    "**Repository migrated** from `movie-cli-v1` to `movie-cli-v6` across all imports, workflows, and docs",
     "Timestamp bug — `saveHistoryLog` now uses `time.Now().Format(time.RFC3339)` instead of hardcoded \"now\"",
     "Deduplicated TMDb fetch logic — shared `fetchMovieDetails()`/`fetchTVDetails()` helpers",
     "Cross-drive move fallback — copy+delete when `os.Rename` fails with `EXDEV`"

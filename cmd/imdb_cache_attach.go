@@ -9,8 +9,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/alimtvnetwork/movie-cli-v5/db"
-	"github.com/alimtvnetwork/movie-cli-v5/tmdb"
+	"github.com/alimtvnetwork/movie-cli-v6/db"
+	"github.com/alimtvnetwork/movie-cli-v6/tmdb"
 )
 
 // attachImdbCacheUnless wires the persistent IMDb cache into client unless

@@ -11,8 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/alimtvnetwork/movie-cli-v5/doctor"
-	"github.com/alimtvnetwork/movie-cli-v5/updater"
+	"github.com/alimtvnetwork/movie-cli-v6/doctor"
+	"github.com/alimtvnetwork/movie-cli-v6/updater"
 )
 
 var updateCmd = &cobra.Command{

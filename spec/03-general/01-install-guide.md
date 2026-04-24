@@ -34,8 +34,8 @@ pwsh
 ### Step 1 — Clone the Repository
 
 ```powershell
-git clone https://https://github.com/alimtvnetwork/movie-cli-v5.git
-cd movie-cli-v5
+git clone https://https://github.com/alimtvnetwork/movie-cli-v6.git
+cd movie-cli-v6
 ```
 
 ### Step 2 — Set Execution Policy (Windows only)
@@ -80,13 +80,13 @@ $env:PATH += ";E:\bin-run"
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://https://github.com/alimtvnetwork/movie-cli-v5.git; cd movie-cli-v5; .\run.ps1
+git clone https://https://github.com/alimtvnetwork/movie-cli-v6.git; cd movie-cli-v6; .\run.ps1
 ```
 
 ### macOS / Linux
 
 ```bash
-git clone https://https://github.com/alimtvnetwork/movie-cli-v5.git && cd movie-cli-v5 && pwsh run.ps1
+git clone https://https://github.com/alimtvnetwork/movie-cli-v6.git && cd movie-cli-v6 && pwsh run.ps1
 ```
 
 ## Configuration

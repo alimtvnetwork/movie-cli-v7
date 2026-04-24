@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/alimtvnetwork/movie-cli-v5/apperror"
-	"github.com/alimtvnetwork/movie-cli-v5/db"
+	"github.com/alimtvnetwork/movie-cli-v6/apperror"
+	"github.com/alimtvnetwork/movie-cli-v6/db"
 )
 
 const repoPathConfigKey = "RepoPath"

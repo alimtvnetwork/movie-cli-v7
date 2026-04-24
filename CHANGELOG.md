@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 ## v2.134.0
 
 ### Added
-- **CI guard against old module paths (v2/v3/v4)** — new `Old module path regression guard` step in `.github/workflows/ci.yml`. Greps the entire repo for any `movie-cli-v2`, `movie-cli-v3`, or `movie-cli-v4` reference and hard-fails the build if found. Current module is `github.com/alimtvnetwork/movie-cli-v5`; any stale import or documentation reference to the old iterations is a regression.
+- **CI guard against old module paths (v2/v3/v4)** — new `Old module path regression guard` step in `.github/workflows/ci.yml`. Greps the entire repo for any `movie-cli-v6`, `movie-cli-v6`, or `movie-cli-v6` reference and hard-fails the build if found. Current module is `github.com/alimtvnetwork/movie-cli-v6`; any stale import or documentation reference to the old iterations is a regression.
 
 ## v2.133.0
 
@@ -73,7 +73,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **Install script 404 on `irm | iex` for v2.97.0** — user reported `Download failed: Not Found` when running the documented one-liner. Root cause: the v2.97.0 GitHub Release was published with a partial asset set (Windows amd64/arm64 + linux-amd64 archives never uploaded; `install.ps1` and `checksums.txt` were uploaded). The release workflow had no guard against partial uploads.
-- **Repo-root `install.ps1`** — `RepoUrl` was pointing at the deleted `movie-cli-v3.git`. Updated to `movie-cli-v5.git` so the build-from-source fallback actually works.
+- **Repo-root `install.ps1`** — `RepoUrl` was pointing at the deleted `movie-cli-v6.git`. Updated to `movie-cli-v6.git` so the build-from-source fallback actually works.
 
 ### Changed
 - **`.github/workflows/release.yml`** — added `Verify all 6 archives are present` step after compress/checksum and BEFORE the GitHub Release upload. Enumerates the 6 expected filenames and exits non-zero with `::error::` annotations if any are missing. Prevents future partial releases.
@@ -187,14 +187,14 @@ All notable changes to this project will be documented in this file.
 ## v2.117.0
 
 ### Added
-- **bootstrap.ps1 / bootstrap.sh** — version-discovery installers per `spec/03-general/05-install-latest-sibling-repo.md`. Probes sibling repos (`-v<N+k>` for `k = 25..0`, highest first) on the same GitHub owner and delegates install to the highest existing one. Auto-upgrades stale install URLs (e.g. user pastes `…/movie-cli-v5` but v7 exists → bootstrap picks v7).
+- **bootstrap.ps1 / bootstrap.sh** — version-discovery installers per `spec/03-general/05-install-latest-sibling-repo.md`. Probes sibling repos (`-v<N+k>` for `k = 25..0`, highest first) on the same GitHub owner and delegates install to the highest existing one. Auto-upgrades stale install URLs (e.g. user pastes `…/movie-cli-v6` but v7 exists → bootstrap picks v7).
   - Algorithm: parse URL → probe `raw.githubusercontent.com/<owner>/<base>-v<N+k>/main/install.{ps1,sh}` with 5s timeout, no retries → first HTTP 200 wins → `irm | iex` (PS) or `curl | bash` (Bash) the winner.
   - Edge cases: trailing `.git` stripped; URLs without `-v<N>` suffix install as-is; all-misses fallback to starting URL; `/tree/` and `/blob/` URLs rejected.
   - Logs every probe with verdict (`miss (404)` / `miss (timeout)` / `HIT`), final selection, and any auto-upgrade jump. Persistent log at `$env:TEMP/movie-bootstrap.log` (Win) or `/tmp/movie-bootstrap.log` (Unix).
-  - End-to-end tested against `alimtvnetwork/movie-cli-v5` — probes v30→v5, hits v5, delegates to its install.sh.
+  - End-to-end tested against `alimtvnetwork/movie-cli-v6` — probes v30→v5, hits v5, delegates to its install.sh.
   - New public install one-liners (paste forever, auto-upgrade silently):
-    - PS: `irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v5/main/bootstrap.ps1 | iex`
-    - Bash: `curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v5/main/bootstrap.sh | bash`
+    - PS: `irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/bootstrap.ps1 | iex`
+    - Bash: `curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/bootstrap.sh | bash`
 
 ## v2.116.0
 
@@ -381,8 +381,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **`movie update` now persists the resolved repo path into the local DB** using `RepoPath`, so future update runs can reuse the actual machine repo location instead of relying only on binary-dir heuristics.
-- Added `movie update --repo-path <path>` as an explicit override, with trimming, quote cleanup, `~` expansion, absolute-path resolution, and validation against `.git` plus `go.mod` module `github.com/alimtvnetwork/movie-cli-v5`.
-- Removed leftover updater references to `movie-cli-v3` during sibling/bootstrap repo resolution; bootstrap clone now targets `movie-cli-v5` and the canonical v5 GitHub URL.
+- Added `movie update --repo-path <path>` as an explicit override, with trimming, quote cleanup, `~` expansion, absolute-path resolution, and validation against `.git` plus `go.mod` module `github.com/alimtvnetwork/movie-cli-v6`.
+- Removed leftover updater references to `movie-cli-v6` during sibling/bootstrap repo resolution; bootstrap clone now targets `movie-cli-v6` and the canonical v5 GitHub URL.
 - **Update handoff now runs only `run.ps1 -Update`** for git pull, build, and deploy; the generated worker script no longer performs its own `git pull`, keeping all mutable git/build logic inside `run.ps1` as intended.
 
 ## v2.95.0
@@ -400,12 +400,12 @@ All notable changes to this project will be documented in this file.
 ## v2.93.0
 
 ### Changed
-- **Module path renamed** — `github.com/alimtvnetwork/movie-cli-v4` → `github.com/alimtvnetwork/movie-cli-v5` across the entire project (104 files: Go imports, `go.mod`, README, CI workflows, install scripts, docs).
-- All GitHub URLs (`github.com/alimtvnetwork/movie-cli-v4` → `…/movie-cli-v5`) updated in README badges, install one-liners, and release-asset URLs.
+- **Module path renamed** — `github.com/alimtvnetwork/movie-cli-v6` → `github.com/alimtvnetwork/movie-cli-v6` across the entire project (104 files: Go imports, `go.mod`, README, CI workflows, install scripts, docs).
+- All GitHub URLs (`github.com/alimtvnetwork/movie-cli-v6` → `…/movie-cli-v6`) updated in README badges, install one-liners, and release-asset URLs.
 
 ### Migration
 - Run `go mod tidy` after pulling to refresh the module cache.
-- Local clones tracking the old remote should update their `origin` URL: `git remote set-url origin https://github.com/alimtvnetwork/movie-cli-v5.git`.
+- Local clones tracking the old remote should update their `origin` URL: `git remote set-url origin https://github.com/alimtvnetwork/movie-cli-v6.git`.
 
 ## v2.92.0
 
@@ -504,9 +504,9 @@ All notable changes to this project will be documented in this file.
 ## v2.7.0
 
 ### Fixed
-- **Updater: wrong GitHub repo URL** — `repoURL` used `movie-cli-v5.git` but actual GitHub repo is `movie-cli-v3`; sibling dir search also looked for wrong name
+- **Updater: wrong GitHub repo URL** — `repoURL` used `movie-cli-v6.git` but actual GitHub repo is `movie-cli-v6`; sibling dir search also looked for wrong name
 - **run.ps1: stale version file path** — referenced `version/version.go` (renamed to `version/info.go`), causing version detection to fail
-- **run.ps1: wrong ldflags module path** — used `movie-cli-v3` instead of `movie-cli-v5` Go module path in build ldflags
+- **run.ps1: wrong ldflags module path** — used `movie-cli-v6` instead of `movie-cli-v6` Go module path in build ldflags
 
 ### Added
 - **run.ps1: `-Deploy` and `-Update` flags** — matches gitmap-v2 pattern; `-Deploy` forces deploy, `-Update` enables rename-first PATH sync
@@ -822,7 +822,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **`movie ls`** now only shows scan-indexed items (filters by non-empty `original_file_path`)
 - **`movie suggest`** upgraded from recommendations-only to 3-phase strategy (DiscoverByGenre → Recommendations → Trending)
-- **Repository migrated** from `movie-cli-v1` to `movie-cli-v2` to `movie-cli-v5` across all imports, workflows, and docs
+- **Repository migrated** from `movie-cli-v1` to `movie-cli-v6` to `movie-cli-v6` across all imports, workflows, and docs
 
 ### Fixed
 - Timestamp bug — `saveHistoryLog` now uses `time.Now().Format(time.RFC3339)` instead of hardcoded "now"

@@ -18,7 +18,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/alimtvnetwork/movie-cli-v5/updater"
+	"github.com/alimtvnetwork/movie-cli-v6/updater"
 )
 
 var (

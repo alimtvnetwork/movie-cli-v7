@@ -5,14 +5,14 @@
 User runs the documented one-liner from a GitHub Release page:
 
 ```powershell
-irm https://github.com/alimtvnetwork/movie-cli-v5/releases/download/v2.97.0/install.ps1 | iex
+irm https://github.com/alimtvnetwork/movie-cli-v6/releases/download/v2.97.0/install.ps1 | iex
 ```
 
 and sees:
 
 ```
   movie installer (v2.97.0)
-  github.com/alimtvnetwork/movie-cli-v5
+  github.com/alimtvnetwork/movie-cli-v6
 
   Downloading movie-v2.97.0-windows-amd64.zip (v2.97.0)...
   Download failed: Not Found
@@ -87,7 +87,7 @@ See lines 171-198 of `.github/workflows/release.yml` for the implementation.
 
 ### 3. Repo-root `install.ps1` — keep repo URL in sync
 
-The legacy `install.ps1` at the repo root (used for `git clone + build` flow) had a stale `RepoUrl` pointing to `movie-cli-v3.git`, which no longer exists. The build-from-source workaround printed by the 404 handler dies immediately. Fixed to `movie-cli-v5.git`.
+The legacy `install.ps1` at the repo root (used for `git clone + build` flow) had a stale `RepoUrl` pointing to `movie-cli-v6.git`, which no longer exists. The build-from-source workaround printed by the 404 handler dies immediately. Fixed to `movie-cli-v6.git`.
 
 **Prevention rule**: any time the repo is renamed/forked to a new `-v<N>` suffix, search for the old name with:
 
