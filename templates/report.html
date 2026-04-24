@@ -709,6 +709,10 @@ async function showSimilar(id, title) {
   if (restRequired()) return;
   var modal = document.getElementById('similarModal');
   var content = document.getElementById('similarContent');
+  var bar = document.getElementById('similarExportBar');
+  document.getElementById('similarExportCsv').onclick = function() { exportSimilar(id, 'csv'); };
+  document.getElementById('similarExportJson').onclick = function() { exportSimilar(id, 'json'); };
+  bar.style.display = 'flex';
   document.getElementById('similarTitle').textContent = 'Similar to "' + title + '"';
   content.innerHTML = '<div class="similar-loading">Loading recommendations…</div>';
   modal.classList.add('show');
