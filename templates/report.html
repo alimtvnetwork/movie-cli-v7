@@ -282,6 +282,8 @@ const API_PORT = {{.Port}};
 const API_BASE = 'http://localhost:' + API_PORT;
 let restAvailable = false;
 let activeTypeFilter = 'all';
+let dashboardMode = false; // becomes true once /api/dashboard/list responds OK
+let dashboardFiltersData = null;
 
 // --- Init ---
 function init() {
@@ -334,10 +336,122 @@ async function checkRest() {
     banner.querySelector('.dot').style.background = 'var(--success)';
     banner.innerHTML = '<span class="dot" style="background:var(--success)"></span> Connected to REST server on port <strong>' + API_PORT + '</strong>';
     loadAllTags();
+    enableDashboardMode();
   } catch(e) {
     // REST not running — banner stays visible
   }
 }
+
+// --- Dashboard mode (server-driven filters/list) ---
+async function enableDashboardMode() {
+  try {
+    const fr = await fetch(API_BASE + '/api/dashboard/filters');
+    if (!fr.ok) return;
+    dashboardFiltersData = await fr.json();
+    populateGenreFilterFromAPI(dashboardFiltersData.genres || []);
+    dashboardMode = true;
+    await refreshDashboardList();
+  } catch(e) {
+    console.error('dashboard mode disabled:', e.message);
+  }
+}
+
+function populateGenreFilterFromAPI(genres) {
+  const sel = document.getElementById('genreFilter');
+  // Keep the first "All Genres" option, replace the rest from the API.
+  while (sel.options.length > 1) sel.remove(1);
+  genres.forEach(function(g) {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g; sel.appendChild(opt);
+  });
+}
+
+function buildDashboardListURL() {
+  const params = new URLSearchParams();
+  if (activeTypeFilter && activeTypeFilter !== 'all') params.set('type', activeTypeFilter);
+  const genre = document.getElementById('genreFilter').value;
+  if (genre) params.set('genre', genre);
+  const minRating = document.getElementById('ratingFilter').value;
+  if (minRating) params.set('min_rating', minRating);
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) params.set('q', q);
+  const sort = document.getElementById('sortSelect').value;
+  if (sort) params.set('sort', sort);
+  params.set('limit', '500');
+  return API_BASE + '/api/dashboard/list?' + params.toString();
+}
+
+async function refreshDashboardList() {
+  if (!dashboardMode) return;
+  try {
+    const r = await fetch(buildDashboardListURL());
+    if (!r.ok) return;
+    const data = await r.json();
+    renderDashboardCards(data.items || []);
+    updateResultsInfo(data.items ? data.items.length : 0);
+  } catch(e) {
+    showToast('Failed to refresh list: ' + e.message, true);
+  }
+}
+
+function renderDashboardCards(items) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = items.map(cardTemplate).join('');
+}
+
+function cardTemplate(c) {
+  const thumb = c.thumbnail_path
+    ? '<img class="card-thumb" src="' + escAttr(c.thumbnail_path) + '" alt="' + escAttr(c.title) + '" loading="lazy" />'
+    : '<div class="card-thumb-placeholder">🎬</div>';
+  const ratingTxt = c.tmdb_rating ? c.tmdb_rating.toFixed(1) : '0.0';
+  const watchedClass = c.watched ? ' watched' : '';
+  const watchedBtn = c.watched ? ' is-watched' : '';
+  return '<div class="card' + watchedClass + '" data-type="' + escAttr(c.type) + '" data-title="' + escAttr(c.title) + '" data-id="' + c.id +
+    '" data-rating="' + ratingTxt + '" data-year="' + (c.year || 0) + '" data-genre="' + escAttr(c.genre || '') +
+    '" data-director="' + escAttr(c.director || '') + '" data-cast="' + escAttr(c.cast_list || '') + '">' +
+    '<div class="card-top">' + thumb +
+      '<div class="card-info">' +
+        '<div class="card-title">' + esc(c.title) + '</div>' +
+        '<div class="card-meta">' +
+          (c.year ? '<span>' + c.year + '</span><span class="sep">·</span>' : '') +
+          '<span>' + esc(c.type) + '</span>' +
+          (c.runtime ? '<span class="sep">·</span><span>' + c.runtime + ' min</span>' : '') +
+          (c.tmdb_rating ? '<span class="sep">·</span><span class="card-rating">⭐ ' + ratingTxt + '</span>' : '') +
+        '</div>' +
+        ((c.genre_list && c.genre_list.length) ? '<div class="card-genre">' + c.genre_list.map(function(g){return '<span>' + esc(g) + '</span>';}).join('') + '</div>' : '') +
+        (c.tagline ? '<div class="card-tagline">"' + esc(c.tagline) + '"</div>' : '') +
+        (c.description ? '<div class="card-desc">' + esc(c.description) + '</div>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="card-middle">' +
+      '<div class="card-tags" id="tags-' + c.id + '">' +
+        (c.tags || []).map(function(t){ return '<span class="tag" onclick="removeTag(' + c.id + ', \'' + esc(t) + '\')">' + esc(t) + '<span class="tag-x">✕</span></span>'; }).join('') +
+      '</div>' +
+      '<div class="tag-add">' +
+        '<input type="text" id="tag-input-' + c.id + '" placeholder="Add tag..." onkeydown="if(event.key===\'Enter\')addTag(' + c.id + ')" />' +
+        '<button onclick="addTag(' + c.id + ')">+</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card-bottom">' +
+      '<div class="card-credits">' +
+        (c.director ? '🎬 ' + esc(c.director) : '') +
+        (c.cast_list ? ' · 🎭 ' + esc(c.cast_list) : '') +
+      '</div>' +
+      '<div class="card-actions">' +
+        '<button onclick="markWatched(' + c.id + ', this)" class="action-btn watched-btn' + watchedBtn + '" title="Mark as watched">👁</button>' +
+        '<button onclick="showSimilar(' + c.id + ', \'' + esc(c.title) + '\')" class="action-btn similar-btn" title="Find similar">🔍</button>' +
+        '<button onclick="deleteMedia(' + c.id + ', this)" class="action-btn delete" title="Remove">🗑</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch];
+  });
+}
+function escAttr(s) { return esc(s).replace(/\n/g, ' '); }
 
 // --- Filters ---
 function setFilter(group, value, btn) {
@@ -346,10 +460,11 @@ function setFilter(group, value, btn) {
     btn.classList.add('active');
     activeTypeFilter = value;
   }
-  applyFilters();
+  if (dashboardMode) { refreshDashboardList(); } else { applyFilters(); }
 }
 
 function applyFilters() {
+  if (dashboardMode) { refreshDashboardList(); return; }
   var query = document.getElementById('searchInput').value.toLowerCase();
   var genre = document.getElementById('genreFilter').value;
   var minRating = parseFloat(document.getElementById('ratingFilter').value) || 0;
@@ -399,6 +514,7 @@ function updateResultsInfo(visible) {
 }
 
 function applySort() {
+  if (dashboardMode) { refreshDashboardList(); return; }
   var val = document.getElementById('sortSelect').value;
   var grid = document.getElementById('grid');
   var cards = Array.from(grid.querySelectorAll('.card'));
@@ -537,13 +653,14 @@ async function showSimilar(id, title) {
   modal.classList.add('show');
 
   try {
-    var r = await fetch(API_BASE + '/api/media/' + id + '/similar');
+    // Prefer the consolidated details endpoint (single round-trip with media + tags + similar).
+    var r = await fetch(API_BASE + '/api/media/' + id + '/details');
     if (!r.ok) {
       content.innerHTML = '<div class="similar-empty">Could not fetch recommendations (HTTP ' + r.status + ')</div>';
       return;
     }
     var data = await r.json();
-    var items = data.similar || [];
+    var items = (data && data.similar) ? data.similar : [];
     if (items.length === 0) {
       content.innerHTML = '<div class="similar-empty">No recommendations found' + (data.message ? ': ' + data.message : '') + '</div>';
       return;
