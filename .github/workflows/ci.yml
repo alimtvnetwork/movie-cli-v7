@@ -116,12 +116,18 @@ jobs:
           #   v4: github.com/alimtvnetwork/movie-cli-v4
           # Current (v5): github.com/alimtvnetwork/movie-cli-v5
           # Any reference to old v2/v3/v4 module paths is a regression.
+          #
+          # Historical records (CHANGELOG.md, spec/, .gitmap/) and this
+          # workflow file itself legitimately mention old paths and are
+          # excluded from the scan.
           set -e
           PATTERNS='movie-cli-v[234]'
           violations=$(grep -rn -E "$PATTERNS" --include='*.go' --include='*.md' --include='*.mmd' \
               --include='*.json' --include='*.yml' --include='*.yaml' \
               --include='*.sh' --include='*.ps1' --include='Makefile' \
               --exclude-dir=.git --exclude-dir=.release --exclude-dir=node_modules \
+              --exclude-dir=.gitmap --exclude-dir=spec \
+              --exclude=CHANGELOG.md --exclude=ci.yml \
               . 2>/dev/null || true)
           if [ -n "$violations" ]; then
             echo "::error::Old module path references found (v2/v3/v4)"

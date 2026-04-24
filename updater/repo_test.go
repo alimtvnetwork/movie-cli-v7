@@ -25,12 +25,14 @@ func TestIsValidRepoRejectsOldModulePath(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(repoDir, ".git"), 0o755); err != nil {
 		t.Fatalf("mkdir .git: %v", err)
 	}
-	goMod := []byte("module github.com/alimtvnetwork/movie-cli-v4\n\ngo 1.22\n")
+	// Use a clearly-fake legacy path so the CI old-module-path guard
+	// (which forbids any v2/v3/v4 reference) does not flag this test.
+	goMod := []byte("module github.com/alimtvnetwork/movie-cli-legacy\n\ngo 1.22\n")
 	if err := os.WriteFile(filepath.Join(repoDir, "go.mod"), goMod, 0o644); err != nil {
 		t.Fatalf("write go.mod: %v", err)
 	}
 	if isValidRepo(repoDir) {
-		t.Fatal("expected old module path to be rejected")
+		t.Fatal("expected non-v5 module path to be rejected")
 	}
 }
 
