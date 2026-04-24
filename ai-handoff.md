@@ -108,7 +108,6 @@ movie-cli/
 ├── spec.md                          # Full project specification (350+ lines)
 ├── README.md                        # Project documentation
 ├── development-log.md               # Every prompt + modification recorded
-├── readm.txt                        # Session milestone marker
 ├── go.mod / go.sum                  # Go module files
 ├── spec/
 │   ├── 01-app/
@@ -357,7 +356,6 @@ CREATE INDEX IF NOT EXISTS idx_tags_media         ON tags(media_id);
 - 📭 Empty/no results
 
 ### Documentation
-- Project milestones: `readm.txt` — `let's start now {dd-MMM-YYYY} {hh:mm AM/PM}` (Malaysia time UTC+8)
 - Specifications: `spec.md` (root) + `spec/01-app/` (app spec) + `spec/01-app/03-issues/` (issue write-ups)
 - Memory: `.lovable/memory/` — project overview, conventions, workflow, suggestions, issues
 
