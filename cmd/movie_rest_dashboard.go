@@ -144,13 +144,13 @@ func parseDashboardListQuery(r *http.Request) dashboardListQuery {
 	return q
 }
 
-func parseLimitDefault(raw string, def, max int) int {
+func parseLimitDefault(raw string, def, ceiling int) int {
 	n, err := strconv.Atoi(raw)
 	if err != nil || n <= 0 {
 		return def
 	}
-	if n > max {
-		return max
+	if n > ceiling {
+		return ceiling
 	}
 	return n
 }
