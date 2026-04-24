@@ -309,6 +309,309 @@
 
 ---
 
+## AC-17: Redo Command
+
+### AC-17a: Redo Last Reverted Operation
+
+**GIVEN** a previous `movie undo` reverted at least one move/rename within the current working directory  
+**WHEN** the user runs `movie redo`  
+**THEN** the most recent reverted operation is re-applied  
+**AND** the affected `move_history` / `action_history` rows are flipped back to `IsReverted = 0`
+
+### AC-17b: List Redoable Actions
+
+**GIVEN** one or more reverted actions exist in scope  
+**WHEN** `movie redo --list` is run  
+**THEN** a numbered table of redoable actions is printed (id, timestamp, summary)
+
+### AC-17c: Redo by ID
+
+**GIVEN** a reverted `action_history` row with id 42 exists  
+**WHEN** `movie redo --id 42` is run  
+**THEN** only that action is re-applied
+
+### AC-17d: Redo Entire Batch
+
+**GIVEN** the last revert affected a batch of files  
+**WHEN** `movie redo --batch` is run  
+**THEN** every member of that batch is re-applied in original order
+
+**Edge Cases:**
+- **GIVEN** no reverted actions exist in scope **WHEN** redo runs **THEN** message: "Nothing to redo"
+- **GIVEN** `--global` is passed **WHEN** redo runs **THEN** the cwd / path scope is ignored
+- **GIVEN** `--include` / `--exclude` globs are supplied **WHEN** redo runs **THEN** matching paths are kept / dropped before execution
+- **GIVEN** `--yes` is passed **WHEN** redo runs **THEN** all confirmation prompts are skipped
+
+---
+
+## AC-18: Doctor Command
+
+**GIVEN** the CLI is installed  
+**WHEN** the user runs `movie doctor`  
+**THEN** the output reports the status of each environment check: SQLite database reachable, TMDb API key configured, `movies_dir` and `tv_dir` exist and are writable, git binary present, current binary path  
+**AND** each check is marked ✅ pass or ❌ fail with a one-line reason
+
+**Edge Cases:**
+- **GIVEN** any check fails **WHEN** doctor finishes **THEN** the process exits with a non-zero code
+- **GIVEN** all checks pass **WHEN** doctor finishes **THEN** the process exits with code 0
+
+---
+
+## AC-19: Duplicates Command
+
+**GIVEN** the library contains two or more media rows with the same `(CleanTitle, Year)`  
+**WHEN** the user runs `movie duplicates`  
+**THEN** each duplicate group is printed with all member ids, sizes, and current file paths  
+**AND** a summary line shows the total duplicate count
+
+**Edge Cases:**
+- **GIVEN** no duplicates exist **WHEN** the command runs **THEN** message: "No duplicates found"
+
+---
+
+## AC-20: Cleanup Command
+
+**GIVEN** the library contains rows whose `CurrentFilePath` no longer exists on disk  
+**WHEN** the user runs `movie cleanup`  
+**THEN** the user is shown the list of orphaned rows and prompted for confirmation  
+**AND** on confirmation the orphaned rows are removed from the database
+
+**Edge Cases:**
+- **GIVEN** no orphaned rows exist **WHEN** cleanup runs **THEN** message: "Library is clean"
+- **GIVEN** the user declines the prompt **WHEN** cleanup runs **THEN** no rows are deleted
+
+---
+
+## AC-21: Watch Command
+
+### AC-21a: Add to Watchlist
+
+**GIVEN** a media row with id 5 exists  
+**WHEN** `movie watch add 5` is run  
+**THEN** a `Watchlist` row is created with `MediaID = 5` and `IsWatched = 0`
+
+### AC-21b: Mark Done
+
+**GIVEN** id 5 is on the watchlist  
+**WHEN** `movie watch done 5` is run  
+**THEN** the watchlist row is updated with `IsWatched = 1` and `WatchedAt = now`
+
+### AC-21c: Remove from Watchlist
+
+**GIVEN** id 5 is on the watchlist  
+**WHEN** `movie watch rm 5` is run  
+**THEN** the watchlist row is deleted
+
+### AC-21d: List Watchlist
+
+**GIVEN** the watchlist has entries  
+**WHEN** `movie watch list` is run  
+**THEN** a table of watchlist items prints with title, year, added date, watched status
+
+**Edge Cases:**
+- **GIVEN** the media id does not exist **WHEN** any subcommand runs **THEN** an error is shown and exit code is non-zero
+
+---
+
+## AC-22: History Command
+
+**GIVEN** at least one move or rename has been recorded  
+**WHEN** the user runs `movie history`  
+**THEN** a table of recent operations prints with id, timestamp, action type, source, destination, IsReverted flag
+
+**Edge Cases:**
+- **GIVEN** no history rows exist **WHEN** the command runs **THEN** message: "No history yet"
+
+---
+
+## AC-23: DB Command
+
+**GIVEN** the SQLite database file exists  
+**WHEN** the user runs `movie db`  
+**THEN** the resolved database file path, schema version, table count, and total row count are printed
+
+**Edge Cases:**
+- **GIVEN** the database file is missing **WHEN** the command runs **THEN** the file is created with the latest schema and a "fresh database" message is shown
+
+---
+
+## AC-24: REST Command
+
+**GIVEN** the database is reachable  
+**WHEN** the user runs `movie rest`  
+**THEN** an HTTP server starts on the configured port and serves the dashboard plus JSON endpoints  
+**AND** the bound URL is printed (e.g. `http://localhost:8765`)
+
+**Edge Cases:**
+- **GIVEN** the configured port is in use **WHEN** rest starts **THEN** an error is shown and exit code is non-zero
+- **GIVEN** the user presses Ctrl+C **WHEN** the server is running **THEN** the server shuts down cleanly
+
+---
+
+## AC-25: Logs Command
+
+**GIVEN** the application has written log entries  
+**WHEN** the user runs `movie logs`  
+**THEN** the most recent log entries are streamed to stdout in chronological order
+
+**Edge Cases:**
+- **GIVEN** no log file exists **WHEN** the command runs **THEN** message: "No logs available"
+
+---
+
+## AC-26: CD Command
+
+**GIVEN** a folder name argument matches a known media root (e.g. `movies`, `tv`)  
+**WHEN** the user runs `movie cd movies`  
+**THEN** the resolved absolute path is printed so a shell wrapper can `cd` into it
+
+**Edge Cases:**
+- **GIVEN** the folder name is unknown **WHEN** the command runs **THEN** an error is shown listing valid folder names
+
+---
+
+## AC-27: Rescan Command
+
+**GIVEN** the library contains media rows that lack TMDb metadata  
+**WHEN** the user runs `movie rescan`  
+**THEN** each row is re-queried against TMDb and updated with fresh metadata  
+**AND** a summary prints: scanned, updated, failed counts
+
+---
+
+## AC-28: Rescan-Failed Command
+
+**GIVEN** previous TMDb lookups recorded misses in `TmdbCacheMiss`  
+**WHEN** the user runs `movie rescan-failed`  
+**THEN** only the rows that previously failed are re-queried  
+**AND** successful matches clear the corresponding miss entry
+
+**Edge Cases:**
+- **GIVEN** no failed lookups exist **WHEN** the command runs **THEN** message: "No failed lookups to retry"
+
+---
+
+## AC-29: Popout Command
+
+### AC-29a: Discover Nested Videos
+
+**GIVEN** the target directory contains subfolders with video files  
+**WHEN** `movie popout` is run with no flags  
+**THEN** all nested video files are listed with their proposed destination at the directory root
+
+### AC-29b: Apply Popout
+
+**GIVEN** the discovery list is non-empty  
+**WHEN** the user confirms the prompt  
+**THEN** each nested video is moved to the root of the target directory  
+**AND** every move is logged to `move_history` for undo
+
+### AC-29c: Cleanup Empty Folders
+
+**GIVEN** popout left behind empty subfolders  
+**WHEN** popout completes  
+**THEN** every now-empty subfolder is removed
+
+**Edge Cases:**
+- **GIVEN** no nested videos exist **WHEN** popout runs **THEN** message: "Nothing to pop out"
+- **GIVEN** a destination filename collision exists **WHEN** popout runs **THEN** the file is renamed with a numeric suffix and the action is recorded
+
+---
+
+## AC-30: Discover Command
+
+**GIVEN** a TMDb API key is configured  
+**WHEN** the user runs `movie discover [genre]`  
+**THEN** TMDb's discover endpoint is called for that genre and the results are printed in a table  
+**AND** the user can pick an item to save to the library
+
+**Edge Cases:**
+- **GIVEN** no TMDb key is configured **WHEN** discover runs **THEN** an error is shown asking to set the key
+- **GIVEN** an unknown genre is passed **WHEN** discover runs **THEN** an error lists the supported genres
+
+---
+
+## AC-31: Cache Command
+
+### AC-31a: List Cache
+
+**GIVEN** TMDb cache rows exist  
+**WHEN** `movie cache` is run  
+**THEN** a summary prints with hit count, miss count, and last update timestamp
+
+### AC-31b: Backfill Cache
+
+**GIVEN** library rows have TMDb ids but no cached payloads  
+**WHEN** `movie cache backfill` is run  
+**THEN** each missing payload is fetched and stored in `TmdbCache`
+
+### AC-31c: Forget Entry
+
+**GIVEN** a cache entry exists for `cleanTitle = "Inception", year = 2010`  
+**WHEN** `movie cache forget Inception 2010` is run  
+**THEN** that cache entry is deleted
+
+### AC-31d: Clear Misses
+
+**GIVEN** miss entries exist in `TmdbCacheMiss`  
+**WHEN** `movie cache clear-misses` is run  
+**THEN** all rows in `TmdbCacheMiss` are deleted
+
+---
+
+## AC-32: Changelog Command
+
+**GIVEN** the binary embeds the project changelog  
+**WHEN** the user runs `movie changelog`  
+**THEN** the full changelog is printed, newest entries first
+
+### AC-32a: Latest Only
+
+**GIVEN** the changelog has at least one release  
+**WHEN** `movie changelog --latest` is run  
+**THEN** only the most recent release section is printed
+
+---
+
+## AC-33: Update Command
+
+**GIVEN** a clean local repo with new commits on the remote  
+**WHEN** the user runs `movie update`  
+**THEN** the binary pulls latest, rebuilds, deploys, and prints `Updated: vOLD → vNEW`
+
+**Edge Cases:**
+- **GIVEN** the repo is at the latest commit **WHEN** update runs **THEN** message: "Already up to date" and no rebuild
+- **GIVEN** git is not in PATH **WHEN** update runs **THEN** an error is shown and exit code is non-zero
+- **GIVEN** the repo has uncommitted changes **WHEN** update runs **THEN** message: "repository has local changes; commit or stash them"
+- **GIVEN** no local repo exists **WHEN** update runs **THEN** a fresh clone is created next to the binary and the user is told to run `movie update` again
+- **GIVEN** the version did not change after build **WHEN** update finishes **THEN** warning: "Version unchanged — was version/info.go bumped?"
+- **GIVEN** the deploy step fails **WHEN** `run.ps1` cannot copy the new binary **THEN** the `.bak` backup is restored
+- **GIVEN** a successful update **WHEN** build and deploy complete **THEN** `movie update-cleanup` runs automatically and `movie changelog --latest` is displayed
+
+See [Self-Update Acceptance Criteria](../13-self-update-app-update/07-acceptance-criteria.md) for the full set.
+
+---
+
+## AC-34: Update-Cleanup Command
+
+**GIVEN** leftover temp files from a previous update exist  
+**WHEN** the user runs `movie update-cleanup`  
+**THEN** all `movie-update-*` and `*.bak` files in the binary directory are removed  
+**AND** the currently running binary is NOT deleted
+
+---
+
+## AC-35: Self-Replace Command
+
+**GIVEN** an update worker has produced a new binary at `<bin>.new`  
+**WHEN** the worker invokes `movie self-replace --target <bin>`  
+**THEN** the running binary is swapped atomically with the new one and the previous version is preserved as `<bin>.bak`
+
+**Edge Cases:**
+- **GIVEN** the target binary is locked (Windows) **WHEN** self-replace runs **THEN** the operation is retried with a backoff and falls back to `.bak` restore on failure
+
+---
+
 ## Cross-References
 
 - [Overview](./00-overview.md)
