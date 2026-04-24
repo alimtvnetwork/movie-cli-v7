@@ -22,6 +22,46 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 
 <div align="center">
 
+## ✨ Highlights
+
+</div>
+
+- 🔍 **Smart scan** — recursively walks folders, cleans messy release names, and matches them against TMDb
+- 🖼️ **Posters & metadata** — automatic thumbnail downloads, ratings, genres, cast, runtime
+- 📦 **Single binary** — one statically-linked Go executable, no runtime, no dependencies
+- 🗂️ **SQLite (WAL)** — fast, durable, zero-config local database in `./data/movie.db`
+- ↩️ **Undo / redo** — every move, rename, scan, and delete is reversible
+- 🌐 **REST API + web UI** — `movie rest --open` launches a local dashboard
+- 🛠️ **Self-updating** — `movie update` pulls, rebuilds, and hands off in-place
+- 🔒 **Cross-platform** — Windows, Linux, macOS on `amd64` and `arm64`
+
+---
+
+<div align="center">
+
+## 📑 Table of Contents
+
+</div>
+
+- [Quick Start](#quick-start)
+- [Demo](#-demo)
+- [Installation](#installation)
+- [What It Does](#what-it-does)
+- [Command Reference](#command-reference)
+- [Command Tree](#command-tree)
+- [Build & Deploy](#build--deploy)
+- [Release Workflow](#release-workflow)
+- [Project Structure](#project-structure)
+- [Data Storage](#data-storage)
+- [Dependencies](#dependencies)
+- [Contributing](#-contributing)
+- [Author](#author)
+- [License](#license)
+
+---
+
+<div align="center">
+
 ## Quick Start
 
 </div>
