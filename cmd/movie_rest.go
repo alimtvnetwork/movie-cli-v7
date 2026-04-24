@@ -43,6 +43,8 @@ Endpoints:
   GET    /api/stats              Library statistics
   GET    /api/dashboard/filters  Distinct genres, tag counts, year range, type counts
   GET    /api/dashboard/list     Filterable + sortable + paginated card list
+  GET    /api/dashboard/export   Export filtered list as CSV or JSON (?format=csv|json)
+  GET    /api/media/{id}/similar/export Export TMDb recommendations as CSV or JSON
 
 Examples:
   movie rest              Start on port 8086
@@ -122,8 +124,13 @@ func buildRESTMux(database *db.DB) *http.ServeMux {
 	}))
 	mux.HandleFunc("/api/media/", corsWrap(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimPrefix(r.URL.Path, "/api/media/")
-		parts := strings.SplitN(path, "/", 2)
-		if len(parts) == 2 {
+		parts := strings.SplitN(path, "/", 3)
+		if len(parts) >= 2 {
+			// /api/media/{id}/similar/export and /api/media/{id}/{sub}
+			if len(parts) == 3 && parts[1] == "similar" && parts[2] == "export" {
+				handleSimilarExport(w, r, database)
+				return
+			}
 			switch parts[1] {
 			case "similar":
 				handleSimilar(w, r, database)
@@ -150,6 +157,9 @@ func buildRESTMux(database *db.DB) *http.ServeMux {
 	mux.HandleFunc("/api/dashboard/list", corsWrap(func(w http.ResponseWriter, r *http.Request) {
 		handleDashboardList(w, r, database)
 	}))
+	mux.HandleFunc("/api/dashboard/export", corsWrap(func(w http.ResponseWriter, r *http.Request) {
+		handleDashboardExport(w, r, database)
+	}))
 
 	return mux
 }
@@ -174,6 +184,8 @@ func printRESTBanner() {
 	fmt.Printf("     GET    /api/stats\n")
 	fmt.Printf("     GET    /api/dashboard/filters\n")
 	fmt.Printf("     GET    /api/dashboard/list?type=&genre=&tag=&q=&min_rating=&year_from=&year_to=&sort=&limit=&offset=\n")
+	fmt.Printf("     GET    /api/dashboard/export?format=csv|json (same filters as list)\n")
+	fmt.Printf("     GET    /api/media/{id}/similar/export?format=csv|json\n")
 	fmt.Printf("     GET    /api/logs?level=ERROR&limit=50\n\n")
 }
 

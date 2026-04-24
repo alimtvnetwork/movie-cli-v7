@@ -54,6 +54,13 @@
   /* Results info */
   .results-info { font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; }
 
+  /* Export bar */
+  .export-bar { display: flex; gap: 0.5rem; margin-left: auto; align-items: center; }
+  .export-btn { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary); padding: 0.3rem 0.7rem; border-radius: var(--radius-xs); font-size: 0.72rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; transition: all 0.15s; text-decoration: none; }
+  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .export-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+  .export-btn[disabled]:hover { border-color: var(--border); color: var(--text-secondary); }
+
   /* Grid */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1rem; }
 
@@ -205,6 +212,10 @@
           <option value="year-asc">Year ↑</option>
         </select>
       </div>
+      <div class="export-bar">
+        <button class="export-btn" id="exportCsvBtn" onclick="exportCurrentView('csv')" disabled title="Start movie rest to enable">⬇ CSV</button>
+        <button class="export-btn" id="exportJsonBtn" onclick="exportCurrentView('json')" disabled title="Start movie rest to enable">⬇ JSON</button>
+      </div>
     </div>
 
     <div class="results-info" id="resultsInfo"></div>
@@ -271,6 +282,10 @@
   <div class="modal">
     <button class="modal-close" onclick="closeSimilar()">✕</button>
     <h2 id="similarTitle">Similar to...</h2>
+    <div id="similarExportBar" style="display:none; margin-bottom:0.75rem; gap:0.4rem; display:flex;">
+      <button class="export-btn" id="similarExportCsv" type="button">⬇ CSV</button>
+      <button class="export-btn" id="similarExportJson" type="button">⬇ JSON</button>
+    </div>
     <div id="similarContent" class="similar-list"></div>
   </div>
 </div>
@@ -337,9 +352,55 @@ async function checkRest() {
     banner.innerHTML = '<span class="dot" style="background:var(--success)"></span> Connected to REST server on port <strong>' + API_PORT + '</strong>';
     loadAllTags();
     enableDashboardMode();
+    enableExportButtons();
   } catch(e) {
     // REST not running — banner stays visible
   }
+}
+
+// --- Export ---
+function enableExportButtons() {
+  ['exportCsvBtn','exportJsonBtn'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) { b.disabled = false; b.title = 'Export current filtered view'; }
+  });
+}
+
+function buildExportURL(format) {
+  var params = new URLSearchParams();
+  if (activeTypeFilter && activeTypeFilter !== 'all') params.set('type', activeTypeFilter);
+  var genre = document.getElementById('genreFilter').value;
+  if (genre) params.set('genre', genre);
+  var minRating = document.getElementById('ratingFilter').value;
+  if (minRating) params.set('min_rating', minRating);
+  var q = document.getElementById('searchInput').value.trim();
+  if (q) params.set('q', q);
+  var sort = document.getElementById('sortSelect').value;
+  if (sort) params.set('sort', sort);
+  params.set('format', format);
+  return API_BASE + '/api/dashboard/export?' + params.toString();
+}
+
+function exportCurrentView(format) {
+  if (restRequired()) return;
+  triggerDownload(buildExportURL(format));
+  showToast('Exporting filtered view as ' + format.toUpperCase());
+}
+
+function triggerDownload(url) {
+  // Anchor with download attr lets the browser honor Content-Disposition.
+  var a = document.createElement('a');
+  a.href = url;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function exportSimilar(mediaId, format) {
+  if (restRequired()) return;
+  triggerDownload(API_BASE + '/api/media/' + mediaId + '/similar/export?format=' + format);
+  showToast('Exporting similar list as ' + format.toUpperCase());
 }
 
 // --- Dashboard mode (server-driven filters/list) ---
@@ -648,6 +709,10 @@ async function showSimilar(id, title) {
   if (restRequired()) return;
   var modal = document.getElementById('similarModal');
   var content = document.getElementById('similarContent');
+  var bar = document.getElementById('similarExportBar');
+  document.getElementById('similarExportCsv').onclick = function() { exportSimilar(id, 'csv'); };
+  document.getElementById('similarExportJson').onclick = function() { exportSimilar(id, 'json'); };
+  bar.style.display = 'flex';
   document.getElementById('similarTitle').textContent = 'Similar to "' + title + '"';
   content.innerHTML = '<div class="similar-loading">Loading recommendations…</div>';
   modal.classList.add('show');
