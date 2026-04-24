@@ -149,8 +149,16 @@ jobs:
               --exclude=CHANGELOG.md --exclude=ci.yml \
               . 2>/dev/null || true)
           if [ -n "$violations" ]; then
-            echo "::error::Old module path references found (v2/v3/v4)"
+            echo "Old module path references found (v2/v3/v4):"
             echo "$violations"
+            echo ""
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              file=$(printf '%s' "$line" | cut -d: -f1)
+              lineno=$(printf '%s' "$line" | cut -d: -f2)
+              content=$(printf '%s' "$line" | cut -d: -f3-)
+              echo "::error file=${file},line=${lineno}::Old module path (v2/v3/v4): ${content}"
+            done <<< "$violations"
             echo ""
             echo "Current module: github.com/alimtvnetwork/movie-cli-v5"
             echo "Old modules v2/v3/v4 must never be referenced."
