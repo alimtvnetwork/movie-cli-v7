@@ -43,7 +43,6 @@ Discovery:
 System:
   movie version                             Show version info
   movie update                              Pull, rebuild, and deploy latest version
-  movie preflight                           Verify local repo is on expected branch & in sync
 
 Documentation: https://github.com/alimtvnetwork/movie-cli-v6`, version.Short()),
 	Version: version.Short(),
@@ -65,7 +64,6 @@ func init() {
 		updateCleanupCmd,
 		selfReplaceCmd,
 		doctorCmd,
-		preflightCmd,
 		movieScanCmd,
 		movieLsCmd,
 		movieSearchCmd,

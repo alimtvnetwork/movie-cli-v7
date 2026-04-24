@@ -42,6 +42,7 @@ type Report struct {
 	Target    string
 	DeployDir string
 	Findings  []Finding
+	Repo      RepoStatus
 }
 
 // Diagnose runs every check and returns the aggregated report.
@@ -54,6 +55,7 @@ func Diagnose() (*Report, error) {
 	report.Findings = append(report.Findings, checkDeployInPath(report))
 	report.Findings = append(report.Findings, checkStaleWorkers(report)...)
 	report.Findings = append(report.Findings, checkVersionDrift(report))
+	report.Repo = CheckRepo()
 	return report, nil
 }
 
