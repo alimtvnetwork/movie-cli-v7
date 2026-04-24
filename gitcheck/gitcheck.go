@@ -20,16 +20,16 @@ import (
 // Status is the result of an upstream-aware preflight inspection.
 // Field order optimized for govet fieldalignment (strings, ints, bools last).
 type Status struct {
-	Branch     string // local branch, e.g. "main"
-	Remote     string // detected remote name, e.g. "origin"
-	RemoteRef  string // detected upstream short ref, e.g. "origin/main"
-	Summary    string // one-line human summary
-	Recovery   string // recovery command when not clean+current
-	Ahead      int
-	Behind     int
-	IsGitRepo  bool
-	IsClean    bool
-	IsCurrent  bool
+	Branch      string // local branch, e.g. "main"
+	Remote      string // detected remote name, e.g. "origin"
+	RemoteRef   string // detected upstream short ref, e.g. "origin/main"
+	Summary     string // one-line human summary
+	Recovery    string // recovery command when not clean+current
+	Ahead       int
+	Behind      int
+	IsGitRepo   bool
+	IsClean     bool
+	IsCurrent   bool
 	HasUpstream bool
 }
 
