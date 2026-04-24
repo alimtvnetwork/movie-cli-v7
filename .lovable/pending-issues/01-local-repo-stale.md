@@ -14,6 +14,7 @@ Local branch is diverged from `origin/main`. Standard `git pull` does fast-forwa
 ## Attempted Solutions
 - [x] Advised `git fetch origin && git reset --hard origin/main && git clean -fd` — user hasn't confirmed execution yet
 - [ ] Manual file edit of tmdb/client.go and tmdb/http.go as workaround
+- [x] v2.155.0: added `movie preflight` command (gitcheck pkg) that detects this exact state and prints the recovery commands automatically. Exit code 4 = stale.
 
 ## Priority
 High — blocks all builds
