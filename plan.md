@@ -29,11 +29,11 @@
 
 ## Phase 2: Spec Completeness (P1)
 
-### 2.1 Acceptance Criteria for All Commands
+### 2.1 Acceptance Criteria for All Commands ✅ DONE (2026-04-25)
 - **Objective**: Add GIVEN/WHEN/THEN test cases to spec.md
 - **Dependencies**: None
-- **Expected outputs**: Updated `spec.md` §4, each command gets 2–4 acceptance criteria
-- **Acceptance criteria**: Every command in §4 has at least 2 testable scenarios
+- **Expected outputs**: Updated `spec/08-app/01-project-spec.md` §4, each command gets 3–6 acceptance criteria ✅
+- **Acceptance criteria**: Every command in §4 has at least 2 testable scenarios ✅
 
 ### 2.2 Shared Helper Documentation
 - **Objective**: Add comments marking shared helpers so AI doesn't duplicate them
