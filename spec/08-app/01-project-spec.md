@@ -231,12 +231,22 @@ All application queries use views instead of direct table joins:
 **Args**: None  
 **Output**: `👋 Hello from Movie CLI!` + version string  
 
+**Acceptance Criteria**:
+- GIVEN the binary is built WHEN user runs `movie hello` THEN stdout contains `👋 Hello from Movie CLI!`
+- GIVEN a release build with version `vX.Y.Z` WHEN user runs `movie hello` THEN output also includes the version string
+- GIVEN any environment WHEN user runs `movie hello` THEN exit code is 0
+
 ### 4.2 `movie-cli version`
 
 **Purpose**: Show version, commit hash, and build date.  
 **Args**: None  
 **Output**: `v1.2.0 (commit: abc1234, built: 2024-06-01)`  
 **Note**: Values injected via `-ldflags` at build time. Defaults: `v0.0.1-dev`, `none`, `unknown`.
+
+**Acceptance Criteria**:
+- GIVEN ldflags are injected WHEN user runs `movie version` THEN output matches `v<semver> (commit: <sha>, built: <date>)`
+- GIVEN a dev build with no ldflags WHEN user runs `movie version` THEN output shows defaults `v0.0.1-dev`, `none`, `unknown`
+- GIVEN any build WHEN user runs `movie version` THEN exit code is 0
 
 ### 4.3 `movie-cli self-update`
 
@@ -256,6 +266,13 @@ All application queries use views instead of direct table joins:
 
 **Error cases**: git not found, clone failed, dirty working tree, merge conflicts.
 
+**Acceptance Criteria**:
+- GIVEN no local repo exists WHEN user runs `movie self-update` THEN repo is cloned next to the binary and success is reported
+- GIVEN a clean repo already at HEAD WHEN user runs `movie self-update` THEN output reports "already up-to-date" and exit code is 0
+- GIVEN a clean repo behind origin WHEN user runs `movie self-update` THEN repo is fast-forwarded and old→new commit hashes are printed
+- GIVEN a dirty working tree WHEN user runs `movie self-update` THEN command aborts with a "dirty working tree" error and no pull is attempted
+- GIVEN `git` is not in PATH WHEN user runs `movie self-update` THEN command exits with a "git not found" error
+
 ### 4.4 `movie-cli movie config`
 
 **Usage**: `config [get|set] [key] [value]`  
@@ -263,6 +280,12 @@ All application queries use views instead of direct table joins:
 **`get <key>`**: Show single config value.  
 **`set <key> <value>`**: Update config value.  
 **Valid keys**: `movies_dir`, `tv_dir`, `archive_dir`, `scan_dir`, `tmdb_api_key`, `page_size`.
+
+**Acceptance Criteria**:
+- GIVEN a populated config WHEN user runs `movie config` (no args) THEN all keys are printed and `tmdb_api_key` is masked as `XXXX...XXXX`
+- GIVEN a key exists WHEN user runs `movie config get movies_dir` THEN only that value is printed
+- GIVEN a valid key WHEN user runs `movie config set page_size 30` THEN config is updated and re-reading the key returns `30`
+- GIVEN an invalid key WHEN user runs `movie config set foo bar` THEN command exits with an "unknown config key" error
 
 ### 4.5 `movie-cli movie scan [folder]`
 
@@ -291,6 +314,13 @@ All application queries use views instead of direct table joins:
 7. Log to `scan_history` table
 8. Print summary: total files, movies, TV shows, skipped
 
+**Acceptance Criteria**:
+- GIVEN a folder with new video files WHEN user runs `movie scan <folder>` THEN each file is inserted into `media` and the summary counts match
+- GIVEN a file already indexed by `OriginalFilePath` WHEN user runs `movie scan` again THEN the file is counted as skipped and not re-inserted
+- GIVEN no folder arg and no `scan_dir` config WHEN user runs `movie scan` THEN command exits with a "folder required" error
+- GIVEN no TMDb API key WHEN user runs `movie scan <folder>` THEN files are still indexed without metadata and a warning is printed
+- GIVEN a successful scan WHEN it completes THEN a row is appended to `scan_history`
+
 ### 4.6 `movie-cli movie ls`
 
 **Purpose**: Paginated list of locally indexed media that have actual files on disk.  
@@ -308,6 +338,13 @@ All application queries use views instead of direct table joins:
 6. Detail view: full metadata card with title, year, type, ratings, genres, director, cast, description, thumbnail path, file path
 7. Clears terminal screen (`\033[H\033[2J`) between pages
 
+**Acceptance Criteria**:
+- GIVEN media records with non-empty `current_file_path` WHEN user runs `movie ls` THEN only those records appear in the list
+- GIVEN catalog-only records (added via `search`/`info`) WHEN user runs `movie ls` THEN those records are excluded
+- GIVEN more than `page_size` records WHEN user types `N` THEN the next page is shown; WHEN user types `P` on page 2 THEN page 1 is shown
+- GIVEN a list page WHEN user types a valid item number THEN the detail card for that media is rendered
+- GIVEN any state WHEN user types `Q` THEN the command exits with code 0
+
 ### 4.7 `movie-cli movie search <name>`
 
 **Purpose**: Search TMDb API live, select a result, fetch full details, save to DB.  
@@ -322,6 +359,13 @@ All application queries use views instead of direct table joins:
 6. Download poster
 7. Insert or update in DB
 8. Print saved details summary
+
+**Acceptance Criteria**:
+- GIVEN no TMDb API key WHEN user runs `movie search inception` THEN command exits with an "API key required" error
+- GIVEN TMDb returns results WHEN user selects a valid number THEN full details + credits are fetched and the record is inserted/updated in DB
+- GIVEN TMDb returns results WHEN user enters `0` THEN selection is cancelled and no DB write occurs
+- GIVEN a result with a poster WHEN selected THEN the poster is downloaded to `./data/thumbnails/<slug>/<slug>.jpg`
+- GIVEN no local file path WHEN the record is saved THEN `current_file_path` remains empty (catalog-only)
 
 ### 4.8 `movie-cli movie info <id|title>`
 
@@ -338,6 +382,13 @@ All application queries use views instead of direct table joins:
    - Fetch full details + credits + poster
    - Auto-save to DB
    - Display result
+
+**Acceptance Criteria**:
+- GIVEN a numeric arg matching a media row WHEN user runs `movie info 5` THEN the local record's detail card is displayed
+- GIVEN a title with an exact local match WHEN user runs `movie info "Inception"` THEN the exact match is preferred over prefix matches
+- GIVEN no local match exists WHEN user runs `movie info <title>` THEN TMDb is queried, the result is auto-saved, and the detail card is shown
+- GIVEN a TMDb result whose `tmdb_id` already exists in DB WHEN auto-saved THEN no duplicate row is created
+- GIVEN no local match and no TMDb result WHEN user runs `movie info <title>` THEN a "not found" message is printed
 
 ### 4.9 `movie-cli movie suggest [N]`
 
@@ -357,6 +408,14 @@ All application queries use views instead of direct table joins:
    - Fetch trending movies + trending TV
    - Merge, shuffle, deduplicate
 5. Display results: title, year, rating, genre names
+
+**Acceptance Criteria**:
+- GIVEN no TMDb API key WHEN user runs `movie suggest` THEN command exits with an "API key required" error
+- GIVEN no count arg WHEN user runs `movie suggest` THEN exactly 10 suggestions are shown
+- GIVEN a count arg WHEN user runs `movie suggest 5` THEN exactly 5 suggestions are shown
+- GIVEN library media exists WHEN category is Movie or TV THEN suggestions exclude IDs already present in the library
+- GIVEN insufficient library data WHEN category is Movie or TV THEN remaining slots are filled from `Trending(mediaType)`
+- GIVEN category Random WHEN run THEN results merge trending movies + TV, are deduplicated, and shuffled
 
 ### 4.10 `movie-cli movie move [directory]`
 
@@ -384,6 +443,13 @@ All application queries use views instead of direct table joins:
    - Append to JSON history file: `./data/json/history/<slug>/move-log.json`
 10. Print success message
 
+**Acceptance Criteria**:
+- GIVEN a same-filesystem move WHEN `os.Rename` succeeds THEN no copy fallback runs and source is gone from origin
+- GIVEN a cross-drive move (e.g., C: → D:) WHEN `os.Rename` returns `EXDEV` THEN file is copied + source removed and destination contains the file
+- GIVEN a copy failure mid-fallback WHEN copy errors THEN source file is NOT deleted and error is reported
+- GIVEN a successful move WHEN it completes THEN a row is appended to `move_history` and `./data/json/history/<slug>/move-log.json`
+- GIVEN no source dir arg WHEN user runs `movie move` THEN an interactive prompt offers Downloads / scan_dir / custom
+
 ### 4.11 `movie-cli movie rename`
 
 **Purpose**: Batch rename files in the library to clean format.  
@@ -401,6 +467,12 @@ All application queries use views instead of direct table joins:
    - Log to `move_history` (for undo support)
 6. Print summary: `X/Y files renamed`
 
+**Acceptance Criteria**:
+- GIVEN files whose names already match clean format WHEN user runs `movie rename` THEN no renames are proposed and summary is `0/0`
+- GIVEN files needing renaming WHEN user confirms `y` THEN each file is renamed via `MoveFile()` and `current_file_path` is updated in DB
+- GIVEN a rename preview WHEN user enters `n` THEN no files are renamed and no DB rows change
+- GIVEN a successful batch rename WHEN it completes THEN each rename is logged to `move_history` for undo
+
 ### 4.12 `movie-cli movie undo`
 
 **Purpose**: Revert the most recent move/rename operation.  
@@ -416,6 +488,12 @@ All application queries use views instead of direct table joins:
 8. Update media `current_file_path` back to `from_path`
 9. Print success message
 
+**Acceptance Criteria**:
+- GIVEN a pending move/rename in `move_history` WHEN user runs `movie undo` and answers `y` THEN file is moved back to `from_path`, record is marked `undone=1`, and media `current_file_path` is reverted
+- GIVEN a pending undo WHEN user answers `n` (or empty) THEN no file is moved and no DB change occurs
+- GIVEN no `move_history` rows with `undone=0` WHEN user runs `movie undo` THEN command prints "nothing to undo" and exits with code 0
+- GIVEN the file at `to_path` no longer exists WHEN user runs `movie undo` THEN command aborts with a "source file missing" error and DB is unchanged
+
 ### 4.13 `movie-cli movie play <id>`
 
 **Purpose**: Open a media file with the system's default video player.  
@@ -428,6 +506,12 @@ All application queries use views instead of direct table joins:
    - **Linux**: `xdg-open <path>`
    - **Windows**: `cmd /c start "" <path>`
 
+**Acceptance Criteria**:
+- GIVEN a media ID with an existing file WHEN user runs `movie play 5` THEN the OS-default player command is invoked for that path
+- GIVEN an unknown ID WHEN user runs `movie play 999` THEN command exits with a "media not found" error
+- GIVEN a media ID whose `current_file_path` does not exist on disk WHEN user runs `movie play <id>` THEN command exits with a "file missing" error
+- GIVEN no ID arg WHEN user runs `movie play` THEN command exits with a usage error
+
 ### 4.14 `movie-cli movie stats`
 
 **Purpose**: Display library statistics.  
@@ -439,6 +523,13 @@ All application queries use views instead of direct table joins:
 4. Average IMDb rating (if available)
 5. Average TMDb rating (if available)
 **Note**: Loads all media (up to 10,000) to compute averages. File size stats use a dedicated SQL aggregate query.
+
+**Acceptance Criteria**:
+- GIVEN a populated library WHEN user runs `movie stats` THEN counts of movies, TV shows, and total are printed
+- GIVEN media with `file_size > 0` WHEN user runs `movie stats` THEN total/largest/smallest/average sizes are shown in human-readable form
+- GIVEN media with genres WHEN user runs `movie stats` THEN top 10 genres are rendered as a bar chart capped at 30 `█` characters
+- GIVEN media with rating data WHEN user runs `movie stats` THEN average IMDb and TMDb ratings are printed (skipped if no data)
+- GIVEN an empty library WHEN user runs `movie stats` THEN command exits with code 0 and prints zero counts (no division-by-zero error)
 
 ### 4.15 `movie-cli movie tag`
 
