@@ -418,9 +418,14 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.list_sections:
-        width = max(len(label) for label in SECTION_LABELS)
+        all_labels = (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
+        width = max(len(label) for label in all_labels)
+        print("# command sections")
         for label in SECTION_LABELS:
             print(f"{label.ljust(width)}  ->  {SECTION_ANCHORS[label]}")
+        print("# extra doc anchors (auto-fix only)")
+        for label in EXTRA_ANCHOR_LABELS:
+            print(f"{label.ljust(width)}  ->  {EXTRA_ANCHORS[label]}")
         return 0
 
     original = README.read_text(encoding="utf-8")
