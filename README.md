@@ -453,8 +453,9 @@ movie watch list --sort <field>            →   Discovery & Organization   #mov
 
 </details>
 
-#### 📂 [Scanning & Library](#scan--library)
+#### 📂 [Scanning & Library](#scanning--library)
 Match files against TMDb, browse the library.
+<!-- SECTION-CMDS:Scanning & Library:BEGIN -->
 ```bash
 movie scan
 movie rescan
@@ -471,6 +472,7 @@ movie info 123
 # Windows-style scan target:
 movie scan "D:\Media\Movies"
 ```
+<!-- SECTION-CMDS:Scanning & Library:END -->
 
 > **Args:** `<path>` is the folder to scan (defaults to your configured `source_folder`). `123` is a **media ID** — get one from `movie ls`. `"inception"` is any free-text query; quote it if it contains spaces.
 
@@ -506,6 +508,7 @@ TMDb:     https://www.themoviedb.org/movie/27205
 
 #### 📦 [File Management](#file-management)
 Move, rename, flatten, play files.
+<!-- SECTION-CMDS:File Management:BEGIN -->
 ```bash
 movie move
 movie rename
@@ -522,6 +525,7 @@ movie cd 123
 # Quote Windows paths with spaces:
 movie move 123 --to "D:\Media\Sorted\Action"
 ```
+<!-- SECTION-CMDS:File Management:END -->
 
 > **Args:** `123` is a **media ID** (`movie ls` to find it). `--to <path>` is the destination folder; quote paths with spaces. `move`, `rename`, and `popout` run interactively when no ID is given.
 
@@ -549,6 +553,7 @@ $ movie play 123
 
 #### ↩️ [History & Undo](#history--undo)
 Reverse any move / rename / scan / delete.
+<!-- SECTION-CMDS:History & Undo:BEGIN -->
 ```bash
 movie undo
 movie undo --list
@@ -561,6 +566,7 @@ movie undo --list
 movie undo --id 42
 movie redo
 ```
+<!-- SECTION-CMDS:History & Undo:END -->
 
 > **Args:** `--id 42` is a **history entry ID** from `movie undo --list`. Bare `movie undo` reverses the most recent operation. `movie redo` re-applies the last undone op.
 
@@ -587,6 +593,7 @@ $ movie redo
 
 #### 🎯 [Discovery & Organization](#discovery--organization)
 Recommendations, genres, tags, watchlist.
+<!-- SECTION-CMDS:Discovery & Organization:BEGIN -->
 ```bash
 movie suggest
 movie discover
@@ -601,6 +608,7 @@ movie tag add 1 favorite
 movie watch list
 movie stats
 ```
+<!-- SECTION-CMDS:Discovery & Organization:END -->
 
 > **Args:** `1` is a **media ID** (`movie ls`). `favorite` is any tag name you choose — letters, digits, dashes. `movie watch list` and `movie stats` take no args.
 
@@ -629,6 +637,7 @@ Watchlist:  12 pending
 
 #### 🛠 [Maintenance & Debugging](#maintenance--debugging)
 Stale-entry cleanup, logs, REST server.
+<!-- SECTION-CMDS:Maintenance & Debugging:BEGIN -->
 ```bash
 movie cleanup
 movie db
@@ -645,6 +654,7 @@ movie export
 # Pipe logs into a file (PowerShell redirection):
 movie logs | Tee-Object -FilePath movie.log
 ```
+<!-- SECTION-CMDS:Maintenance & Debugging:END -->
 
 > **Args:** All of these run with no required args. `movie rest --open` opens the dashboard in your browser; add `--port 8080` to override the default port. `movie export` writes to stdout unless you pass `--out <file>`.
 
@@ -672,6 +682,7 @@ $ movie export --format csv --out library.csv
 
 #### ⚙️ [Configuration & System](#configuration--system)
 Settings, TMDb key, version, self-update.
+<!-- SECTION-CMDS:Configuration & System:BEGIN -->
 ```bash
 movie config
 movie config set tmdb_api_key YOUR_KEY
@@ -686,6 +697,7 @@ movie update
 # Read the key from a PowerShell env var instead of hardcoding it:
 movie config set tmdb_api_key $env:TMDB_KEY
 ```
+<!-- SECTION-CMDS:Configuration & System:END -->
 
 > **Args:** `tmdb_api_key` is the **config key name** (others: `source_folder`, `default_player`, `log_level`). `YOUR_KEY` is a real TMDb v3 API key — get one at https://www.themoviedb.org/settings/api. `movie version` and `movie update` take no args.
 
