@@ -2,9 +2,21 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Terminal, Copy, Check, AlertTriangle, ShieldCheck } from "lucide-react";
+import {
+  Terminal,
+  Copy,
+  Check,
+  AlertTriangle,
+  ShieldCheck,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { toast } from "sonner";
-import { COMMAND_ENTRIES, COMMAND_GROUPS } from "./command-data";
+import {
+  COMMAND_ENTRIES,
+  COMMAND_GROUPS,
+  type CommandExampleInvocation,
+} from "./command-data";
 
 /**
  * Command reference panel for the `movie` CLI.
@@ -19,6 +31,7 @@ import { COMMAND_ENTRIES, COMMAND_GROUPS } from "./command-data";
 interface CommandExample {
   cmd: string;
   desc: string;
+  examples?: CommandExampleInvocation[];
 }
 
 interface CommandGroup {
@@ -34,35 +47,115 @@ const GROUP_ICONS: Record<string, string> = {
   "Tags & Watchlist": "🏷️",
 };
 
-function CommandRow({ cmd, desc }: CommandExample) {
+async function copyToClipboard(text: string) {
+  await navigator.clipboard.writeText(text);
+  toast.success("Copied", { description: text });
+}
+
+function ExampleRow({ cmd, note }: CommandExampleInvocation) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(cmd);
+    await copyToClipboard(cmd);
     setCopied(true);
-    toast.success("Copied", { description: cmd });
     setTimeout(() => setCopied(false), 1500);
   };
 
   return (
-    <div className="group flex items-start justify-between gap-3 rounded-md border border-transparent px-2 py-1.5 hover:border-border hover:bg-muted/40">
+    <div className="flex items-start justify-between gap-2 rounded border border-dashed border-border/60 bg-background/40 px-2 py-1.5">
       <div className="min-w-0 flex-1 space-y-0.5">
-        <code className="block font-mono text-xs text-foreground break-all">{cmd}</code>
-        <p className="text-xs text-muted-foreground">{desc}</p>
+        <code className="block font-mono text-[11px] text-foreground break-all">
+          {cmd}
+        </code>
+        <p className="text-[10px] text-muted-foreground">{note}</p>
       </div>
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100"
+        className="h-6 w-6 shrink-0"
         onClick={handleCopy}
-        aria-label={`Copy ${cmd}`}
+        aria-label={`Copy example: ${cmd}`}
       >
         {copied ? (
-          <Check className="h-3.5 w-3.5 text-primary" />
+          <Check className="h-3 w-3 text-primary" />
         ) : (
-          <Copy className="h-3.5 w-3.5" />
+          <Copy className="h-3 w-3" />
         )}
       </Button>
+    </div>
+  );
+}
+
+function CommandRow({ cmd, desc, examples }: CommandExample) {
+  const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const hasExamples = !!examples && examples.length > 0;
+
+  const handleCopy = async () => {
+    await copyToClipboard(cmd);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div className="group rounded-md border border-transparent px-2 py-1.5 hover:border-border hover:bg-muted/40">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <code className="block font-mono text-xs text-foreground break-all">
+            {cmd}
+          </code>
+          <p className="text-xs text-muted-foreground">{desc}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          {hasExamples && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setExpanded((v) => !v)}
+              aria-label={
+                expanded
+                  ? `Hide examples for ${cmd}`
+                  : `Show ${examples!.length} example${examples!.length === 1 ? "" : "s"} for ${cmd}`
+              }
+              aria-expanded={expanded}
+            >
+              {expanded ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 opacity-0 group-hover:opacity-100"
+            onClick={handleCopy}
+            aria-label={`Copy ${cmd}`}
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-primary" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </div>
+      </div>
+      {hasExamples && (
+        <div className="mt-1 flex items-center gap-1 pl-1">
+          <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">
+            {examples!.length} example{examples!.length === 1 ? "" : "s"}
+          </Badge>
+        </div>
+      )}
+      {hasExamples && expanded && (
+        <div className="mt-2 space-y-1.5 pl-3">
+          {examples!.map((ex) => (
+            <ExampleRow key={ex.cmd} {...ex} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -76,6 +169,7 @@ export function CommandReferencePanel() {
         commands: COMMAND_ENTRIES.filter((e) => e.group === title).map((e) => ({
           cmd: e.cmd,
           desc: e.desc,
+          examples: e.examples,
         })),
       })),
     [],
