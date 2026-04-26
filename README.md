@@ -49,6 +49,7 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 - [Installation](#installation)
 - [What It Does](#what-it-does)
 - [Command Reference](#command-reference)
+- [Troubleshooting Flowchart](#troubleshooting)
 - [Command Tree](#command-tree)
 - [Build & Deploy](#build--deploy)
 - [Release Workflow](#release-workflow)
