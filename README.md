@@ -45,6 +45,7 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 
 - [Quick Start](#quick-start)
 - [Sample setup used in this README](#sample-setup-used-in-this-readme)
+- [Pre-flight checklist](#-pre-flight-checklist)
 - [Jump to a command](#jump-to-a-command)
 - [Demo](#-demo)
 - [Installation](#installation)
