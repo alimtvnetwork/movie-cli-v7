@@ -635,9 +635,13 @@ def main() -> int:
     #    rebuilt from the same canonical slugs everything else now uses.
     updated, anchor_changes = _rewrite_section_anchors(original)
 
-    # 2. Regenerate the two index regions in place.
-    updated = _replace_region(updated, HTML_BEGIN, HTML_END, render_html())
-    updated = _replace_region(updated, TEXT_BEGIN, TEXT_END, render_text())
+    # 2. Regenerate the two index regions in place — unless they're frozen
+    #    via IGNORED_REGIONS, in which case we leave the body verbatim and
+    #    drift is suppressed in the --check path.
+    if not _is_region_ignored("COMMAND-INDEX:HTML"):
+        updated = _replace_region(updated, HTML_BEGIN, HTML_END, render_html())
+    if not _is_region_ignored("COMMAND-INDEX:TEXT"):
+        updated = _replace_region(updated, TEXT_BEGIN, TEXT_END, render_text())
 
     # 3. Regenerate the per-section quick-start bash+powershell pairs.
     updated, sections_done = _replace_section_blocks(updated)
