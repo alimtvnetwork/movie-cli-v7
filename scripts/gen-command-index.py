@@ -588,15 +588,39 @@ def main() -> int:
     if args.check:
         if updated != original:
             sys.stderr.write("README.md is stale:\n")
+
+            # 1. Anchor rewrites — show the offending source line for each.
             if anchor_changes:
                 sys.stderr.write(
-                    f"  {len(anchor_changes)} section anchor(s) need rewriting:\n"
+                    f"\n  {len(anchor_changes)} section anchor(s) need "
+                    "rewriting:\n"
                 )
                 for change in anchor_changes:
-                    sys.stderr.write(change + "\n")
-            if not anchor_changes:
-                sys.stderr.write("  command-index region(s) need regenerating\n")
-            sys.stderr.write("Run: python3 scripts/gen-command-index.py\n")
+                    sys.stderr.write(_format_anchor_change(original, change) + "\n")
+
+            # 2. Generated-region drift — name each stale region and emit a
+            #    unified diff so the failure is reviewable straight from CI logs.
+            drifted = _stale_regions(original, updated)
+            if drifted:
+                sys.stderr.write(
+                    f"\n  {len(drifted)} generated region(s) need regenerating:\n"
+                )
+                for name, diff in drifted:
+                    sys.stderr.write(f"    - {name}\n")
+                    if diff:
+                        # Indent the diff so it's visually nested under the region name.
+                        for line in diff.splitlines():
+                            sys.stderr.write(f"      {line}\n")
+
+            # 3. Belt-and-braces: if neither bucket caught the drift, say so
+            #    explicitly rather than printing a confusingly-empty failure.
+            if not anchor_changes and not drifted:
+                sys.stderr.write(
+                    "  README would change but no specific region or anchor "
+                    "could be attributed — run the script to inspect the diff.\n"
+                )
+
+            sys.stderr.write("\nRun: python3 scripts/gen-command-index.py\n")
             return 1
         print(
             "README.md command index, section anchors, and per-section "
