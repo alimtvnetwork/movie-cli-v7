@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" width="900" height="360" role="img" aria-label="movie stats">
+  <defs>
+    <filter id="sh" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect x="6" y="6" width="888" height="348" rx="10" ry="10" fill="#0f1419" stroke="#2a3340" stroke-width="1" filter="url(#sh)"/>
+  <rect x="6" y="6" width="888" height="38" rx="10" ry="10" fill="#1c232b"/>
+  <rect x="6" y="34" width="888" height="10" fill="#1c232b"/>
+  <circle cx="26" cy="25.0" r="6" fill="#ff5f57"/>
+  <circle cx="46" cy="25.0" r="6" fill="#febc2e"/>
+  <circle cx="66" cy="25.0" r="6" fill="#28c840"/>
+  <text x="450.0" y="29.0" text-anchor="middle" fill="#7a8694" font-family="ui-sans-serif, system-ui" font-size="12">movie stats</text>
+  <text x="22" y="68" fill="#5fd7ff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">$ movie stats</text>
+  <text x="22" y="90" fill="#82aaff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">📚 Library Overview</text>
+  <text x="22" y="112" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  Movies   : 142     Total size : 487.2 GB</text>
+  <text x="22" y="134" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  TV shows :  38     Episodes   : 1,204</text>
+  <text x="22" y="156" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  Avg rating: ⭐ 7.4  Watchlist  :   23</text>
+  <text x="22" y="178" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve"></text>
+  <text x="22" y="200" fill="#82aaff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">🎭 Top genres</text>
+  <text x="22" y="222" fill="#7bd88f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  Drama        ████████████████████  58</text>
+  <text x="22" y="244" fill="#7bd88f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  Sci-Fi       ██████████████        41</text>
+  <text x="22" y="266" fill="#7bd88f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  Thriller     ███████████           33</text>
+  <text x="22" y="288" fill="#7bd88f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  Comedy       ████████              24</text>
+  <text x="22" y="310" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve"></text>
+  <text x="22" y="332" fill="#7a8694" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">Run movie cleanup to detect stale entries.</text>
+</svg>

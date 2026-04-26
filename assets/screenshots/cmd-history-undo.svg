@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 316" width="900" height="316" role="img" aria-label="movie undo --list">
+  <defs>
+    <filter id="sh" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect x="6" y="6" width="888" height="304" rx="10" ry="10" fill="#0f1419" stroke="#2a3340" stroke-width="1" filter="url(#sh)"/>
+  <rect x="6" y="6" width="888" height="38" rx="10" ry="10" fill="#1c232b"/>
+  <rect x="6" y="34" width="888" height="10" fill="#1c232b"/>
+  <circle cx="26" cy="25.0" r="6" fill="#ff5f57"/>
+  <circle cx="46" cy="25.0" r="6" fill="#febc2e"/>
+  <circle cx="66" cy="25.0" r="6" fill="#28c840"/>
+  <text x="450.0" y="29.0" text-anchor="middle" fill="#7a8694" font-family="ui-sans-serif, system-ui" font-size="12">movie undo --list</text>
+  <text x="22" y="68" fill="#5fd7ff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">$ movie undo --list</text>
+  <text x="22" y="90" fill="#7a8694" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">Recent operations (newest first):</text>
+  <text x="22" y="112" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve"></text>
+  <text x="22" y="134" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  ID   When        Action     Target</text>
+  <text x="22" y="156" fill="#7a8694" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  ──   ─────────   ────────   ─────────────────────────</text>
+  <text x="22" y="178" fill="#e6e6e6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  42   2m ago      move       4 files → Movies/, TV/</text>
+  <text x="22" y="200" fill="#e6e6e6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  41   10m ago     scan       ~/Downloads (3 items)</text>
+  <text x="22" y="222" fill="#e6e6e6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  40   1h ago      rename     12 files cleaned</text>
+  <text x="22" y="244" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve"></text>
+  <text x="22" y="266" fill="#5fd7ff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">$ movie undo --id 42</text>
+  <text x="22" y="288" fill="#7bd88f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">✓ reverted 4 file moves · redo with: movie redo</text>
+</svg>
