@@ -376,6 +376,77 @@ One line per command. Search lands on the exact row; the section name on the rig
 
 </details>
 
+<details><summary><strong>📋 Plain-text / terminal version</strong> — same index, fixed-width so the <code>→</code> arrows line up in monospace</summary>
+
+Use this block when reading the README in a terminal (`cat README.md`, `less`, `bat`), in a non-HTML editor, or when piping to `grep` / `fzf`. Every row is padded so the `→` pointer sits in a single column and the **Section** and **Anchor** columns start at the same offset on every line. Copy the whole block — it's ASCII-safe (only the `→` arrow is non-ASCII, U+2192) and renders cleanly in any UTF-8 monospace font.
+
+```text
+Command                                      Section                      Anchor
+----------------------------------------   -   ------------------------   ------------------------------------
+movie cd <id>                              →   File Management            #movie-cd-id
+movie changelog                            →   Configuration & System     #movie-changelog
+movie cleanup                              →   Maintenance & Debugging    #movie-cleanup
+movie config                               →   Configuration & System     #movie-config
+movie config get <key>                     →   Configuration & System     #movie-config-get-key
+movie config set <key> <value>             →   Configuration & System     #movie-config-set-key-value
+movie config set source_folder <path>      →   Configuration & System     #movie-config-set-source-folder-path
+movie config set tmdb_api_key <key>        →   Configuration & System     #movie-config-set-tmdb-api-key-key
+movie db                                   →   Maintenance & Debugging    #movie-db
+movie discover                             →   Discovery & Organization   #movie-discover
+movie duplicates                           →   File Management            #movie-duplicates
+movie export                               →   Maintenance & Debugging    #movie-export
+movie export --format csv --out <file>     →   Maintenance & Debugging    #movie-export-format-csv-out-file
+movie export --format json --out <file>    →   Maintenance & Debugging    #movie-export-format-json-out-file
+movie hello                                →   Configuration & System     #movie-hello
+movie info <id>                            →   Scanning & Library         #movie-info-id
+movie info <id> --json                     →   Scanning & Library         #movie-info-id-json
+movie logs                                 →   Maintenance & Debugging    #movie-logs
+movie ls                                   →   Scanning & Library         #movie-ls
+movie ls --genre <name>                    →   Scanning & Library         #movie-ls-genre-name
+movie ls --limit <n>                       →   Scanning & Library         #movie-ls-limit-n
+movie ls --year <yyyy> --sort <field>      →   Scanning & Library         #movie-ls-year-yyyy-sort-field
+movie move                                 →   File Management            #movie-move
+movie move --all                           →   File Management            #movie-move-all
+movie move <id> --to <path>                →   File Management            #movie-move-id-to-path
+movie play <id>                            →   File Management            #movie-play-id
+movie play <id> --player <bin>             →   File Management            #movie-play-id-player-bin
+movie popout                               →   File Management            #movie-popout
+movie redo                                 →   History & Undo             #movie-redo
+movie rename                               →   File Management            #movie-rename
+movie rename <id>                          →   File Management            #movie-rename-id
+movie rename --all --pattern <fmt>         →   File Management            #movie-rename-all-pattern-fmt
+movie rescan                               →   Scanning & Library         #movie-rescan
+movie rest                                 →   Maintenance & Debugging    #movie-rest
+movie rest --open                          →   Maintenance & Debugging    #movie-rest-open
+movie rest --port <n>                      →   Maintenance & Debugging    #movie-rest-port-n
+movie scan                                 →   Scanning & Library         #movie-scan
+movie scan <path>                          →   Scanning & Library         #movie-scan-path
+movie scan <path> --dry-run                →   Scanning & Library         #movie-scan-path-dry-run
+movie scan <path> --refresh                →   Scanning & Library         #movie-scan-path-refresh
+movie search <query>                       →   Scanning & Library         #movie-search-query
+movie search <query> --year <yyyy>         →   Scanning & Library         #movie-search-query-year-yyyy
+movie stats                                →   Discovery & Organization   #movie-stats
+movie stats --by <dimension>               →   Discovery & Organization   #movie-stats-by-dimension
+movie suggest                              →   Discovery & Organization   #movie-suggest
+movie suggest --genre <name> --limit <n>   →   Discovery & Organization   #movie-suggest-genre-name-limit-n
+movie tag add <id> <tag>                   →   Discovery & Organization   #movie-tag-add-id-tag
+movie tag list <id>                        →   Discovery & Organization   #movie-tag-list-id
+movie tag list --all                       →   Discovery & Organization   #movie-tag-list-all
+movie tag remove <id> <tag>                →   Discovery & Organization   #movie-tag-remove-id-tag
+movie tag remove <id> --all                →   Discovery & Organization   #movie-tag-remove-id-all
+movie undo                                 →   History & Undo             #movie-undo
+movie undo --id <history-id>               →   History & Undo             #movie-undo-id-history-id
+movie undo --list                          →   History & Undo             #movie-undo-list
+movie update                               →   Configuration & System     #movie-update
+movie version                              →   Configuration & System     #movie-version
+movie watch add <id>                       →   Discovery & Organization   #movie-watch-add-id
+movie watch add <id> --priority <level>    →   Discovery & Organization   #movie-watch-add-id-priority-level
+movie watch list                           →   Discovery & Organization   #movie-watch-list
+movie watch list --sort <field>            →   Discovery & Organization   #movie-watch-list-sort-field
+```
+
+</details>
+
 #### 📂 [Scanning & Library](#scanning--library)
 Match files against TMDb, browse the library.
 ```bash
