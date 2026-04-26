@@ -200,16 +200,30 @@ class WhitelistTests(unittest.TestCase):
         # without affecting the others or any later import.
         self._saved_list = gci.ANCHOR_WHITELIST
         self._saved_fp = gci._WHITELIST_FINGERPRINTS
+        self._saved_by_fp = gci._WHITELIST_BY_FINGERPRINT
 
     def tearDown(self):
         gci.ANCHOR_WHITELIST = self._saved_list
         gci._WHITELIST_FINGERPRINTS = self._saved_fp
+        gci._WHITELIST_BY_FINGERPRINT = self._saved_by_fp
 
-    def _set_whitelist(self, entries: tuple[str, ...]):
+    def _set_whitelist(self, entries):
+        """
+        Install a whitelist for one test. Accepts the same shapes the real
+        constant accepts — bare strings (global) or (anchor, scope) tuples.
+        Mirrors the module-load logic in gen-command-index.py so behaviour
+        under test exactly matches production.
+        """
         import re
         gci.ANCHOR_WHITELIST = entries
+        by_fp: dict[str, set] = {}
+        for entry in entries:
+            anchor, scope = gci._normalize_whitelist_entry(entry)
+            fp = re.sub(r"[^a-z0-9]", "", anchor.lower())
+            by_fp.setdefault(fp, set()).add(scope)
+        gci._WHITELIST_BY_FINGERPRINT = by_fp
         gci._WHITELIST_FINGERPRINTS = frozenset(
-            re.sub(r"[^a-z0-9]", "", a.lower()) for a in entries
+            fp for fp, scopes in by_fp.items() if None in scopes
         )
 
     def test_whitelisted_fingerprint_is_left_verbatim(self):
