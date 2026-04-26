@@ -224,19 +224,82 @@ EXTRA_ANCHORS: dict[str, str] = {
 # so every casing/punctuation variant of an entry is whitelisted together:
 #   "legacy-quick-start"  → also covers #legacy_quick_start, #LegacyQuickStart
 #
+# Two entry shapes are supported:
+#   "legacy-link"                            — global: applies anywhere in README
+#   ("legacy-link", "Quick Start")           — scoped: applies ONLY when the
+#                                              link appears in the document
+#                                              section under the named heading
+#
+# Scoped entries restrict the suppression to one of these section labels:
+#   Installation, Quick Start, Troubleshooting
+# A scoped entry is a no-op for occurrences of the same anchor in OTHER
+# sections — those are still reported and rewritten as normal.
+#
 # Keep this list short and add a one-line comment per entry explaining why
 # the link can't be migrated to the canonical slug.
-ANCHOR_WHITELIST: tuple[str, ...] = (
-    # e.g. "legacy-quick-start",  # keeps an old blog post deep-link working
+ANCHOR_WHITELIST: tuple[str | tuple[str, str], ...] = (
+    # e.g. "legacy-quick-start",                       # global
+    # e.g. ("legacy-quick-start", "Quick Start"),      # only under ## Quick Start
 )
 
+# Set of labels that scoped whitelist entries are allowed to reference. Kept
+# narrow (just the three EXTRA_ANCHOR_LABELS) so a scoped entry can never be
+# attached to a command-section heading where the rewriter is the source of
+# truth — those should stay either fully managed or fully whitelisted.
+_SCOPABLE_LABELS: frozenset[str] = frozenset(EXTRA_ANCHOR_LABELS)
+
+
+def _normalize_whitelist_entry(entry: str | tuple[str, str]) -> tuple[str, str | None]:
+    """
+    Return (anchor, scope_label_or_None). Aborts on malformed entries so a
+    typo in ANCHOR_WHITELIST can never silently downgrade a scoped rule
+    to a no-op.
+    """
+    if isinstance(entry, str):
+        return (entry, None)
+    if (
+        isinstance(entry, tuple)
+        and len(entry) == 2
+        and isinstance(entry[0], str)
+        and isinstance(entry[1], str)
+    ):
+        anchor, scope = entry
+        if scope not in _SCOPABLE_LABELS:
+            sys.exit(
+                f"error: ANCHOR_WHITELIST entry ({anchor!r}, {scope!r}) — "
+                f"scope label {scope!r} is not one of "
+                f"{sorted(_SCOPABLE_LABELS)}"
+            )
+        return (anchor, scope)
+    sys.exit(
+        f"error: ANCHOR_WHITELIST entry has unexpected shape: {entry!r}. "
+        "Expected a bare string or a (anchor, section_label) 2-tuple."
+    )
+
+
+# Indexed by fingerprint → set of scopes (None means "global"). A fingerprint
+# can appear with multiple scopes; a link is suppressed if its containing
+# section matches ANY of them, or if any entry for the fingerprint is global.
+_WHITELIST_BY_FINGERPRINT: dict[str, set[str | None]] = {}
+for _entry in ANCHOR_WHITELIST:
+    _anchor, _scope = _normalize_whitelist_entry(_entry)
+    _fp = re.sub(r"[^a-z0-9]", "", _anchor.lower())
+    _WHITELIST_BY_FINGERPRINT.setdefault(_fp, set()).add(_scope)
+
+# Backward-compat: code that pre-dates the per-section feature reads this
+# frozenset for global suppression. Only entries that have at least one
+# global occurrence count — scoped-only entries are NOT in this set so the
+# old short-circuit doesn't accidentally apply them everywhere.
 _WHITELIST_FINGERPRINTS: frozenset[str] = frozenset(
-    re.sub(r"[^a-z0-9]", "", a.lower()) for a in ANCHOR_WHITELIST
+    fp for fp, scopes in _WHITELIST_BY_FINGERPRINT.items() if None in scopes
 )
 
 # Safety net: a whitelist entry that fingerprint-collides with a managed
 # label would silently disable that label's auto-fix. That's almost never
-# what the maintainer wants — fail loudly at startup instead.
+# what the maintainer wants — fail loudly at startup instead. We only
+# enforce this for *global* entries; a scoped entry is allowed to share a
+# fingerprint with a managed label because the scope itself prevents the
+# whitelist from short-circuiting outside that one section.
 _MANAGED_FINGERPRINTS: frozenset[str] = frozenset(
     re.sub(r"[^a-z0-9]", "", lbl.lower())
     for lbl in (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
