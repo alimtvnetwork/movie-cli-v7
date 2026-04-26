@@ -688,17 +688,23 @@ def main() -> int:
 
             sys.stderr.write("\nRun: python3 scripts/gen-command-index.py\n")
             return 1
-        print(
+        msg = (
             "README.md command index, section anchors, and per-section "
             f"quick-start blocks ({len(sections_done)} sections) are up to date."
         )
+        if IGNORED_REGIONS:
+            msg += f" Ignored regions: {len(IGNORED_REGIONS)} ({', '.join(IGNORED_REGIONS)})."
+        print(msg)
         return 0
 
     if updated == original:
-        print(
+        msg = (
             "README.md command index, section anchors, and per-section "
             f"quick-start blocks ({len(sections_done)} sections) already up to date."
         )
+        if IGNORED_REGIONS:
+            msg += f" Ignored regions: {len(IGNORED_REGIONS)} ({', '.join(IGNORED_REGIONS)})."
+        print(msg)
         return 0
     README.write_text(updated, encoding="utf-8")
     msg = (
