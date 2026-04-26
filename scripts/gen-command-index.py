@@ -139,7 +139,10 @@ def _section_slug(label: str) -> str:
     Mirrors GitHub's slugger:
       - lowercase
       - drop characters that aren't alphanumeric, space, or hyphen
-      - spaces → '-'
+        (importantly: do NOT collapse the surrounding whitespace — the
+        characters '&', '_', etc. vanish but the spaces on either side
+        remain, so they each become a hyphen)
+      - each remaining whitespace character → '-'
 
     So `&` is dropped (becoming a doubled hyphen between its neighbours):
       "Scanning & Library"      → "scanning--library"
@@ -147,9 +150,12 @@ def _section_slug(label: str) -> str:
       "File Management"         → "file-management"
     """
     s = label.lower()
-    s = re.sub(r"[^\w\s-]", "", s, flags=re.UNICODE)
-    s = s.replace("_", "")
-    s = re.sub(r"\s+", "-", s.strip())
+    # Strip non-{alnum, space, hyphen} character-by-character so adjacent
+    # spaces are preserved — that's what produces the doubled hyphen in
+    # "scanning--library" on real GitHub.
+    s = "".join(ch for ch in s if ch.isalnum() or ch in " -")
+    # Convert each whitespace character (not runs) to a single hyphen.
+    s = "".join("-" if ch == " " else ch for ch in s.strip(" "))
     return s
 
 
