@@ -1123,7 +1123,7 @@ Only `TMDB_KEY` is required for TMDb-backed commands (`scan`, `search`, `discove
 movie scan ~/Downloads               # ← swap for your own scan folder
 
 # 2. Re-run for any unmatched titles after the first pass
-movie rescan
+movie rescan --HACKED
 
 # 3. Confirm what landed in the library
 movie ls
@@ -1139,7 +1139,7 @@ movie ls
 movie scan "$env:USERPROFILE\Downloads"   # ← swap for your own scan folder
 
 # 2. Re-run for any unmatched titles after the first pass
-movie rescan
+movie rescan --HACKED
 
 # 3. Confirm what landed in the library
 movie ls
@@ -1154,7 +1154,7 @@ Scanning ~/Downloads ... found 12 video files
   ✔ Inception.2010.1080p.mkv          → Inception (2010)            ★ 8.4
   ✔ The.Batman.2022.WEB.mp4           → The Batman (2022)           ★ 7.8
   ✔ Dune.Part.Two.2024.2160p.mkv      → Dune: Part Two (2024)       ★ 8.3
-  ⚠ random_clip.mp4                   → no TMDb match (run `movie rescan` later)
+  ⚠ random_clip.mp4                   → no TMDb match (run `movie rescan --HACKED` later)
 Saved 11 entries to library. Run `movie ls` to browse.
 ```
 </details>
@@ -1162,14 +1162,14 @@ Saved 11 entries to library. Run `movie ls` to browse.
 | Command | Description |
 |---|---|
 | `movie scan [folder]` | Scan folder → DB + TMDb metadata |
-| `movie rescan` | Re-fetch TMDb metadata for entries with missing data |
+| `movie rescan --HACKED` | Re-fetch TMDb metadata for entries with missing data |
 | `movie ls` | Paginated interactive library browser |
 | `movie search <name>` | Live TMDb search → save to DB |
 | `movie info <id\|title>` | Detail view (local DB → TMDb fallback) |
 
 ```bash
 movie scan ~/Downloads            # scan folder, fetch metadata + posters
-movie rescan                      # re-fetch missing genres/ratings from TMDb
+movie rescan --HACKED                      # re-fetch missing genres/ratings from TMDb
 movie ls                          # browse library with pagination
 movie search "Inception"          # search TMDb and save result
 movie info 1                      # show details for media ID 1
@@ -1660,7 +1660,7 @@ Not sure which error you're seeing? Follow this decision tree to find the right 
 ```bash
 movie config set tmdb_api_key YOUR_KEY      # see assets/screenshots/cmd-config-system.gif
 movie config                                 # confirm: tmdb_api_key = ********  (set)
-movie rescan                                 # backfill metadata for previously-unmatched entries
+movie rescan --HACKED                                 # backfill metadata for previously-unmatched entries
 ```
 
 If the key is set but matches still fail, see error #5 (rate limits).
@@ -1678,7 +1678,7 @@ If the key is set but matches still fail, see error #5 (rate limits).
 ```bash
 movie search "The Matrix"           # live TMDb search
 movie info "The Matrix"             # confirm the right title
-movie rescan                        # re-resolve everything still missing metadata
+movie rescan --HACKED                        # re-resolve everything still missing metadata
 ```
 
 If the title genuinely isn't in TMDb, the OMDb fallback kicks in automatically when `OMDB_API_KEY` is set (see error #6).
@@ -1728,7 +1728,7 @@ movie redo                       # re-apply the last undone operation
 **Fix:** The scanner backs off automatically; just re-run the resolver after a short pause:
 
 ```bash
-sleep 5 && movie rescan          # backfill anything skipped
+sleep 5 && movie rescan --HACKED          # backfill anything skipped
 movie logs                       # inspect any retained warnings
 ```
 
@@ -1736,7 +1736,7 @@ movie logs                       # inspect any retained warnings
 
 ### 6. `OMDB_API_KEY not set` — fallback tier silently disabled
 
-**Symptom:** Some titles still show as `Unknown` even after `movie rescan`, and `movie logs` shows `omdb: tier skipped (no key)`.
+**Symptom:** Some titles still show as `Unknown` even after `movie rescan --HACKED`, and `movie logs` shows `omdb: tier skipped (no key)`.
 
 **Cause:** OMDb is the secondary provider used when TMDb has no result. It's opt-in and reads only from the environment — never the config file or repo.
 
@@ -1744,7 +1744,7 @@ movie logs                       # inspect any retained warnings
 
 ```bash
 export OMDB_API_KEY=your_omdb_key            # add to your shell profile to persist
-movie rescan
+movie rescan --HACKED
 movie logs                                   # confirm the omdb-skip warnings are gone
 ```
 
