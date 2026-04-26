@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 294" width="900" height="294" role="img" aria-label="movie move ~/Downloads">
+  <defs>
+    <filter id="sh" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect x="6" y="6" width="888" height="282" rx="10" ry="10" fill="#0f1419" stroke="#2a3340" stroke-width="1" filter="url(#sh)"/>
+  <rect x="6" y="6" width="888" height="38" rx="10" ry="10" fill="#1c232b"/>
+  <rect x="6" y="34" width="888" height="10" fill="#1c232b"/>
+  <circle cx="26" cy="25.0" r="6" fill="#ff5f57"/>
+  <circle cx="46" cy="25.0" r="6" fill="#febc2e"/>
+  <circle cx="66" cy="25.0" r="6" fill="#28c840"/>
+  <text x="450.0" y="29.0" text-anchor="middle" fill="#7a8694" font-family="ui-sans-serif, system-ui" font-size="12">movie move ~/Downloads</text>
+  <text x="22" y="68" fill="#5fd7ff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">$ movie move ~/Downloads</text>
+  <text x="22" y="90" fill="#7a8694" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">Found 4 video files in ~/Downloads</text>
+  <text x="22" y="112" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve"></text>
+  <text x="22" y="134" fill="#e6e6e6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  1) The.Matrix.1999.mkv         → Movies/The Matrix (1999).mkv</text>
+  <text x="22" y="156" fill="#e6e6e6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  2) Inception.2010.mkv          → Movies/Inception (2010).mkv</text>
+  <text x="22" y="178" fill="#e6e6e6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  3) Breaking.Bad.S01E01.mkv     → TV/Breaking Bad/S01/E01.mkv</text>
+  <text x="22" y="200" fill="#e6e6e6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">  4) Dune.2021.mkv               → Movies/Dune (2021).mkv</text>
+  <text x="22" y="222" fill="#d6deeb" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve"></text>
+  <text x="22" y="244" fill="#c792ea" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">Select [a]ll, [n]one, or numbers: a</text>
+  <text x="22" y="266" fill="#7bd88f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" xml:space="preserve">✓ moved 4 files · undo with: movie undo</text>
+</svg>
