@@ -233,6 +233,21 @@ _WHITELIST_FINGERPRINTS: frozenset[str] = frozenset(
     re.sub(r"[^a-z0-9]", "", a.lower()) for a in ANCHOR_WHITELIST
 )
 
+# Safety net: a whitelist entry that fingerprint-collides with a managed
+# label would silently disable that label's auto-fix. That's almost never
+# what the maintainer wants — fail loudly at startup instead.
+_MANAGED_FINGERPRINTS: frozenset[str] = frozenset(
+    re.sub(r"[^a-z0-9]", "", lbl.lower())
+    for lbl in (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
+)
+_WHITELIST_COLLISIONS = _WHITELIST_FINGERPRINTS & _MANAGED_FINGERPRINTS
+if _WHITELIST_COLLISIONS:
+    sys.exit(
+        "error: ANCHOR_WHITELIST entries collide with managed labels: "
+        f"{sorted(_WHITELIST_COLLISIONS)}. Remove them from the whitelist or "
+        "rename the managed label."
+    )
+
 
 def _row_id(command: str) -> str:
     """Stable per-row anchor: 'movie scan <path> --dry-run' → 'movie-scan-path-dry-run'."""
