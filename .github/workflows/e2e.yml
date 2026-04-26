@@ -1,0 +1,59 @@
+name: E2E
+
+# End-to-end pipeline test. Runs the gated Go integration test (E2E=1) and
+# the shell smoke script against the real `movie` binary with a fake media
+# folder. No secrets are used — TMDB_API_KEY / OMDB_API_KEY are intentionally
+# left empty so offline code paths are exercised.
+#
+# CONSTRAINT (mem://issues/04-ci-log-commit-loop): this workflow MUST NOT
+# commit, push, or write back to the repo under any circumstance.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: E2E (${{ matrix.kind }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: integration
+          - kind: smoke
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Run Go integration test
+        if: matrix.kind == 'integration'
+        env:
+          E2E: "1"
+          TMDB_API_KEY: ""
+          TMDB_TOKEN: ""
+          OMDB_API_KEY: ""
+        run: go test ./cmd/ -run TestE2EPipeline -v -count=1 -timeout 5m
+
+      - name: Run shell smoke
+        if: matrix.kind == 'smoke'
+        run: |
+          chmod +x scripts/e2e-smoke.sh
+          ./scripts/e2e-smoke.sh
