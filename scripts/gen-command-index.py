@@ -131,6 +131,27 @@ HTML_END   = "<!-- COMMAND-INDEX:HTML:END -->"
 TEXT_BEGIN = "<!-- COMMAND-INDEX:TEXT:BEGIN -->"
 TEXT_END   = "<!-- COMMAND-INDEX:TEXT:END -->"
 
+# Per-section quick-start blocks live under each `#### 📂 [Section]` heading
+# in the Command Reference. They're delimited by markers like:
+#
+#   <!-- SECTION-CMDS:File Management:BEGIN -->
+#   ```bash
+#   movie cd <id>
+#   movie duplicates
+#   ...
+#   ```
+#   ```powershell
+#   movie cd <id>
+#   ...
+#   ```
+#   <!-- SECTION-CMDS:File Management:END -->
+#
+# Only the bash + powershell fenced blocks between the markers are
+# regenerated. The surrounding prose ("Args:", "Assumptions:", "Expected
+# output", "If it differs:") is hand-written and preserved verbatim.
+SECTION_CMDS_BEGIN = "<!-- SECTION-CMDS:{label}:BEGIN -->"
+SECTION_CMDS_END   = "<!-- SECTION-CMDS:{label}:END -->"
+
 
 def _section_slug(label: str) -> str:
     """
@@ -224,6 +245,24 @@ def render_text() -> str:
     return "\n".join(rows)
 
 
+def render_section_block(label: str) -> str:
+    """
+    Build the bash + powershell quick-start pair for one section.
+
+    Includes every command in `COMMANDS` whose section_label matches, in the
+    order they appear in `COMMANDS` (which is alphabetical). The bash and
+    powershell blocks are byte-identical because every command name is
+    platform-agnostic — the only Windows-specific tip from the previous
+    hand-written blocks (quoting `D:\\Media\\...` paths, redirecting with
+    `Tee-Object`) is dropped to keep the source-of-truth single.
+    """
+    cmds = [c for c, sec, _ in COMMANDS if sec == label]
+    if not cmds:
+        sys.exit(f"error: no commands in section '{label}'")
+    body = "\n".join(cmds)
+    return f"```bash\n{body}\n```\n```powershell\n{body}\n```"
+
+
 def _replace_region(content: str, begin: str, end: str, body: str) -> str:
     pattern = re.compile(
         re.escape(begin) + r"\n.*?\n" + re.escape(end),
@@ -234,6 +273,29 @@ def _replace_region(content: str, begin: str, end: str, body: str) -> str:
     if count != 1:
         sys.exit(f"error: expected exactly one '{begin}'..'{end}' region, found {count}")
     return new_content
+
+
+def _replace_section_blocks(content: str) -> tuple[str, list[str]]:
+    """
+    Rewrite the bash+powershell pair inside every `<!-- SECTION-CMDS:…:BEGIN
+    -->` / `:END -->` region. Returns (new_content, list_of_labels_processed).
+
+    Skips silently if a section's markers don't exist (e.g. Troubleshooting
+    has no command list and no markers). Fails loudly if a section IS marked
+    but the markers are malformed (begin without end, etc.).
+    """
+    processed: list[str] = []
+    new_content = content
+    for label in SECTION_LABELS:
+        begin = SECTION_CMDS_BEGIN.format(label=label)
+        end = SECTION_CMDS_END.format(label=label)
+        if begin not in new_content:
+            continue  # section not yet wired up — skip
+        if end not in new_content:
+            sys.exit(f"error: found '{begin}' without matching '{end}'")
+        new_content = _replace_region(new_content, begin, end, render_section_block(label))
+        processed.append(label)
+    return new_content, processed
 
 
 def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
@@ -267,6 +329,16 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
     skip_spans: list[tuple[int, int]] = []
     for begin, end in ((HTML_BEGIN, HTML_END), (TEXT_BEGIN, TEXT_END)):
         sp = _spans(begin, end)
+        if sp:
+            skip_spans.append(sp)
+    # Per-section quick-start regions are also fully owned by this script —
+    # any href inside them is regenerated, so the anchor pass shouldn't
+    # double-process them.
+    for label in SECTION_LABELS:
+        sp = _spans(
+            SECTION_CMDS_BEGIN.format(label=label),
+            SECTION_CMDS_END.format(label=label),
+        )
         if sp:
             skip_spans.append(sp)
 
@@ -314,6 +386,9 @@ def main() -> int:
     updated = _replace_region(updated, HTML_BEGIN, HTML_END, render_html())
     updated = _replace_region(updated, TEXT_BEGIN, TEXT_END, render_text())
 
+    # 3. Regenerate the per-section quick-start bash+powershell pairs.
+    updated, sections_done = _replace_section_blocks(updated)
+
     if args.check:
         if updated != original:
             sys.stderr.write("README.md is stale:\n")
@@ -323,18 +398,27 @@ def main() -> int:
                 )
                 for change in anchor_changes:
                     sys.stderr.write(change + "\n")
-            else:
+            if not anchor_changes:
                 sys.stderr.write("  command-index region(s) need regenerating\n")
             sys.stderr.write("Run: python3 scripts/gen-command-index.py\n")
             return 1
-        print("README.md command index and section anchors are up to date.")
+        print(
+            "README.md command index, section anchors, and per-section "
+            f"quick-start blocks ({len(sections_done)} sections) are up to date."
+        )
         return 0
 
     if updated == original:
-        print("README.md command index and section anchors already up to date.")
+        print(
+            "README.md command index, section anchors, and per-section "
+            f"quick-start blocks ({len(sections_done)} sections) already up to date."
+        )
         return 0
     README.write_text(updated, encoding="utf-8")
-    msg = f"README.md command index regenerated ({len(COMMANDS)} commands)."
+    msg = (
+        f"README.md command index regenerated ({len(COMMANDS)} commands), "
+        f"{len(sections_done)} per-section quick-start block(s) refreshed."
+    )
     if anchor_changes:
         msg += f"\nRewrote {len(anchor_changes)} section anchor reference(s):"
         for change in anchor_changes:

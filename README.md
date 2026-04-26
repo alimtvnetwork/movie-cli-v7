@@ -302,7 +302,7 @@ One line per command. Search lands on the exact row; the section name on the rig
 
 **Click the command** to jump straight to its README subsection (with the bash/PowerShell blocks, args, expected output, and "if it differs" notes). Each row also carries a stable anchor (e.g. `#movie-scan`, `#movie-undo-list`) shown in the rightmost column — share that fragment and links always land on the exact row. The **Example keyword** column gives you a minimal command-shaped placeholder (e.g. `movie ls --year `, `movie scan --dry-run `, `movie config set tmdb_api_key `) — paste it into <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> to find every place that argument pattern appears in this README (index row, usage block, expected output, and tips).
 
-> 🔄 **Both the HTML table below and the plain-text block further down are auto-generated** from a single source-of-truth list in `scripts/gen-command-index.py`. Edit only that file when adding/renaming a command, then run `python3 scripts/gen-command-index.py` — it refreshes both blocks **and** rewrites every stale link to one of the six command-section anchors (`#scanning--library`, `#file-management`, `#history--undo`, `#discovery--organization`, `#maintenance--debugging`, `#configuration--system`) anywhere else in the README. CI runs `--check` on every push and fails with a `file:line` annotation if anything is still stale.
+> 🔄 **Auto-generated from a single source.** `scripts/gen-command-index.py` owns the canonical command list and rewrites three things in this README on every run: (1) the HTML table + plain-text block in this section, (2) every stale link to one of the six command-section anchors (`#scanning--library`, `#file-management`, `#history--undo`, `#discovery--organization`, `#maintenance--debugging`, `#configuration--system`), and (3) the `bash` + `powershell` quick-start pair under each `#### 📂 [Section]` heading in the Command Reference (between `<!-- SECTION-CMDS:<label>:BEGIN -->` markers). Edit only the script, then run `python3 scripts/gen-command-index.py`. CI runs `--check` on every push and fails with a `file:line` annotation if anything is stale. Hand-written prose around the markers (Args / Assumptions / Expected output / If it differs) is preserved untouched.
 
 <!-- COMMAND-INDEX:HTML:BEGIN -->
 <table>
@@ -453,24 +453,40 @@ movie watch list --sort <field>            →   Discovery & Organization   #mov
 
 </details>
 
-#### 📂 [Scanning & Library](#scan--library)
+#### 📂 [Scanning & Library](#scanning--library)
 Match files against TMDb, browse the library.
+<!-- SECTION-CMDS:Scanning & Library:BEGIN -->
 ```bash
-movie scan
-movie rescan
+movie info <id>
+movie info <id> --json
 movie ls
-movie search "inception"
-movie info 123
+movie ls --genre <name>
+movie ls --limit <n>
+movie ls --year <yyyy> --sort <field>
+movie rescan
+movie scan
+movie scan <path>
+movie scan <path> --dry-run
+movie scan <path> --refresh
+movie search <query>
+movie search <query> --year <yyyy>
 ```
 ```powershell
-movie scan
-movie rescan
+movie info <id>
+movie info <id> --json
 movie ls
-movie search "inception"
-movie info 123
-# Windows-style scan target:
-movie scan "D:\Media\Movies"
+movie ls --genre <name>
+movie ls --limit <n>
+movie ls --year <yyyy> --sort <field>
+movie rescan
+movie scan
+movie scan <path>
+movie scan <path> --dry-run
+movie scan <path> --refresh
+movie search <query>
+movie search <query> --year <yyyy>
 ```
+<!-- SECTION-CMDS:Scanning & Library:END -->
 
 > **Args:** `<path>` is the folder to scan (defaults to your configured `source_folder`). `123` is a **media ID** — get one from `movie ls`. `"inception"` is any free-text query; quote it if it contains spaces.
 
@@ -506,22 +522,34 @@ TMDb:     https://www.themoviedb.org/movie/27205
 
 #### 📦 [File Management](#file-management)
 Move, rename, flatten, play files.
+<!-- SECTION-CMDS:File Management:BEGIN -->
 ```bash
+movie cd <id>
+movie duplicates
 movie move
-movie rename
+movie move --all
+movie move <id> --to <path>
+movie play <id>
+movie play <id> --player <bin>
 movie popout
-movie play 123
-movie cd 123
+movie rename
+movie rename <id>
+movie rename --all --pattern <fmt>
 ```
 ```powershell
+movie cd <id>
+movie duplicates
 movie move
-movie rename
+movie move --all
+movie move <id> --to <path>
+movie play <id>
+movie play <id> --player <bin>
 movie popout
-movie play 123
-movie cd 123
-# Quote Windows paths with spaces:
-movie move 123 --to "D:\Media\Sorted\Action"
+movie rename
+movie rename <id>
+movie rename --all --pattern <fmt>
 ```
+<!-- SECTION-CMDS:File Management:END -->
 
 > **Args:** `123` is a **media ID** (`movie ls` to find it). `--to <path>` is the destination folder; quote paths with spaces. `move`, `rename`, and `popout` run interactively when no ID is given.
 
@@ -549,18 +577,20 @@ $ movie play 123
 
 #### ↩️ [History & Undo](#history--undo)
 Reverse any move / rename / scan / delete.
+<!-- SECTION-CMDS:History & Undo:BEGIN -->
 ```bash
-movie undo
-movie undo --list
-movie undo --id 42
 movie redo
+movie undo
+movie undo --id <history-id>
+movie undo --list
 ```
 ```powershell
-movie undo
-movie undo --list
-movie undo --id 42
 movie redo
+movie undo
+movie undo --id <history-id>
+movie undo --list
 ```
+<!-- SECTION-CMDS:History & Undo:END -->
 
 > **Args:** `--id 42` is a **history entry ID** from `movie undo --list`. Bare `movie undo` reverses the most recent operation. `movie redo` re-applies the last undone op.
 
@@ -587,20 +617,40 @@ $ movie redo
 
 #### 🎯 [Discovery & Organization](#discovery--organization)
 Recommendations, genres, tags, watchlist.
+<!-- SECTION-CMDS:Discovery & Organization:BEGIN -->
 ```bash
-movie suggest
 movie discover
-movie tag add 1 favorite
-movie watch list
 movie stats
+movie stats --by <dimension>
+movie suggest
+movie suggest --genre <name> --limit <n>
+movie tag add <id> <tag>
+movie tag list <id>
+movie tag list --all
+movie tag remove <id> <tag>
+movie tag remove <id> --all
+movie watch add <id>
+movie watch add <id> --priority <level>
+movie watch list
+movie watch list --sort <field>
 ```
 ```powershell
-movie suggest
 movie discover
-movie tag add 1 favorite
-movie watch list
 movie stats
+movie stats --by <dimension>
+movie suggest
+movie suggest --genre <name> --limit <n>
+movie tag add <id> <tag>
+movie tag list <id>
+movie tag list --all
+movie tag remove <id> <tag>
+movie tag remove <id> --all
+movie watch add <id>
+movie watch add <id> --priority <level>
+movie watch list
+movie watch list --sort <field>
 ```
+<!-- SECTION-CMDS:Discovery & Organization:END -->
 
 > **Args:** `1` is a **media ID** (`movie ls`). `favorite` is any tag name you choose — letters, digits, dashes. `movie watch list` and `movie stats` take no args.
 
@@ -629,22 +679,30 @@ Watchlist:  12 pending
 
 #### 🛠 [Maintenance & Debugging](#maintenance--debugging)
 Stale-entry cleanup, logs, REST server.
+<!-- SECTION-CMDS:Maintenance & Debugging:BEGIN -->
 ```bash
 movie cleanup
 movie db
-movie logs
-movie rest --open
 movie export
+movie export --format csv --out <file>
+movie export --format json --out <file>
+movie logs
+movie rest
+movie rest --open
+movie rest --port <n>
 ```
 ```powershell
 movie cleanup
 movie db
-movie logs
-movie rest --open
 movie export
-# Pipe logs into a file (PowerShell redirection):
-movie logs | Tee-Object -FilePath movie.log
+movie export --format csv --out <file>
+movie export --format json --out <file>
+movie logs
+movie rest
+movie rest --open
+movie rest --port <n>
 ```
+<!-- SECTION-CMDS:Maintenance & Debugging:END -->
 
 > **Args:** All of these run with no required args. `movie rest --open` opens the dashboard in your browser; add `--port 8080` to override the default port. `movie export` writes to stdout unless you pass `--out <file>`.
 
@@ -672,20 +730,30 @@ $ movie export --format csv --out library.csv
 
 #### ⚙️ [Configuration & System](#configuration--system)
 Settings, TMDb key, version, self-update.
+<!-- SECTION-CMDS:Configuration & System:BEGIN -->
 ```bash
+movie changelog
 movie config
-movie config set tmdb_api_key YOUR_KEY
-movie version
+movie config get <key>
+movie config set <key> <value>
+movie config set source_folder <path>
+movie config set tmdb_api_key <key>
+movie hello
 movie update
+movie version
 ```
 ```powershell
+movie changelog
 movie config
-movie config set tmdb_api_key YOUR_KEY
-movie version
+movie config get <key>
+movie config set <key> <value>
+movie config set source_folder <path>
+movie config set tmdb_api_key <key>
+movie hello
 movie update
-# Read the key from a PowerShell env var instead of hardcoding it:
-movie config set tmdb_api_key $env:TMDB_KEY
+movie version
 ```
+<!-- SECTION-CMDS:Configuration & System:END -->
 
 > **Args:** `tmdb_api_key` is the **config key name** (others: `source_folder`, `default_player`, `log_level`). `YOUR_KEY` is a real TMDb v3 API key — get one at https://www.themoviedb.org/settings/api. `movie version` and `movie update` take no args.
 
