@@ -44,6 +44,7 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 </div>
 
 - [Quick Start](#quick-start)
+- [Jump to a command](#jump-to-a-command)
 - [Demo](#-demo)
 - [Installation](#installation)
 - [What It Does](#what-it-does)
@@ -119,6 +120,28 @@ movie suggest 5
 ```
 
 Every command supports `--help` or `-h` for detailed usage.
+
+---
+
+<div align="center">
+
+## Jump to a command
+
+</div>
+
+Skip the demo and jump straight to the command you need. Each link drops you into the matching **Command Reference** subsection — with the animated walkthrough, copy-paste Bash + PowerShell examples, expected output, and the full subcommand table.
+
+| | Section | What's there | Top commands |
+|---|---|---|---|
+| 📂 | [Scanning & Library](#scanning--library) | Match files against TMDb, browse the library | `movie scan`, `movie rescan`, `movie ls`, `movie search`, `movie info` |
+| 📦 | [File Management](#file-management) | Move, rename, flatten, play files | `movie move`, `movie rename`, `movie popout`, `movie play`, `movie cd` |
+| ↩️ | [History & Undo](#history--undo) | Reverse any move/rename/scan/delete | `movie undo`, `movie undo --list`, `movie undo --id`, `movie redo` |
+| 🎯 | [Discovery & Organization](#discovery--organization) | Recommendations, genres, tags, watchlist | `movie suggest`, `movie discover`, `movie tag`, `movie watch`, `movie stats` |
+| 🛠 | [Maintenance & Debugging](#maintenance--debugging) | Stale-entry cleanup, logs, REST server | `movie cleanup`, `movie db`, `movie logs`, `movie rest`, `movie export` |
+| ⚙️ | [Configuration & System](#configuration--system) | Settings, TMDb key, version, self-update | `movie config`, `movie config set`, `movie version`, `movie update` |
+| 🚑 | [Troubleshooting](#troubleshooting) | Common errors and how to fix them | `tmdb_api_key not set`, `429`, `database is locked`, stale entries |
+
+> First time here? Run the **[env-var check](#command-reference)** at the top of the Command Reference to confirm `TMDB_KEY` is set before you scan.
 
 ---
 
