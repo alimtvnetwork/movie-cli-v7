@@ -212,6 +212,43 @@ EXTRA_ANCHORS: dict[str, str] = {
 }
 
 
+# ─── Custom-anchor whitelist (escape hatch) ─────────────────────────────────
+# Anchors listed here are NEVER rewritten and NEVER reported as stale by
+# `--check`, even when their fingerprint would otherwise match a managed
+# label. Use this for legacy deep-links you intentionally want to keep
+# pointing at a custom HTML target (e.g. a hand-authored `<a name="…">`
+# anchor that predates the current heading slugs).
+#
+# Matching is by alphanumeric fingerprint — same rule the rewriter uses —
+# so every casing/punctuation variant of an entry is whitelisted together:
+#   "legacy-quick-start"  → also covers #legacy_quick_start, #LegacyQuickStart
+#
+# Keep this list short and add a one-line comment per entry explaining why
+# the link can't be migrated to the canonical slug.
+ANCHOR_WHITELIST: tuple[str, ...] = (
+    # e.g. "legacy-quick-start",  # keeps an old blog post deep-link working
+)
+
+_WHITELIST_FINGERPRINTS: frozenset[str] = frozenset(
+    re.sub(r"[^a-z0-9]", "", a.lower()) for a in ANCHOR_WHITELIST
+)
+
+# Safety net: a whitelist entry that fingerprint-collides with a managed
+# label would silently disable that label's auto-fix. That's almost never
+# what the maintainer wants — fail loudly at startup instead.
+_MANAGED_FINGERPRINTS: frozenset[str] = frozenset(
+    re.sub(r"[^a-z0-9]", "", lbl.lower())
+    for lbl in (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
+)
+_WHITELIST_COLLISIONS = _WHITELIST_FINGERPRINTS & _MANAGED_FINGERPRINTS
+if _WHITELIST_COLLISIONS:
+    sys.exit(
+        "error: ANCHOR_WHITELIST entries collide with managed labels: "
+        f"{sorted(_WHITELIST_COLLISIONS)}. Remove them from the whitelist or "
+        "rename the managed label."
+    )
+
+
 def _row_id(command: str) -> str:
     """Stable per-row anchor: 'movie scan <path> --dry-run' → 'movie-scan-path-dry-run'."""
     slug = re.sub(r"[<>]", "", command)
@@ -392,6 +429,8 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
             return match.group(0)
         raw = match.group(1)
         fp = re.sub(r"[^a-z0-9]", "", raw.lower())
+        if fp in _WHITELIST_FINGERPRINTS:
+            return match.group(0)  # explicitly whitelisted — leave verbatim
         label = fingerprint_to_label.get(fp)
         if label is None:
             return match.group(0)  # not a known section — leave alone
@@ -419,13 +458,19 @@ def main() -> int:
 
     if args.list_sections:
         all_labels = (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
-        width = max(len(label) for label in all_labels)
+        width = max((len(label) for label in all_labels), default=0)
+        width = max(width, *(len(a) for a in ANCHOR_WHITELIST), 0)
         print("# command sections")
         for label in SECTION_LABELS:
             print(f"{label.ljust(width)}  ->  {SECTION_ANCHORS[label]}")
         print("# extra doc anchors (auto-fix only)")
         for label in EXTRA_ANCHOR_LABELS:
             print(f"{label.ljust(width)}  ->  {EXTRA_ANCHORS[label]}")
+        print("# whitelist (never rewritten, never reported)")
+        if not ANCHOR_WHITELIST:
+            print("(empty)")
+        for anchor in ANCHOR_WHITELIST:
+            print(f"{anchor.ljust(width)}  ->  #{anchor}  [verbatim]")
         return 0
 
     original = README.read_text(encoding="utf-8")
