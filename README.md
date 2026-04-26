@@ -49,6 +49,7 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 - [Installation](#installation)
 - [What It Does](#what-it-does)
 - [Command Reference](#command-reference)
+- [Troubleshooting Flowchart](#troubleshooting)
 - [Command Tree](#command-tree)
 - [Build & Deploy](#build--deploy)
 - [Release Workflow](#release-workflow)
@@ -946,7 +947,65 @@ movie changelog --latest
 
 </div>
 
-The most common errors users hit, what each one means, and the exact command to fix it. Each entry links back to the matching walkthrough in the [Command Reference](#command-reference).
+### Quick Diagnosis Flowchart
+
+Not sure which error you're seeing? Follow this decision tree to find the right fix in seconds.
+
+```
+┌─────────────────────────────────────┐
+│  What happened when you ran the     │
+│  command?                           │
+└──────────────┬──────────────────────┘
+               │
+    ┌──────────┴──────────┐
+    │                     │
+┌───▼────┐           ┌────▼────┐
+│ Every  │           │ Some or │
+│ file   │           │ all got │
+│ shows  │           │ skipped │
+│ "no    │           │ with an │
+│ TMDb   │           │ error   │
+│ match" │           │ code    │
+└───┬────┘           └────┬────┘
+    │                     │
+    │         ┌───────────┼───────────┐
+    │         │           │           │
+    │    ┌────▼────┐ ┌────▼────┐ ┌────▼────┐
+    │    │ 429 /   │ │ 401 /   │ │ timeout │
+    │    │ "too     │ │ "unauth-│ │ / DNS   │
+    │    │ many    │ │ orized" │ │ failure │
+    │    │ requests"│ │         │ │         │
+    │    └────┬────┘ └────┬────┘ └────┬────┘
+    │         │           │           │
+    │    ┌────▼────┐ ┌────▼────┐ ┌────▼────┐
+    │    │ Wait &  │ │ Check   │ │ Check   │
+    │    │ re-run  │ │ your    │ │ network │
+    │    │ rescan  │ │ API key │ │ / proxy │
+    │    │         │ │         │ │ settings│
+    │    └────┬────┘ └────┬────┘ └────┬────┘
+    │         │           │           │
+    └─────────┴───────────┴───────────┘
+              │
+    ┌─────────▼─────────┐
+    │  "database is      │
+    │  locked" or        │
+    │  SQLITE_BUSY       │
+    └─────────┬─────────┘
+              │
+    ┌─────────▼─────────┐
+    │  Kill any other    │
+    │  movie process,    │
+    │  then retry        │
+    └────────────────────┘
+```
+
+**Map the symptom to the fix:**
+
+| Symptom | Likely cause | Jump to fix |
+|---|---|---|
+| Every file shows `no TMDb match` | API key missing or wrong | [1. `tmdb_api_key not set`](#1-tmdb_api_key-not-set--tmdb-requests-are-skipped) |
+| `429 too many requests` | Rate limit hit during large scan | [5. `TMDb 429 Too Many Requests`](#5-tmdb-429-too-many-requests--rate-limited) |
+| `database is locked` / `SQLITE_BUSY` | Second `movie` process running | [8. `database is locked`](#8-database-is-locked--second-movie-process-running) |
 
 ### 1. `tmdb_api_key not set` — TMDb requests are skipped
 
