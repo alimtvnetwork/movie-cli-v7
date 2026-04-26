@@ -667,6 +667,28 @@ def _nearest_heading_above(content: str, line_no: int) -> tuple[int, str] | None
       * ATX headings themselves may be indented up to 3 spaces; 4+ spaces
         of leading whitespace disqualifies them.
     """
+    return _nearest_heading_above_levels(content, line_no, _ALL_HEADING_LEVELS)
+
+
+# Default set used when no caller-specific filter is provided. Frozen so it
+# can safely be passed around as a default argument without aliasing risk.
+_ALL_HEADING_LEVELS: frozenset[int] = frozenset(range(1, 7))
+
+
+def _nearest_heading_above_levels(
+    content: str,
+    line_no: int,
+    levels: frozenset[int],
+) -> tuple[int, str] | None:
+    """
+    Same as _nearest_heading_above but restricted to a caller-supplied set
+    of heading levels (1–6). A heading whose level is NOT in `levels` is
+    skipped entirely — the walk continues looking for an older heading at
+    a permitted level. Returns None if none qualify.
+
+    Used by `--check` so reviewers can scope the breadcrumb to, e.g., only
+    H2 sections (matching the per-section whitelist's scoping model).
+    """
     lines = content.splitlines()
     if line_no < 1 or not lines:
         return None
@@ -715,12 +737,16 @@ def _nearest_heading_above(content: str, line_no: int) -> tuple[int, str] | None
         # at least one non-space char. Trailing '#' run is allowed but we
         # keep the line verbatim for display.
         m = re.match(r"^ {0,3}(#{1,6}) +(\S.*)$", line)
-        if m:
+        if m and len(m.group(1)) in levels:
             found = (idx + 1, line.rstrip())
     return found
 
 
-def _format_anchor_change(content: str, change: str) -> str:
+def _format_anchor_change(
+    content: str,
+    change: str,
+    breadcrumb_levels: frozenset[int] = frozenset({2}),
+) -> str:
     """
     Decorate one anchor-change record with its source line and a region tag.
 
@@ -730,6 +756,11 @@ def _format_anchor_change(content: str, change: str) -> str:
         '  line 42 [outside index]: #FOO → #foo  (Foo)\\n'
         '      under: ## ✨ Quick Start (line 70)\\n'
         '      > <line text>'
+
+    `breadcrumb_levels` controls which heading levels (1–6) qualify for
+    the `under:` line. Defaults to H2 only, matching the per-section
+    whitelist's scoping model. Pass `_ALL_HEADING_LEVELS` to restore the
+    nearest-heading-at-any-level behaviour.
     """
     m = re.match(r"\s*line (\d+):", change)
     if not m:
@@ -741,9 +772,9 @@ def _format_anchor_change(content: str, change: str) -> str:
     # reported change is by construction outside them — surface that explicitly
     # so reviewers know where to edit.
     tagged = re.sub(r"line (\d+):", r"line \1 [outside index]:", change, count=1)
-    # Nearest heading at any level — gives reviewers a one-line breadcrumb
-    # to the section that owns the offending link, without scrolling.
-    heading = _nearest_heading_above(content, line_no)
+    # Nearest heading at one of the configured levels — gives reviewers a
+    # one-line breadcrumb to the section that owns the offending link.
+    heading = _nearest_heading_above_levels(content, line_no, breadcrumb_levels)
     if heading is not None:
         h_line, h_text = heading
         tagged += f"\n      under: {h_text} (line {h_line})"
