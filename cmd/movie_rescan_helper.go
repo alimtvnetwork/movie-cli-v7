@@ -1,4 +1,10 @@
-// movie_rescan_helper.go — shared rescan logic used by both scan and rescan commands
+// movie_rescan_helper.go — shared rescan logic used by both scan and rescan commands.
+//
+// SHARED: title parsing + TMDb resolve + DB upsert pipeline.
+// Callers: movie scan, movie rescan, movie rescan-failed.
+// Do NOT re-implement the TMDb-resolve-and-upsert dance elsewhere — call
+// these helpers so all paths share the same fallback chain and metadata
+// merge rules.
 package cmd
 
 import (

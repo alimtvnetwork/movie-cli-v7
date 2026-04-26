@@ -1,4 +1,9 @@
 // movie_suggest_helpers.go — helper functions for movie suggest command.
+//
+// SHARED: TMDb discover + recommendation ranking helpers.
+// Callers: movie suggest, movie discover, movie info (related-titles block).
+// Do NOT re-implement TMDb genre→discover mapping elsewhere — these helpers
+// own the canonical mapping and weighting.
 package cmd
 
 import (

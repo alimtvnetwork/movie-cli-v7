@@ -1,12 +1,12 @@
-// movie_resolve.go — shared media resolver
+// movie_resolve.go — shared media resolver.
 //
-// -- Shared helper exported from this file --
-//
-//	resolveMediaByQuery(db, query) (*Media, error)
-//	    Resolves a media item from the local DB by numeric ID or fuzzy
-//	    title match (exact → prefix → first result).
-//
-// Consumers: movie_info.go, movie_play.go, movie_ls.go (detail view)
+// SHARED: resolveMediaByQuery(db, query) — accepts a numeric ID or a fuzzy
+// title match (exact → prefix → first result) and returns the matching
+// *db.Media (DB-first, TMDb fallback for unknown titles).
+// Callers: movie info, movie play, movie ls (detail view), movie move,
+// movie rename, movie undo, movie suggest, movie cache, movie cache-forget.
+// Do NOT re-implement ID-vs-title disambiguation in command files — always
+// route through this resolver so behaviour stays consistent.
 //
 // All commands that accept an <id-or-title> argument should use this
 // helper to keep resolution logic consistent.  Do NOT duplicate the

@@ -1,6 +1,9 @@
 // movie_move_helpers.go — shared helpers for move/rename/undo operations.
-// Consumers: movie_move.go, movie_rename.go, movie_undo.go, movie_stats.go
-// Do NOT duplicate move/size/path logic elsewhere — use these helpers.
+//
+// SHARED: filesystem move + size + path-rewrite helpers.
+// Callers: movie move, movie rename, movie undo, movie stats.
+// Do NOT duplicate move/size/path logic elsewhere — use these helpers so
+// undo bookkeeping (action_id, rollback path) stays consistent.
 package cmd
 
 import (

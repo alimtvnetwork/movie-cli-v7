@@ -2,6 +2,11 @@
 // commands (scan, rescan, rescan-failed). When keepLogs is false the logs
 // directory is wiped so each run starts with a clean error.txt; when true the
 // previous run's log is preserved (useful for diffing two consecutive runs).
+//
+// SHARED: errlog initialization for any command that produces a long error
+// trail. Callers: movie scan, movie rescan, movie rescan-failed.
+// Do NOT call errlog.Init directly from command files — use this helper so
+// the keep/wipe policy stays consistent.
 package cmd
 
 import (

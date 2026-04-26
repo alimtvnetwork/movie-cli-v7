@@ -1,4 +1,10 @@
 // movie_scan_process_helpers.go — extracted helpers for processVideoFile.
+//
+// SHARED: per-file scan pipeline pieces (title clean, year extract, TMDb
+// match, DB upsert, JSON sidecar write).
+// Callers: movie scan, movie rescan, movie rescan-failed.
+// Do NOT duplicate the per-file pipeline elsewhere — compose it from these
+// helpers so every entry point produces identical DB rows and sidecars.
 package cmd
 
 import (
