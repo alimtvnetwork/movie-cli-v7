@@ -666,6 +666,11 @@ def _nearest_heading_above(content: str, line_no: int) -> tuple[int, str] | None
         which CommonMark treats as code. A `#` here is not a heading.
       * ATX headings themselves may be indented up to 3 spaces; 4+ spaces
         of leading whitespace disqualifies them.
+
+    Also recognises setext headings — a non-blank text line followed by an
+    underline of '=' (H1) or '-' (H2). The reported line number is the
+    text line (so the breadcrumb points at what the user reads as the
+    heading), and the reported text is the text line verbatim.
     """
     return _nearest_heading_above_levels(content, line_no, _ALL_HEADING_LEVELS)
 
@@ -688,6 +693,9 @@ def _nearest_heading_above_levels(
 
     Used by `--check` so reviewers can scope the breadcrumb to, e.g., only
     H2 sections (matching the per-section whitelist's scoping model).
+
+    Setext headings count as level 1 ('===' underline) or level 2
+    ('---' underline) for the purposes of `levels` filtering.
     """
     lines = content.splitlines()
     if line_no < 1 or not lines:
@@ -695,6 +703,11 @@ def _nearest_heading_above_levels(
     # Active fence descriptor: (char, min_close_length) or None.
     fence: tuple[str, int] | None = None
     found: tuple[int, str] | None = None
+    # Setext-heading state: the most recent line that could serve as the
+    # text line of a setext heading. Cleared on blanks, ATX headings,
+    # fence opens, indented-code lines, or any line consumed by a fence.
+    # Stored as (line_no_1indexed, text_verbatim). None when no candidate.
+    prev_para: tuple[int, str] | None = None
     # Walk forward up to the target line. Forward-walk (not backward)
     # because fence state only resolves correctly in document order.
     upper = min(line_no, len(lines))
@@ -715,6 +728,7 @@ def _nearest_heading_above_levels(
                 if run >= min_len and tail.strip() == "":
                     fence = None
             # Either way, lines inside a fence cannot be headings.
+            prev_para = None
             continue
         # Opening fence: ≤3 spaces indent, ≥3 of ` or ~. The info string
         # may contain anything except backticks (for ``` fences).
@@ -728,10 +742,32 @@ def _nearest_heading_above_levels(
                 pass  # not a real fence opener
             else:
                 fence = (ch, run)
+                prev_para = None
                 continue
         # Indented code block: 4+ leading spaces or a leading tab. ATX
         # headings are disallowed here per CommonMark.
         if indent >= 4 or starts_with_tab:
+            prev_para = None
+            continue
+        # Blank line — terminates any setext-text candidate. CommonMark
+        # requires the underline to immediately follow a non-blank line.
+        if stripped.strip() == "":
+            prev_para = None
+            continue
+        # --- Setext underline detection ---
+        # Underline line: ≤3 spaces indent, all chars are '=' or all '-'
+        # (only one kind, ≥1 char), optionally followed by trailing spaces.
+        # Promotes the immediately-preceding paragraph text line into a
+        # setext heading. '-'-only underline with no preceding paragraph
+        # text is a thematic break — left to fall through as content.
+        setext = _setext_underline_level(stripped) if prev_para is not None else None
+        if setext is not None:
+            level = setext  # 1 for '=', 2 for '-'
+            if level in levels:
+                # Report at the text line (what the user sees as the heading).
+                found = (prev_para[0], prev_para[1].rstrip())
+            # The underline line is consumed; it is not itself paragraph text.
+            prev_para = None
             continue
         # ATX heading: optional 1–3 spaces, then 1–6 '#', then a space and
         # at least one non-space char. Trailing '#' run is allowed but we
@@ -739,7 +775,38 @@ def _nearest_heading_above_levels(
         m = re.match(r"^ {0,3}(#{1,6}) +(\S.*)$", line)
         if m and len(m.group(1)) in levels:
             found = (idx + 1, line.rstrip())
+            prev_para = None
+            continue
+        if m:
+            # ATX heading at a disallowed level — still consumed, not paragraph text.
+            prev_para = None
+            continue
+        # Otherwise: a non-blank, non-heading, non-code line. It becomes
+        # the candidate text for any setext underline that follows.
+        prev_para = (idx + 1, line)
     return found
+
+
+def _setext_underline_level(stripped: str) -> int | None:
+    """
+    Return 1 if `stripped` is a setext H1 underline ('=' run, optional
+    trailing spaces), 2 if it's a setext H2 underline ('-' run, ditto),
+    or None otherwise.
+
+    Caller is responsible for ensuring leading indent is ≤3 (already
+    handled by stripping leading spaces and checking before calling).
+    """
+    if not stripped:
+        return None
+    head = stripped[0]
+    if head not in ("=", "-"):
+        return None
+    run = len(stripped) - len(stripped.lstrip(head))
+    tail = stripped[run:]
+    # Underline body must be ≥1 char and trailing must be only whitespace.
+    if run < 1 or tail.strip() != "":
+        return None
+    return 1 if head == "=" else 2
 
 
 # Default breadcrumb level set when --breadcrumb-levels is not passed.
