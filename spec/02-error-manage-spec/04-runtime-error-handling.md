@@ -1,7 +1,7 @@
 # Runtime Error Handling — TMDb, Database, Network
 
-**Version:** 1.0.0  
-**Updated:** 2026-04-16  
+**Version:** 1.1.0  
+**Updated:** 2026-04-26  
 **Format:** Error scenarios with handling strategy and GIVEN/WHEN/THEN criteria
 
 ---
@@ -232,7 +232,125 @@ func isNetworkError(err error) bool {
 
 ---
 
-## 5. Error Message Standards
+## 5. OMDb Fallback Errors
+
+OMDb (`omdbapi.com`) is the **second** fallback tier in `SearchWithFallback`,
+sitting between TMDb's progressive query trim and the IMDb-via-web scrape.
+It is a best-effort enrichment source — failures here must NEVER block a
+scan or surface as a user-facing error.
+
+**Activation:** only runs when the `OMDB_API_KEY` environment variable is
+set. When unset, the tier is silently skipped (this is the default state
+for fresh installs and is not an error).
+
+### 5.1 Missing API Key
+
+| Scenario | Strategy |
+|----------|----------|
+| `OMDB_API_KEY` unset | Skip the OMDb tier silently — do NOT log, warn, or count as a failure |
+| `OMDB_API_KEY` empty string | Treated identically to unset |
+| `movie doctor` invoked | Report `OMDb fallback: disabled (set OMDB_API_KEY to enable)` as INFO, not WARN |
+
+**Rationale:** OMDb is opt-in. Most users will never set the key, and the
+TMDb + IMDb-scrape chain works fine without it.
+
+### 5.2 Network / HTTP Errors
+
+| Scenario | Strategy |
+|----------|----------|
+| DNS / TCP failure | Return `nil` from `tryOmdbFallback`; chain continues to IMDb-via-web |
+| HTTP timeout (>8s) | Same — fail-soft, no retry, no log spam |
+| HTTP 4xx (401/403 invalid key) | Return `nil`; emit a single `⚠️ OMDb auth failed — check OMDB_API_KEY` warning per process (deduplicated) |
+| HTTP 5xx | Return `nil`; OMDb is unreliable, no retry — fall through to next tier |
+| HTTP 429 (rate limit) | Return `nil`; OMDb's free tier is 1k/day — back off entirely for this process run |
+
+**No retry policy.** Unlike TMDb, OMDb failures do NOT trigger retries.
+The whole point of the OMDb tier is "cheap, fast, optional" — a slow retry
+would defeat its purpose. The next fallback tier (IMDb scrape) takes over.
+
+### 5.3 Empty / Invalid Response
+
+| Scenario | Strategy |
+|----------|----------|
+| `Response: "False"` (no match) | Return `nil` — normal "no results", chain continues |
+| Missing `imdbID` field | Return `nil` — treated as no result |
+| Malformed JSON | Return `nil` — log at DEBUG only, never user-facing |
+| `imdbID` present but TMDb `/find` returns nothing | Cache the partial hit (IMDb id, TmdbId=0) so the next run can retry `/find` without re-hitting OMDb |
+
+**Acceptance Criteria:**
+
+- GIVEN `OMDB_API_KEY` is unset WHEN `movie scan` runs THEN the OMDb tier is skipped without any log line
+- GIVEN OMDb returns `Response: "False"` WHEN the fallback runs THEN the next tier (IMDb scrape) is invoked
+- GIVEN OMDb returns HTTP 401 WHEN the fallback runs THEN exactly one `⚠️ OMDb auth failed` warning is printed per process
+- GIVEN OMDb returns HTTP 5xx or times out WHEN the fallback runs THEN no retry is attempted and the chain continues
+- GIVEN OMDb returns an `imdbID` that TMDb `/find` cannot resolve WHEN the fallback completes THEN the IMDb id is cached with `TmdbId=0` for future retry
+
+---
+
+## 6. IMDb-Scrape Fallback Errors
+
+The IMDb-scrape tier (`tryImdbViaWeb` → `fetchImdbIdFromDuckDuckGo`) is the
+**last-resort** fallback. It performs a DuckDuckGo HTML search for
+`"<title> <year> imdb"`, extracts an `tt\d{7,10}` IMDb id from the result
+page, then resolves it via TMDb `/find`. It is fragile by nature (HTML
+layout can change, DuckDuckGo can rate-limit, results may be wrong) and
+therefore has the strictest fail-soft policy of any tier.
+
+### 6.1 Cache-First Behavior
+
+| Scenario | Strategy |
+|----------|----------|
+| Title+year cached as a hit | Return cached TMDb id immediately — no network call |
+| Title+year cached as a miss (`imdbID == ""`, `found == true`) | Return `nil` immediately — do NOT re-scrape |
+| Title+year not in cache | Proceed to network scrape |
+
+**Rationale:** the IMDb cache (`c.ImdbCache`) prevents repeated scrapes for
+titles that are genuinely untrackable. Cached misses are honored for the
+lifetime of the cache file.
+
+### 6.2 Network / HTTP Errors
+
+| Scenario | Strategy |
+|----------|----------|
+| DNS / TCP failure | Return `nil`; do NOT cache (transient, retry next run) |
+| HTTP timeout (>10s) | Return `nil`; do NOT cache |
+| HTTP non-200 (rate limit, captcha, block) | Return `nil`; do NOT cache so a future retry can succeed |
+| Body read truncated at 512 KiB | Continue with partial body — IMDb id pattern usually appears early |
+
+**No retry policy.** A single attempt per scan. Retry pressure on
+DuckDuckGo would risk an IP ban that breaks the fallback for all users.
+
+### 6.3 Parse / Resolution Errors
+
+| Scenario | Strategy |
+|----------|----------|
+| No `tt\d{7,10}` match in HTML | Cache as miss (`imdbID=""`, `TmdbId=0`); return `nil` |
+| IMDb id extracted but TMDb `/find` returns no results | Cache the partial hit (`imdbID=tt...`, `TmdbId=0`); return `nil` so a future `/find` retry can succeed |
+| TMDb `/find` returns multiple results | Pick the first; cache the chosen `(TmdbId, MediaType)` |
+| TMDb auth missing (no API key) | Return `nil` immediately — `lookupByImdbId` short-circuits via `HasAuth()` |
+
+### 6.4 No-Results End-State
+
+When **all** tiers (SearchMulti → progressive trim → OMDb → IMDb scrape)
+return empty, the caller (`movie scan` / `movie search`) treats the title
+as **unmatched**:
+
+- Scan: file is recorded with `TmdbId=NULL`; user can re-run `movie rescan-failed` later
+- Search: prints `📭 No matches found — try a shorter query or check spelling`
+- Exit code: `0` (no-match is not an error condition for scan; search exits `0` too)
+
+**Acceptance Criteria:**
+
+- GIVEN a title is cached as a miss WHEN the IMDb-scrape tier runs THEN no HTTP request is made
+- GIVEN DuckDuckGo returns HTTP 429 or a captcha page WHEN the scrape runs THEN no cache entry is written and the chain returns no results
+- GIVEN the HTML contains no `tt\d{7,10}` pattern WHEN parsing completes THEN the title is cached as a miss
+- GIVEN an IMDb id is found but TMDb `/find` returns nothing WHEN the chain completes THEN a partial cache entry (`imdbID`, `TmdbId=0`) is written
+- GIVEN all four fallback tiers return no results WHEN `movie scan` finishes processing the file THEN the file is recorded with `TmdbId=NULL` and exit code is `0`
+- GIVEN all four fallback tiers return no results WHEN `movie search` finishes THEN `📭 No matches found` is printed and exit code is `0`
+
+---
+
+## 7. Error Message Standards
 
 All error messages follow these rules:
 
@@ -253,8 +371,10 @@ All error messages follow these rules:
 - [Error Code Registry](./03-error-code-registry/)
 - [Acceptance Criteria](./97-acceptance-criteria.md)
 - [TMDb Client](../../tmdb/client.go) — HTTP timeout, request logic
+- [OMDb Fallback](../../tmdb/omdb.go) — OMDB_API_KEY, fail-soft policy
+- [IMDb Scrape Fallback](../../tmdb/fallback.go) — DuckDuckGo → IMDb id → TMDb /find
 - [DB Layer](../../db/db.go) — Open(), migrations, pragmas
 
 ---
 
-*Runtime error handling spec — updated: 2026-04-10*
+*Runtime error handling spec — updated: 2026-04-26*
