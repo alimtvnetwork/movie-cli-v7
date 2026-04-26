@@ -649,6 +649,41 @@ def _line_at(content: str, line_no: int) -> str:
     return ""
 
 
+def _nearest_heading_above(content: str, line_no: int) -> tuple[int, str] | None:
+    """
+    Return (heading_line_no, heading_text) for the closest Markdown heading
+    AT ANY LEVEL (H1–H6) at or above `line_no`. Returns None if no heading
+    precedes the position. Heading text is returned verbatim, including the
+    leading '#' run, so callers can render it as-is for visual context.
+
+    Heuristic-friendly: ignores ATX-style headings nested inside fenced
+    code blocks (lines opening with ``` toggle our "inside" state) so a
+    `# comment` in a bash block can't masquerade as a section header.
+    """
+    lines = content.splitlines()
+    if line_no < 1 or not lines:
+        return None
+    inside_fence = False
+    found: tuple[int, str] | None = None
+    # Walk forward up to the target line, tracking fence state and the most
+    # recent real heading. Forward-walk (not backward) because fence state
+    # only resolves correctly in document order.
+    upper = min(line_no, len(lines))
+    for idx in range(upper):
+        line = lines[idx]
+        stripped = line.lstrip()
+        if stripped.startswith("```"):
+            inside_fence = not inside_fence
+            continue
+        if inside_fence:
+            continue
+        # ATX heading: 1–6 '#' followed by a space and at least one char.
+        m = re.match(r"^(#{1,6}) +(\S.*)$", line)
+        if m:
+            found = (idx + 1, line.rstrip())
+    return found
+
+
 def _format_anchor_change(content: str, change: str) -> str:
     """
     Decorate one anchor-change record with its source line and a region tag.
@@ -656,7 +691,9 @@ def _format_anchor_change(content: str, change: str) -> str:
     Input format (produced by _rewrite_section_anchors):
         '  line 42: #FOO → #foo  (Foo)'
     Output:
-        '  line 42 [outside index]: #FOO → #foo  (Foo)\\n      > <line text>'
+        '  line 42 [outside index]: #FOO → #foo  (Foo)\\n'
+        '      under: ## ✨ Quick Start (line 70)\\n'
+        '      > <line text>'
     """
     m = re.match(r"\s*line (\d+):", change)
     if not m:
@@ -668,6 +705,12 @@ def _format_anchor_change(content: str, change: str) -> str:
     # reported change is by construction outside them — surface that explicitly
     # so reviewers know where to edit.
     tagged = re.sub(r"line (\d+):", r"line \1 [outside index]:", change, count=1)
+    # Nearest heading at any level — gives reviewers a one-line breadcrumb
+    # to the section that owns the offending link, without scrolling.
+    heading = _nearest_heading_above(content, line_no)
+    if heading is not None:
+        h_line, h_text = heading
+        tagged += f"\n      under: {h_text} (line {h_line})"
     if src:
         tagged += f"\n      > {src}"
     return tagged
