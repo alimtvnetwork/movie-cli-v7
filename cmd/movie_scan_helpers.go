@@ -1,4 +1,10 @@
-// movie_scan_helpers.go — shared helpers for movie scan (dir resolution, output dirs, print)
+// movie_scan_helpers.go — shared helpers for movie scan (dir resolution, output dirs, print).
+//
+// SHARED: scan-directory resolution + .movie-output dir layout + summary
+// formatting. Callers: movie scan, movie rescan, movie rescan-failed,
+// movie ls (for the "📂 Scanned:" banner).
+// Do NOT hard-code .movie-output paths elsewhere — read them from here so
+// a future rename only touches one file.
 package cmd
 
 import (

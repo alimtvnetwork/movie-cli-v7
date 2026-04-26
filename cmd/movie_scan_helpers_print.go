@@ -1,4 +1,9 @@
-// movie_scan_helpers_print.go — print helpers for scan footer (extracted from movie_scan_helpers.go)
+// movie_scan_helpers_print.go — print helpers for scan footer (extracted from movie_scan_helpers.go).
+//
+// SHARED: scan summary footer rendering (counts, sizes, durations).
+// Callers: movie scan, movie rescan, movie rescan-failed.
+// Do NOT re-implement the footer in JSON/table renderers — they should
+// call these helpers so plain output stays consistent across modes.
 package cmd
 
 import (
