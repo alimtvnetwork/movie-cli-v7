@@ -627,6 +627,11 @@ def main() -> int:
             print("(empty)")
         for anchor in ANCHOR_WHITELIST:
             print(f"{anchor.ljust(width)}  ->  #{anchor}  [verbatim]")
+        print("# ignored regions (never regenerated, drift suppressed)")
+        if not IGNORED_REGIONS:
+            print("(empty)")
+        for region in IGNORED_REGIONS:
+            print(f"{region}  [frozen]")
         return 0
 
     original = README.read_text(encoding="utf-8")
