@@ -155,6 +155,8 @@ movie scan "D:\Media\Movies"
 
 > **Args:** `<path>` is the folder to scan (defaults to your configured `source_folder`). `123` is a **media ID** — get one from `movie ls`. `"inception"` is any free-text query; quote it if it contains spaces.
 
+> **Assumptions:** `source_folder` is set (`movie config set source_folder /mnt/storage/Movies`), `tmdb_api_key` is set, and that folder contains video files. The sample IDs `123/124/125` come from your own library after the first `movie scan`.
+
 <details><summary><strong>✅ Expected output</strong></summary>
 
 ```text
@@ -204,6 +206,8 @@ movie move 123 --to "D:\Media\Sorted\Action"
 
 > **Args:** `123` is a **media ID** (`movie ls` to find it). `--to <path>` is the destination folder; quote paths with spaces. `move`, `rename`, and `popout` run interactively when no ID is given.
 
+> **Assumptions:** Media ID `123` exists in your DB (run `movie scan` first), the destination folder (`/mnt/storage/Sorted/Action` or `D:\Media\Sorted\Action`) is writable, and `default_player` is configured for `movie play`.
+
 <details><summary><strong>✅ Expected output</strong></summary>
 
 ```text
@@ -240,6 +244,8 @@ movie redo
 ```
 
 > **Args:** `--id 42` is a **history entry ID** from `movie undo --list`. Bare `movie undo` reverses the most recent operation. `movie redo` re-applies the last undone op.
+
+> **Assumptions:** At least one prior `movie scan`, `move`, or `rename` has recorded an entry in the history table. The sample IDs `87/86/85` are placeholders — substitute the IDs you see in your own `movie undo --list`.
 
 <details><summary><strong>✅ Expected output</strong></summary>
 
@@ -278,6 +284,8 @@ movie stats
 ```
 
 > **Args:** `1` is a **media ID** (`movie ls`). `favorite` is any tag name you choose — letters, digits, dashes. `movie watch list` and `movie stats` take no args.
+
+> **Assumptions:** Library is non-empty (`movie scan` has run), `tmdb_api_key` is set for `movie suggest` / `movie discover`, and media ID `1` exists. Stats numbers reflect your own library, not the sample.
 
 <details><summary><strong>✅ Expected output</strong></summary>
 
@@ -321,6 +329,8 @@ movie logs | Tee-Object -FilePath movie.log
 
 > **Args:** All of these run with no required args. `movie rest --open` opens the dashboard in your browser; add `--port 8080` to override the default port. `movie export` writes to stdout unless you pass `--out <file>`.
 
+> **Assumptions:** Default port `7777` is free for `movie rest`, the current working directory is writable for `movie export --out`, and the DB exists at the configured path. Stale-entry IDs (`412/418`) only appear if files were removed outside the CLI.
+
 <details><summary><strong>✅ Expected output</strong></summary>
 
 ```text
@@ -359,6 +369,8 @@ movie config set tmdb_api_key $env:TMDB_KEY
 ```
 
 > **Args:** `tmdb_api_key` is the **config key name** (others: `source_folder`, `default_player`, `log_level`). `YOUR_KEY` is a real TMDb v3 API key — get one at https://www.themoviedb.org/settings/api. `movie version` and `movie update` take no args.
+
+> **Assumptions:** The config file exists at its default OS-specific path (created automatically on first run), the user has write access to it, and `movie update` has network access to GitHub releases. Replace `YOUR_KEY` with a real TMDb v3 key.
 
 <details><summary><strong>✅ Expected output</strong></summary>
 
