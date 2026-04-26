@@ -372,12 +372,14 @@ All data lives in `./data/` at the project root.
 </div>
 
 Each section below shows a real-world example of what the command does.
-Click any thumbnail to view full-size on GitHub.
+Each thumbnail is a short looping walkthrough — hover or click to view the full-size still.
 
 ### Scanning & Library
 
 <p align="center">
-  <img src="assets/screenshots/cmd-scan-library.svg" alt="Example output of movie scan: matching files against TMDb and reporting matches" width="780">
+  <a href="assets/screenshots/cmd-scan-library.svg">
+    <img src="assets/screenshots/cmd-scan-library.gif" alt="Animated walkthrough of movie scan: matching files against TMDb and reporting matches" width="780">
+  </a>
   <br>
   <em>📸 <code>movie scan</code> walks a folder, cleans messy release names, and matches each file against TMDb.</em>
 </p>
@@ -404,7 +406,9 @@ movie info "The Batman"           # search by title
 ### File Management
 
 <p align="center">
-  <img src="assets/screenshots/cmd-file-management.svg" alt="Example output of movie move showing planned destinations and a batch confirmation" width="780">
+  <a href="assets/screenshots/cmd-file-management.svg">
+    <img src="assets/screenshots/cmd-file-management.gif" alt="Animated walkthrough of movie move showing planned destinations and a batch confirmation" width="780">
+  </a>
   <br>
   <em>📸 <code>movie move</code> previews the destination for every file before touching the filesystem — fully reversible with <code>movie undo</code>.</em>
 </p>
@@ -432,7 +436,9 @@ cd $(movie cd Movies)             # navigate to scanned folder
 ### History & Undo
 
 <p align="center">
-  <img src="assets/screenshots/cmd-history-undo.svg" alt="Example output of movie undo --list followed by movie undo --id 42 reverting a batch of moves" width="780">
+  <a href="assets/screenshots/cmd-history-undo.svg">
+    <img src="assets/screenshots/cmd-history-undo.gif" alt="Animated walkthrough of movie undo --list followed by movie undo --id 42 reverting a batch of moves" width="780">
+  </a>
   <br>
   <em>📸 Every move, rename, scan, and delete is tracked. <code>movie undo --list</code> shows what can be reversed; <code>movie redo</code> re-applies it.</em>
 </p>
@@ -460,7 +466,9 @@ movie history                     # view full operation history
 ### Discovery & Organization
 
 <p align="center">
-  <img src="assets/screenshots/cmd-discovery.svg" alt="Example output of movie suggest showing personalized recommendations and trending titles" width="780">
+  <a href="assets/screenshots/cmd-discovery.svg">
+    <img src="assets/screenshots/cmd-discovery.gif" alt="Animated walkthrough of movie suggest showing personalized recommendations and trending titles" width="780">
+  </a>
   <br>
   <em>📸 <code>movie suggest</code> reads your library tastes and surfaces both personalized picks and trending titles from TMDb.</em>
 </p>
@@ -502,7 +510,9 @@ movie duplicates                  # find duplicate entries
 ### Maintenance & Debugging
 
 <p align="center">
-  <img src="assets/screenshots/cmd-maintenance.svg" alt="Example output of movie stats showing library counts, total size, and a top-genres bar chart" width="780">
+  <a href="assets/screenshots/cmd-maintenance.svg">
+    <img src="assets/screenshots/cmd-maintenance.gif" alt="Animated walkthrough of movie stats showing library counts, total size, and a top-genres bar chart" width="780">
+  </a>
   <br>
   <em>📸 <code>movie stats</code> renders an instant overview — counts, storage used, top genres, and average rating.</em>
 </p>
@@ -532,7 +542,9 @@ movie export -o ~/library.json    # export full library as JSON
 ### Configuration & System
 
 <p align="center">
-  <img src="assets/screenshots/cmd-config-system.svg" alt="Example output of movie config showing config keys, setting tmdb_api_key, and movie version output" width="780">
+  <a href="assets/screenshots/cmd-config-system.svg">
+    <img src="assets/screenshots/cmd-config-system.gif" alt="Animated walkthrough of movie config showing config keys, setting tmdb_api_key, and movie version output" width="780">
+  </a>
   <br>
   <em>📸 <code>movie config</code> shows every setting; <code>movie version</code> prints the exact build for bug reports.</em>
 </p>
