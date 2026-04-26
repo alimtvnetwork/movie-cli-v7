@@ -250,6 +250,55 @@ if _WHITELIST_COLLISIONS:
     )
 
 
+# ─── Heading-side ignore list (skip generation + drift reporting) ───────────
+# Names listed here are skipped by both the writer and `--check`:
+#   - the writer leaves the marker region's body untouched (or, if the
+#     markers don't exist yet, doesn't insert anything)
+#   - `--check` does NOT report the region as drifted even when its body
+#     differs from what the script would otherwise generate
+#
+# This is the heading/region-side counterpart to ANCHOR_WHITELIST — that one
+# silences anchor *targets*, this one silences entire generated *regions*.
+# Use it when a section is being deprecated, hand-curated for a release, or
+# temporarily frozen while you migrate something.
+#
+# Region names match exactly what `--check` prints (see _all_regions()):
+#   "COMMAND-INDEX:HTML"
+#   "COMMAND-INDEX:TEXT"
+#   "SECTION-CMDS:Scanning & Library"
+#   "SECTION-CMDS:File Management"          ... etc for each SECTION_LABELS entry
+#
+# Keep this list short and add a one-line comment per entry explaining why
+# the region is frozen. Unknown names abort the script — typos can't silently
+# leave a real region unmanaged.
+IGNORED_REGIONS: tuple[str, ...] = (
+    # e.g. "SECTION-CMDS:File Management",  # frozen during v3 migration
+)
+
+
+def _canonical_region_names() -> frozenset[str]:
+    """Every region name the script knows how to generate. Used for the typo guard."""
+    names = {"COMMAND-INDEX:HTML", "COMMAND-INDEX:TEXT"}
+    for label in SECTION_LABELS:
+        names.add(f"SECTION-CMDS:{label}")
+    return frozenset(names)
+
+
+_IGNORED_REGION_SET: frozenset[str] = frozenset(IGNORED_REGIONS)
+_UNKNOWN_IGNORED = _IGNORED_REGION_SET - _canonical_region_names()
+if _UNKNOWN_IGNORED:
+    sys.exit(
+        "error: IGNORED_REGIONS contains unknown region name(s): "
+        f"{sorted(_UNKNOWN_IGNORED)}. Valid names: "
+        f"{sorted(_canonical_region_names())}"
+    )
+
+
+def _is_region_ignored(name: str) -> bool:
+    """True if `name` is in the IGNORED_REGIONS allowlist."""
+    return name in _IGNORED_REGION_SET
+
+
 def _row_id(command: str) -> str:
     """Stable per-row anchor: 'movie scan <path> --dry-run' → 'movie-scan-path-dry-run'."""
     slug = re.sub(r"[<>]", "", command)
