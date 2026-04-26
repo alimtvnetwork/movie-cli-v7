@@ -742,10 +742,63 @@ def _nearest_heading_above_levels(
     return found
 
 
+# Default breadcrumb level set when --breadcrumb-levels is not passed.
+# Frozen so it can safely be reused as a default across calls.
+_DEFAULT_BREADCRUMB_LEVELS: frozenset[int] = frozenset({2})
+
+
+def _parse_breadcrumb_levels(raw: str) -> frozenset[int]:
+    """
+    Parse the --breadcrumb-levels CSV value into a frozenset[int] of
+    permitted heading levels (1-6).
+
+    Behaviour:
+      * Empty tokens (from "1,,2") are silently ignored.
+      * Non-integer tokens emit a stderr warning and are dropped.
+      * Integers outside 1-6 are clamped to the nearest endpoint and a
+        stderr warning names the original value (so the user can see
+        what was clamped, rather than silently morphing 0 into 1).
+      * Duplicates collapse via the set.
+      * If the result is empty after parsing, falls back to H2 with a
+        warning so --check always produces some breadcrumb.
+    """
+    levels: set[int] = set()
+    for token in raw.split(","):
+        token = token.strip()
+        if not token:
+            continue
+        try:
+            value = int(token)
+        except ValueError:
+            sys.stderr.write(
+                f"warning: --breadcrumb-levels: ignoring non-integer "
+                f"token {token!r}\n"
+            )
+            continue
+        if value < 1:
+            sys.stderr.write(
+                f"warning: --breadcrumb-levels: clamping {value} to 1\n"
+            )
+            value = 1
+        elif value > 6:
+            sys.stderr.write(
+                f"warning: --breadcrumb-levels: clamping {value} to 6\n"
+            )
+            value = 6
+        levels.add(value)
+    if not levels:
+        sys.stderr.write(
+            "warning: --breadcrumb-levels: no valid levels parsed, "
+            "falling back to H2 only\n"
+        )
+        return _DEFAULT_BREADCRUMB_LEVELS
+    return frozenset(levels)
+
+
 def _format_anchor_change(
     content: str,
     change: str,
-    breadcrumb_levels: frozenset[int] = frozenset({2}),
+    breadcrumb_levels: frozenset[int] = _DEFAULT_BREADCRUMB_LEVELS,
 ) -> str:
     """
     Decorate one anchor-change record with its source line and a region tag.
