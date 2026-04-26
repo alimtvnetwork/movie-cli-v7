@@ -14,23 +14,45 @@ import (
 	"github.com/alimtvnetwork/movie-cli-v6/errlog"
 )
 
-var lsFormat string
+var (
+	lsFormat  string
+	lsAll     bool
+	lsMissing bool
+)
 
 var movieLsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List scanned movies and TV shows from your library",
-	Long: `Lists scan-indexed movies and TV shows (items with a known file path).
-Only items added via 'movie scan' are shown.
-Press N for next page, P for previous, Q to quit.
+	Long: `Lists movies and TV shows from your library.
 
-Use --format json to output all items as JSON to stdout for piping.
-Use --format table to output all items as a formatted table (no pager).`,
+Filter behavior (mutually exclusive — pick at most one):
+  (default)   Only SCANNED items — rows that have a known file path on disk
+              (added via 'movie scan'). Metadata-only entries are hidden.
+  --all       Every item in the database, including metadata-only entries
+              that have no associated file path (e.g. discovered via TMDb,
+              imported manually, or whose file was later removed).
+  --missing   Only items WITHOUT a file path (metadata-only / never scanned
+              or whose original file is gone). Useful to spot orphaned
+              entries or rows that need a rescan.
+
+If both --all and --missing are passed, --missing wins (more specific filter).
+
+Navigation: press N for next page, P for previous, Q to quit.
+
+Output formats:
+  --format default  Interactive paged view (default).
+  --format json     Emit all matching items as JSON to stdout (for piping).
+  --format table    Emit all matching items as a formatted table (no pager).`,
 	Run: runMovieLs,
 }
 
 func init() {
 	movieLsCmd.Flags().StringVar(&lsFormat, "format", "default",
 		"output format: default, json, or table")
+	movieLsCmd.Flags().BoolVar(&lsAll, "all", false,
+		"include every item, even metadata-only entries with no file path")
+	movieLsCmd.Flags().BoolVar(&lsMissing, "missing", false,
+		"only show items WITHOUT a file path (metadata-only / unscanned)")
 }
 
 // lsJSONItem represents a single media item in JSON output.
@@ -71,8 +93,21 @@ func runMovieLs(cmd *cobra.Command, args []string) {
 	}
 }
 
+// resolveLsFilterMode maps the --all / --missing flags to a DB filter mode.
+// SHARED: used by JSON, table, and interactive ls paths to keep filter
+// semantics consistent. --missing wins over --all when both are set.
+func resolveLsFilterMode() string {
+	if lsMissing {
+		return "missing"
+	}
+	if lsAll {
+		return "all"
+	}
+	return "scanned"
+}
+
 func runMovieLsJSON(database *db.DB) {
-	allMedia, err := database.ListMedia(0, 100000)
+	allMedia, err := database.ListMediaFiltered(0, 100000, resolveLsFilterMode())
 	if err != nil {
 		errlog.Error(msgDatabaseError, err)
 		return
@@ -102,14 +137,15 @@ func toLsJSONItem(m *db.Media) lsJSONItem {
 
 func runMovieLsInteractive(database *db.DB) {
 	pageSize := resolvePageSize(database)
+	mode := resolveLsFilterMode()
 
-	total, countErr := database.CountMedia("")
+	total, countErr := database.CountMediaFiltered(mode)
 	if countErr != nil {
 		errlog.Error(msgDatabaseError, countErr)
 		return
 	}
 	if total == 0 {
-		fmt.Println("📭 No media found. Run 'movie scan <folder>' first.")
+		fmt.Println(emptyLsMessage(mode))
 		return
 	}
 
@@ -117,7 +153,7 @@ func runMovieLsInteractive(database *db.DB) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
-		media, listErr := database.ListMedia(offset, pageSize)
+		media, listErr := database.ListMediaFiltered(offset, pageSize, mode)
 		if listErr != nil {
 			errlog.Error("Error: %v", listErr)
 			return
@@ -133,6 +169,18 @@ func runMovieLsInteractive(database *db.DB) {
 		if offset < 0 {
 			return
 		}
+	}
+}
+
+// emptyLsMessage returns a filter-aware empty-state hint.
+func emptyLsMessage(mode string) string {
+	switch mode {
+	case "missing":
+		return "✅ No metadata-only entries — every item has a file path."
+	case "all":
+		return "📭 Library is empty. Run 'movie scan <folder>' to add items."
+	default:
+		return "📭 No scanned media found. Run 'movie scan <folder>' first."
 	}
 }
 
