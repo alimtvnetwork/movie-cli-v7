@@ -212,6 +212,28 @@ EXTRA_ANCHORS: dict[str, str] = {
 }
 
 
+# ─── Custom-anchor whitelist (escape hatch) ─────────────────────────────────
+# Anchors listed here are NEVER rewritten and NEVER reported as stale by
+# `--check`, even when their fingerprint would otherwise match a managed
+# label. Use this for legacy deep-links you intentionally want to keep
+# pointing at a custom HTML target (e.g. a hand-authored `<a name="…">`
+# anchor that predates the current heading slugs).
+#
+# Matching is by alphanumeric fingerprint — same rule the rewriter uses —
+# so every casing/punctuation variant of an entry is whitelisted together:
+#   "legacy-quick-start"  → also covers #legacy_quick_start, #LegacyQuickStart
+#
+# Keep this list short and add a one-line comment per entry explaining why
+# the link can't be migrated to the canonical slug.
+ANCHOR_WHITELIST: tuple[str, ...] = (
+    # e.g. "legacy-quick-start",  # keeps an old blog post deep-link working
+)
+
+_WHITELIST_FINGERPRINTS: frozenset[str] = frozenset(
+    re.sub(r"[^a-z0-9]", "", a.lower()) for a in ANCHOR_WHITELIST
+)
+
+
 def _row_id(command: str) -> str:
     """Stable per-row anchor: 'movie scan <path> --dry-run' → 'movie-scan-path-dry-run'."""
     slug = re.sub(r"[<>]", "", command)
