@@ -34,6 +34,7 @@ The --check mode is what CI runs to enforce no-drift.
 from __future__ import annotations
 
 import argparse
+import difflib
 import html
 import pathlib
 import re
