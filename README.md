@@ -302,7 +302,7 @@ One line per command. Search lands on the exact row; the section name on the rig
 
 **Click the command** to jump straight to its README subsection (with the bash/PowerShell blocks, args, expected output, and "if it differs" notes). Each row also carries a stable anchor (e.g. `#movie-scan`, `#movie-undo-list`) shown in the rightmost column — share that fragment and links always land on the exact row. The **Example keyword** column gives you a minimal command-shaped placeholder (e.g. `movie ls --year `, `movie scan --dry-run `, `movie config set tmdb_api_key `) — paste it into <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> to find every place that argument pattern appears in this README (index row, usage block, expected output, and tips).
 
-> 🔄 **Both the HTML table below and the plain-text block further down are auto-generated** from a single source-of-truth list in `scripts/gen-command-index.py`. Edit only that file when adding/renaming a command, then run `python3 scripts/gen-command-index.py` to refresh both blocks. CI runs `--check` on every push and fails if they drift apart.
+> 🔄 **Both the HTML table below and the plain-text block further down are auto-generated** from a single source-of-truth list in `scripts/gen-command-index.py`. Edit only that file when adding/renaming a command, then run `python3 scripts/gen-command-index.py` — it refreshes both blocks **and** rewrites every stale link to one of the six command-section anchors (`#scanning--library`, `#file-management`, `#history--undo`, `#discovery--organization`, `#maintenance--debugging`, `#configuration--system`) anywhere else in the README. CI runs `--check` on every push and fails with a `file:line` annotation if anything is still stale.
 
 <!-- COMMAND-INDEX:HTML:BEGIN -->
 <table>
@@ -453,7 +453,7 @@ movie watch list --sort <field>            →   Discovery & Organization   #mov
 
 </details>
 
-#### 📂 [Scanning & Library](#scanning--library)
+#### 📂 [Scanning & Library](#scan--library)
 Match files against TMDb, browse the library.
 ```bash
 movie scan
