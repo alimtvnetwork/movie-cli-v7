@@ -447,6 +447,104 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
     return new_content, changes
 
 
+# ─── Rich --check diagnostics ───────────────────────────────────────────────
+# These helpers re-derive what changed (anchor lines + which generated region
+# drifted) so `--check` can show actionable context, not just "stale".
+# They never mutate state; they're only read from the --check failure branch.
+
+# An auto-generated region this script owns. `name` is the human label printed
+# in error output; `begin`/`end` are the marker comments wrapping the block.
+_Region = tuple[str, str, str]  # (name, begin_marker, end_marker)
+
+
+def _all_regions() -> list[_Region]:
+    """Every begin/end marker pair this script regenerates, in scan order."""
+    regions: list[_Region] = [
+        ("COMMAND-INDEX:HTML", HTML_BEGIN, HTML_END),
+        ("COMMAND-INDEX:TEXT", TEXT_BEGIN, TEXT_END),
+    ]
+    for label in SECTION_LABELS:
+        regions.append((
+            f"SECTION-CMDS:{label}",
+            SECTION_CMDS_BEGIN.format(label=label),
+            SECTION_CMDS_END.format(label=label),
+        ))
+    return regions
+
+
+def _extract_region_body(content: str, begin: str, end: str) -> str | None:
+    """Return the text strictly between `begin\\n` and `\\n{end}`, or None if absent."""
+    i = content.find(begin)
+    if i == -1:
+        return None
+    body_start = i + len(begin) + 1  # skip the trailing '\n' of the BEGIN line
+    j = content.find(end, body_start)
+    if j == -1:
+        return None
+    return content[body_start:j - 1]  # strip the leading '\n' before END
+
+
+def _line_at(content: str, line_no: int) -> str:
+    """1-indexed line lookup, returning '' for out-of-range to keep callers simple."""
+    lines = content.splitlines()
+    if 1 <= line_no <= len(lines):
+        return lines[line_no - 1]
+    return ""
+
+
+def _format_anchor_change(content: str, change: str) -> str:
+    """
+    Decorate one anchor-change record with its source line and a region tag.
+
+    Input format (produced by _rewrite_section_anchors):
+        '  line 42: #FOO → #foo  (Foo)'
+    Output:
+        '  line 42 [outside index]: #FOO → #foo  (Foo)\\n      > <line text>'
+    """
+    m = re.match(r"\s*line (\d+):", change)
+    if not m:
+        # Should never happen, but degrade gracefully rather than crash --check.
+        return change
+    line_no = int(m.group(1))
+    src = _line_at(content, line_no).rstrip()
+    # The rewriter already excludes anchors inside generated regions, so every
+    # reported change is by construction outside them — surface that explicitly
+    # so reviewers know where to edit.
+    tagged = re.sub(r"line (\d+):", r"line \1 [outside index]:", change, count=1)
+    if src:
+        tagged += f"\n      > {src}"
+    return tagged
+
+
+def _stale_regions(original: str, updated: str) -> list[tuple[str, str]]:
+    """
+    Compare each owned region in `original` vs `updated`. Return a list of
+    (region_name, unified_diff_text) for every region whose body changed.
+    Regions missing from `original` (e.g. Troubleshooting has no markers) are
+    silently skipped — they're not drift, they're just not wired up.
+    """
+    drifted: list[tuple[str, str]] = []
+    for name, begin, end in _all_regions():
+        before = _extract_region_body(original, begin, end)
+        after = _extract_region_body(updated, begin, end)
+        if before is None or after is None:
+            continue  # region not present — not stale, just absent
+        if before == after:
+            continue
+        diff = "\n".join(
+            difflib.unified_diff(
+                before.splitlines(),
+                after.splitlines(),
+                fromfile=f"{name} (current)",
+                tofile=f"{name} (expected)",
+                n=3,
+                lineterm="",
+            )
+        )
+        drifted.append((name, diff))
+    return drifted
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="exit 1 if README would change")
