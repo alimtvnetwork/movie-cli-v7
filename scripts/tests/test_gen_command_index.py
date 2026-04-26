@@ -200,16 +200,30 @@ class WhitelistTests(unittest.TestCase):
         # without affecting the others or any later import.
         self._saved_list = gci.ANCHOR_WHITELIST
         self._saved_fp = gci._WHITELIST_FINGERPRINTS
+        self._saved_by_fp = gci._WHITELIST_BY_FINGERPRINT
 
     def tearDown(self):
         gci.ANCHOR_WHITELIST = self._saved_list
         gci._WHITELIST_FINGERPRINTS = self._saved_fp
+        gci._WHITELIST_BY_FINGERPRINT = self._saved_by_fp
 
-    def _set_whitelist(self, entries: tuple[str, ...]):
+    def _set_whitelist(self, entries):
+        """
+        Install a whitelist for one test. Accepts the same shapes the real
+        constant accepts — bare strings (global) or (anchor, scope) tuples.
+        Mirrors the module-load logic in gen-command-index.py so behaviour
+        under test exactly matches production.
+        """
         import re
         gci.ANCHOR_WHITELIST = entries
+        by_fp: dict[str, set] = {}
+        for entry in entries:
+            anchor, scope = gci._normalize_whitelist_entry(entry)
+            fp = re.sub(r"[^a-z0-9]", "", anchor.lower())
+            by_fp.setdefault(fp, set()).add(scope)
+        gci._WHITELIST_BY_FINGERPRINT = by_fp
         gci._WHITELIST_FINGERPRINTS = frozenset(
-            re.sub(r"[^a-z0-9]", "", a.lower()) for a in entries
+            fp for fp, scopes in by_fp.items() if None in scopes
         )
 
     def test_whitelisted_fingerprint_is_left_verbatim(self):
@@ -231,6 +245,62 @@ class WhitelistTests(unittest.TestCase):
             new, changes = gci._rewrite_section_anchors(body)
             self.assertEqual(new, body, f"whitelist failed to cover variant {raw}")
             self.assertEqual(changes, [])
+
+    # ─── Per-section scoped entries ─────────────────────────────────────────
+
+    def test_scoped_entry_only_suppresses_managed_anchor_in_its_section(self):
+        # `quick_start` fingerprint-matches the managed Quick Start label, so
+        # the rewriter would normally rewrite it to `#quick-start`. A scoped
+        # whitelist entry must allow that variant inside the Quick Start
+        # section but still rewrite it elsewhere.
+        self._set_whitelist((("quick_start", "Quick Start"),))
+        body = (
+            "## Quick Start\n"
+            "[inside](#quick_start)\n"
+            "## Other\n"
+            "[outside](#quick_start)\n"
+        )
+        new, changes = gci._rewrite_section_anchors(body)
+        # Inside Quick Start: untouched
+        self.assertIn("[inside](#quick_start)", new)
+        # Outside: canonicalised
+        self.assertIn("[outside](#quick-start)", new)
+        # Exactly one rewrite reported, and it's the outside one.
+        self.assertEqual(len(changes), 1)
+        self.assertIn("#quick_start", changes[0])
+        self.assertIn("#quick-start", changes[0])
+
+    def test_global_and_scoped_entries_for_same_fingerprint_combine(self):
+        # If both a global and a scoped entry exist for the same fingerprint,
+        # the global one wins (every occurrence is suppressed). Documents the
+        # union semantics rather than letting it be discovered by accident.
+        self._set_whitelist(("quick_start", ("quick_start", "Quick Start")))
+        body = "## Other\n[outside](#quick_start)\n"
+        new, changes = gci._rewrite_section_anchors(body)
+        self.assertEqual(new, body)
+        self.assertEqual(changes, [])
+
+    def test_invalid_scope_label_rejected_at_normalize(self):
+        # "Sample setup" isn't in _SCOPABLE_LABELS — must abort, not silently
+        # downgrade to a global entry that would surprise the user.
+        with self.assertRaises(SystemExit):
+            gci._normalize_whitelist_entry(("legacy-link", "Sample setup"))
+
+    def test_malformed_entry_rejected(self):
+        with self.assertRaises(SystemExit):
+            gci._normalize_whitelist_entry(("only-one-element",))  # type: ignore[arg-type]
+        with self.assertRaises(SystemExit):
+            gci._normalize_whitelist_entry(123)  # type: ignore[arg-type]
+
+    def test_scoped_entry_no_op_when_section_absent(self):
+        # If the README doesn't contain the scoped section heading, a scoped
+        # entry must NOT accidentally suppress matches elsewhere. It should
+        # behave as if the entry didn't exist for that document.
+        self._set_whitelist((("quick_start", "Quick Start"),))
+        body = "## Other\n[x](#quick_start)\n"
+        new, changes = gci._rewrite_section_anchors(body)
+        self.assertIn("#quick-start", new)  # rewritten
+        self.assertEqual(len(changes), 1)
 
 
 class CheckDiagnosticsTests(unittest.TestCase):

@@ -224,19 +224,82 @@ EXTRA_ANCHORS: dict[str, str] = {
 # so every casing/punctuation variant of an entry is whitelisted together:
 #   "legacy-quick-start"  → also covers #legacy_quick_start, #LegacyQuickStart
 #
+# Two entry shapes are supported:
+#   "legacy-link"                            — global: applies anywhere in README
+#   ("legacy-link", "Quick Start")           — scoped: applies ONLY when the
+#                                              link appears in the document
+#                                              section under the named heading
+#
+# Scoped entries restrict the suppression to one of these section labels:
+#   Installation, Quick Start, Troubleshooting
+# A scoped entry is a no-op for occurrences of the same anchor in OTHER
+# sections — those are still reported and rewritten as normal.
+#
 # Keep this list short and add a one-line comment per entry explaining why
 # the link can't be migrated to the canonical slug.
-ANCHOR_WHITELIST: tuple[str, ...] = (
-    # e.g. "legacy-quick-start",  # keeps an old blog post deep-link working
+ANCHOR_WHITELIST: tuple[str | tuple[str, str], ...] = (
+    # e.g. "legacy-quick-start",                       # global
+    # e.g. ("legacy-quick-start", "Quick Start"),      # only under ## Quick Start
 )
 
+# Set of labels that scoped whitelist entries are allowed to reference. Kept
+# narrow (just the three EXTRA_ANCHOR_LABELS) so a scoped entry can never be
+# attached to a command-section heading where the rewriter is the source of
+# truth — those should stay either fully managed or fully whitelisted.
+_SCOPABLE_LABELS: frozenset[str] = frozenset(EXTRA_ANCHOR_LABELS)
+
+
+def _normalize_whitelist_entry(entry: str | tuple[str, str]) -> tuple[str, str | None]:
+    """
+    Return (anchor, scope_label_or_None). Aborts on malformed entries so a
+    typo in ANCHOR_WHITELIST can never silently downgrade a scoped rule
+    to a no-op.
+    """
+    if isinstance(entry, str):
+        return (entry, None)
+    if (
+        isinstance(entry, tuple)
+        and len(entry) == 2
+        and isinstance(entry[0], str)
+        and isinstance(entry[1], str)
+    ):
+        anchor, scope = entry
+        if scope not in _SCOPABLE_LABELS:
+            sys.exit(
+                f"error: ANCHOR_WHITELIST entry ({anchor!r}, {scope!r}) — "
+                f"scope label {scope!r} is not one of "
+                f"{sorted(_SCOPABLE_LABELS)}"
+            )
+        return (anchor, scope)
+    sys.exit(
+        f"error: ANCHOR_WHITELIST entry has unexpected shape: {entry!r}. "
+        "Expected a bare string or a (anchor, section_label) 2-tuple."
+    )
+
+
+# Indexed by fingerprint → set of scopes (None means "global"). A fingerprint
+# can appear with multiple scopes; a link is suppressed if its containing
+# section matches ANY of them, or if any entry for the fingerprint is global.
+_WHITELIST_BY_FINGERPRINT: dict[str, set[str | None]] = {}
+for _entry in ANCHOR_WHITELIST:
+    _anchor, _scope = _normalize_whitelist_entry(_entry)
+    _fp = re.sub(r"[^a-z0-9]", "", _anchor.lower())
+    _WHITELIST_BY_FINGERPRINT.setdefault(_fp, set()).add(_scope)
+
+# Backward-compat: code that pre-dates the per-section feature reads this
+# frozenset for global suppression. Only entries that have at least one
+# global occurrence count — scoped-only entries are NOT in this set so the
+# old short-circuit doesn't accidentally apply them everywhere.
 _WHITELIST_FINGERPRINTS: frozenset[str] = frozenset(
-    re.sub(r"[^a-z0-9]", "", a.lower()) for a in ANCHOR_WHITELIST
+    fp for fp, scopes in _WHITELIST_BY_FINGERPRINT.items() if None in scopes
 )
 
 # Safety net: a whitelist entry that fingerprint-collides with a managed
 # label would silently disable that label's auto-fix. That's almost never
-# what the maintainer wants — fail loudly at startup instead.
+# what the maintainer wants — fail loudly at startup instead. We only
+# enforce this for *global* entries; a scoped entry is allowed to share a
+# fingerprint with a managed label because the scope itself prevents the
+# whitelist from short-circuiting outside that one section.
 _MANAGED_FINGERPRINTS: frozenset[str] = frozenset(
     re.sub(r"[^a-z0-9]", "", lbl.lower())
     for lbl in (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
@@ -472,6 +535,47 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
     def _in_skip(pos: int) -> bool:
         return any(s <= pos < e for s, e in skip_spans)
 
+    # Per-section whitelist support: pre-compute the H2 section span for each
+    # _SCOPABLE_LABELS entry so we can answer "what scoped section contains
+    # position N?" in O(1). Sections that don't appear in this README are
+    # simply absent from the map — a scoped whitelist entry pointing at one
+    # of them then never matches anything, which is the safe outcome.
+    scope_spans: dict[str, tuple[int, int]] = {}
+    if _WHITELIST_BY_FINGERPRINT:
+        # Only bother scanning the document when at least one whitelist
+        # entry exists — keeps the unmodified-default path zero-cost.
+        h2_pat = re.compile(r"^## +(.+?)\s*$", flags=re.MULTILINE)
+        h2_matches = list(h2_pat.finditer(content))
+        for idx, m in enumerate(h2_matches):
+            heading_text = m.group(1).strip()
+            # Strip leading emoji + whitespace before comparing — the
+            # README uses headings like "## ✨ Highlights" but "## Quick Start"
+            # for the scopable labels. Belt and braces: also try the raw text.
+            stripped = re.sub(r"^[^A-Za-z]+", "", heading_text).strip()
+            for label in _SCOPABLE_LABELS:
+                if label in (heading_text, stripped):
+                    end = h2_matches[idx + 1].start() if idx + 1 < len(h2_matches) else len(content)
+                    # First-occurrence wins; later duplicates are ignored so a
+                    # single label never has ambiguous spans.
+                    scope_spans.setdefault(label, (m.start(), end))
+
+    def _scope_at(pos: int) -> str | None:
+        """Return the scopable section label whose span contains `pos`, or None."""
+        for label, (s, e) in scope_spans.items():
+            if s <= pos < e:
+                return label
+        return None
+
+    def _is_whitelisted(fp: str, pos: int) -> bool:
+        scopes = _WHITELIST_BY_FINGERPRINT.get(fp)
+        if not scopes:
+            return False
+        if None in scopes:
+            return True  # at least one global entry covers this fingerprint
+        # All entries for this fingerprint are scoped — only suppress when
+        # the link is physically inside one of those sections.
+        return _scope_at(pos) in scopes
+
     changes: list[str] = []
 
     # Patterns: Markdown link target `(#xxx)` and HTML attribute `href="#xxx"`.
@@ -483,7 +587,7 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
             return match.group(0)
         raw = match.group(1)
         fp = re.sub(r"[^a-z0-9]", "", raw.lower())
-        if fp in _WHITELIST_FINGERPRINTS:
+        if _is_whitelisted(fp, match.start()):
             return match.group(0)  # explicitly whitelisted — leave verbatim
         label = fingerprint_to_label.get(fp)
         if label is None:
@@ -614,8 +718,11 @@ def main() -> int:
 
     if args.list_sections:
         all_labels = (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
+        # Pre-normalize whitelist entries so width math and rendering work
+        # for both the bare-string and (anchor, scope) tuple forms.
+        whitelist_normalized = [_normalize_whitelist_entry(e) for e in ANCHOR_WHITELIST]
         width = max((len(label) for label in all_labels), default=0)
-        width = max(width, *(len(a) for a in ANCHOR_WHITELIST), 0)
+        width = max(width, *(len(anchor) for anchor, _ in whitelist_normalized), 0)
         print("# command sections")
         for label in SECTION_LABELS:
             print(f"{label.ljust(width)}  ->  {SECTION_ANCHORS[label]}")
@@ -623,10 +730,11 @@ def main() -> int:
         for label in EXTRA_ANCHOR_LABELS:
             print(f"{label.ljust(width)}  ->  {EXTRA_ANCHORS[label]}")
         print("# whitelist (never rewritten, never reported)")
-        if not ANCHOR_WHITELIST:
+        if not whitelist_normalized:
             print("(empty)")
-        for anchor in ANCHOR_WHITELIST:
-            print(f"{anchor.ljust(width)}  ->  #{anchor}  [verbatim]")
+        for anchor, scope in whitelist_normalized:
+            tag = "[verbatim]" if scope is None else f"[scoped to ## {scope}]"
+            print(f"{anchor.ljust(width)}  ->  #{anchor}  {tag}")
         print("# ignored regions (never regenerated, drift suppressed)")
         if not IGNORED_REGIONS:
             print("(empty)")
