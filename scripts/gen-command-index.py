@@ -458,13 +458,19 @@ def main() -> int:
 
     if args.list_sections:
         all_labels = (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
-        width = max(len(label) for label in all_labels)
+        width = max((len(label) for label in all_labels), default=0)
+        width = max(width, *(len(a) for a in ANCHOR_WHITELIST), 0)
         print("# command sections")
         for label in SECTION_LABELS:
             print(f"{label.ljust(width)}  ->  {SECTION_ANCHORS[label]}")
         print("# extra doc anchors (auto-fix only)")
         for label in EXTRA_ANCHOR_LABELS:
             print(f"{label.ljust(width)}  ->  {EXTRA_ANCHORS[label]}")
+        print("# whitelist (never rewritten, never reported)")
+        if not ANCHOR_WHITELIST:
+            print("(empty)")
+        for anchor in ANCHOR_WHITELIST:
+            print(f"{anchor.ljust(width)}  ->  #{anchor}  [verbatim]")
         return 0
 
     original = README.read_text(encoding="utf-8")
