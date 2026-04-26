@@ -418,6 +418,94 @@ class NearestHeadingTests(unittest.TestCase):
         self.assertNotIn("under:", decorated)
         self.assertIn("> [bad](#FILE_MANAGEMENT)", decorated)
 
+    def test_ignores_atx_inside_indented_code_block(self):
+        # CommonMark: a line indented with 4+ spaces is an indented code
+        # block, so a `#` there is code, not a heading.
+        content = (
+            "## Real\n"               # line 1
+            "\n"                       # line 2
+            "    # not a heading\n"   # line 3 (4-space indent → code)
+            "[link]\n"                # line 4
+        )
+        result = gci._nearest_heading_above(content, 4)
+        self.assertEqual(result, (1, "## Real"))
+
+    def test_ignores_atx_inside_tab_indented_code_block(self):
+        # A leading tab also marks an indented code block.
+        content = (
+            "## Real\n"          # line 1
+            "\n"                  # line 2
+            "\t# not heading\n"  # line 3 (tab → code)
+            "[link]\n"           # line 4
+        )
+        result = gci._nearest_heading_above(content, 4)
+        self.assertEqual(result, (1, "## Real"))
+
+    def test_tracks_tilde_fences(self):
+        # ~~~ fences must be recognised exactly like ``` fences.
+        content = (
+            "## Real\n"           # line 1
+            "~~~\n"               # line 2 (open)
+            "# not heading\n"    # line 3
+            "~~~\n"               # line 4 (close)
+            "[link]\n"            # line 5
+        )
+        result = gci._nearest_heading_above(content, 5)
+        self.assertEqual(result, (1, "## Real"))
+
+    def test_inner_shorter_fence_does_not_close_outer(self):
+        # CommonMark: a closing fence must use the same char and length
+        # ≥ the opener. An inner ``` inside a ```` block is content.
+        content = (
+            "## Real\n"               # line 1
+            "````\n"                  # line 2 (open, len 4)
+            "```\n"                   # line 3 (NOT a close — too short)
+            "# still inside fence\n" # line 4
+            "```\n"                   # line 5 (still not a close)
+            "````\n"                  # line 6 (close)
+            "[link]\n"                # line 7
+        )
+        result = gci._nearest_heading_above(content, 7)
+        self.assertEqual(result, (1, "## Real"))
+
+    def test_inner_different_char_fence_does_not_toggle(self):
+        # An inner ~~~ inside a ``` block must not close it.
+        content = (
+            "## Real\n"            # line 1
+            "```\n"                # line 2 (open ` fence)
+            "~~~\n"                # line 3 (different char — content)
+            "# not heading\n"     # line 4
+            "~~~\n"                # line 5 (still content)
+            "```\n"                # line 6 (close)
+            "[link]\n"             # line 7
+        )
+        result = gci._nearest_heading_above(content, 7)
+        self.assertEqual(result, (1, "## Real"))
+
+    def test_indented_atx_up_to_three_spaces_still_counts(self):
+        # CommonMark: ATX headings may have up to 3 leading spaces.
+        content = (
+            "intro\n"             # line 1
+            "   ## Indented\n"   # line 2 (3 spaces — still a heading)
+            "[link]\n"            # line 3
+        )
+        result = gci._nearest_heading_above(content, 3)
+        # Stored verbatim including the 3-space indent.
+        self.assertEqual(result, (2, "   ## Indented"))
+
+    def test_fence_with_backticks_in_info_string_is_not_a_fence(self):
+        # ``` openers forbid backticks in the info string. A line like
+        # "```foo`bar" is not a real fence opener, so a later '#' line
+        # outside any real fence remains a heading candidate.
+        content = (
+            "## Real\n"             # line 1
+            "```foo`bar\n"          # line 2 (NOT a fence opener)
+            "## Inner Heading\n"    # line 3 (a real heading)
+            "[link]\n"              # line 4
+        )
+        result = gci._nearest_heading_above(content, 4)
+        self.assertEqual(result, (3, "## Inner Heading"))
+
 
 class IgnoredRegionsTests(unittest.TestCase):
     """IGNORED_REGIONS must suppress both generation and drift reporting."""
