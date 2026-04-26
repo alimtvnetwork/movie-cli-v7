@@ -605,6 +605,135 @@ class BreadcrumbLevelsTests(unittest.TestCase):
         )
 
 
+class SetextHeadingTests(unittest.TestCase):
+    """Setext (===/--- underline) heading detection in the breadcrumb helper."""
+
+    def test_h1_setext_recognised(self):
+        # 'Top' followed by '===' is an H1; reported at the text line.
+        content = (
+            "Top\n"        # line 1 (heading text)
+            "===\n"        # line 2 (underline)
+            "para\n"       # line 3
+            "[link]\n"     # line 4
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 4), (1, "Top"))
+
+    def test_h2_setext_recognised(self):
+        # 'Section' followed by '---' is an H2.
+        content = (
+            "Section\n"   # line 1
+            "---\n"        # line 2
+            "[link]\n"    # line 3
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 3), (1, "Section"))
+
+    def test_setext_h1_filtered_out_when_levels_excludes_1(self):
+        # H1 setext exists but levels={2} — must yield None, not the H1.
+        content = "Top\n===\n[link]\n"
+        self.assertIsNone(
+            gci._nearest_heading_above_levels(content, 3, frozenset({2}))
+        )
+
+    def test_setext_h2_picked_when_levels_is_h2_only(self):
+        # H2 setext should appear under the default H2-only breadcrumb.
+        content = "Section\n---\n[link]\n"
+        self.assertEqual(
+            gci._nearest_heading_above_levels(content, 3, frozenset({2})),
+            (1, "Section"),
+        )
+
+    def test_dash_underline_after_blank_is_thematic_break_not_heading(self):
+        # CommonMark: a '---' line preceded by a blank line is a thematic
+        # break, not a setext underline. It must NOT promote anything.
+        content = (
+            "## Real H2\n"   # line 1 (the only real heading)
+            "para\n"           # line 2
+            "\n"                # line 3 (blank — kills setext candidate)
+            "---\n"            # line 4 (thematic break)
+            "[link]\n"         # line 5
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 5), (1, "## Real H2"))
+
+    def test_setext_inside_fenced_code_block_ignored(self):
+        # Underline inside a ``` block is content, not a heading.
+        content = (
+            "## Real\n"     # line 1
+            "```\n"          # line 2 (open fence)
+            "Top\n"          # line 3
+            "===\n"          # line 4 (looks like underline but inside fence)
+            "```\n"          # line 5 (close)
+            "[link]\n"       # line 6
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 6), (1, "## Real"))
+
+    def test_setext_text_in_indented_code_block_ignored(self):
+        # Text line is indented 4 spaces → it's code, not paragraph text,
+        # so the following '===' must NOT promote anything.
+        content = (
+            "## Real\n"           # line 1
+            "\n"                    # line 2
+            "    Looks like h1\n" # line 3 (indented code)
+            "===\n"                # line 4 (no preceding paragraph → no setext)
+            "[link]\n"             # line 5
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 5), (1, "## Real"))
+
+    def test_setext_underline_with_leading_spaces_and_trailing_whitespace(self):
+        # CommonMark allows up to 3 leading spaces and trailing whitespace.
+        content = (
+            "Top\n"           # line 1
+            "   ===   \n"     # line 2 (3 spaces, trailing spaces)
+            "[link]\n"        # line 3
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 3), (1, "Top"))
+
+    def test_setext_underline_with_4_space_indent_is_not_underline(self):
+        # 4 leading spaces → indented code; not a setext underline. The
+        # 'Top' paragraph line is therefore NOT promoted to a heading.
+        content = (
+            "## Real\n"      # line 1
+            "\n"               # line 2
+            "Top\n"           # line 3
+            "    ===\n"       # line 4 (4 spaces — code, not underline)
+            "[link]\n"        # line 5
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 5), (1, "## Real"))
+
+    def test_atx_overrides_following_setext_underline(self):
+        # An ATX heading is a complete block; '===' on the next line
+        # cannot promote it. The ATX heading still wins as nearest.
+        content = (
+            "## ATX H2\n"   # line 1 (ATX heading)
+            "===\n"          # line 2 (NOT a setext underline — prev was ATX)
+            "[link]\n"       # line 3
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 3), (1, "## ATX H2"))
+
+    def test_setext_picked_over_earlier_atx_when_closer(self):
+        # An H1 setext appearing AFTER an ATX H2 should be reported as
+        # the nearest heading (it is closer to the target line).
+        content = (
+            "## Earlier\n"   # line 1
+            "para\n"           # line 2
+            "\n"                # line 3
+            "Later\n"         # line 4
+            "===\n"            # line 5 (promotes 'Later' to H1)
+            "[link]\n"         # line 6
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 6), (4, "Later"))
+
+    def test_setext_underline_must_be_single_char_kind(self):
+        # Mixed '=' and '-' is not a valid underline; falls through to
+        # paragraph text. The following line is therefore not a heading.
+        content = (
+            "## Real\n"   # line 1
+            "Top\n"       # line 2
+            "=-=\n"       # line 3 (mixed — invalid)
+            "[link]\n"    # line 4
+        )
+        self.assertEqual(gci._nearest_heading_above(content, 4), (1, "## Real"))
+
+
 class IgnoredRegionsTests(unittest.TestCase):
     """IGNORED_REGIONS must suppress both generation and drift reporting."""
 
