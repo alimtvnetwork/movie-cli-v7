@@ -250,6 +250,55 @@ if _WHITELIST_COLLISIONS:
     )
 
 
+# ─── Heading-side ignore list (skip generation + drift reporting) ───────────
+# Names listed here are skipped by both the writer and `--check`:
+#   - the writer leaves the marker region's body untouched (or, if the
+#     markers don't exist yet, doesn't insert anything)
+#   - `--check` does NOT report the region as drifted even when its body
+#     differs from what the script would otherwise generate
+#
+# This is the heading/region-side counterpart to ANCHOR_WHITELIST — that one
+# silences anchor *targets*, this one silences entire generated *regions*.
+# Use it when a section is being deprecated, hand-curated for a release, or
+# temporarily frozen while you migrate something.
+#
+# Region names match exactly what `--check` prints (see _all_regions()):
+#   "COMMAND-INDEX:HTML"
+#   "COMMAND-INDEX:TEXT"
+#   "SECTION-CMDS:Scanning & Library"
+#   "SECTION-CMDS:File Management"          ... etc for each SECTION_LABELS entry
+#
+# Keep this list short and add a one-line comment per entry explaining why
+# the region is frozen. Unknown names abort the script — typos can't silently
+# leave a real region unmanaged.
+IGNORED_REGIONS: tuple[str, ...] = (
+    # e.g. "SECTION-CMDS:File Management",  # frozen during v3 migration
+)
+
+
+def _canonical_region_names() -> frozenset[str]:
+    """Every region name the script knows how to generate. Used for the typo guard."""
+    names = {"COMMAND-INDEX:HTML", "COMMAND-INDEX:TEXT"}
+    for label in SECTION_LABELS:
+        names.add(f"SECTION-CMDS:{label}")
+    return frozenset(names)
+
+
+_IGNORED_REGION_SET: frozenset[str] = frozenset(IGNORED_REGIONS)
+_UNKNOWN_IGNORED = _IGNORED_REGION_SET - _canonical_region_names()
+if _UNKNOWN_IGNORED:
+    sys.exit(
+        "error: IGNORED_REGIONS contains unknown region name(s): "
+        f"{sorted(_UNKNOWN_IGNORED)}. Valid names: "
+        f"{sorted(_canonical_region_names())}"
+    )
+
+
+def _is_region_ignored(name: str) -> bool:
+    """True if `name` is in the IGNORED_REGIONS allowlist."""
+    return name in _IGNORED_REGION_SET
+
+
 def _row_id(command: str) -> str:
     """Stable per-row anchor: 'movie scan <path> --dry-run' → 'movie-scan-path-dry-run'."""
     slug = re.sub(r"[<>]", "", command)
@@ -341,11 +390,15 @@ def _replace_section_blocks(content: str) -> tuple[str, list[str]]:
 
     Skips silently if a section's markers don't exist (e.g. Troubleshooting
     has no command list and no markers). Fails loudly if a section IS marked
-    but the markers are malformed (begin without end, etc.).
+    but the markers are malformed (begin without end, etc.). Sections whose
+    region name appears in IGNORED_REGIONS are left strictly untouched, even
+    when their markers are present.
     """
     processed: list[str] = []
     new_content = content
     for label in SECTION_LABELS:
+        if _is_region_ignored(f"SECTION-CMDS:{label}"):
+            continue  # explicitly frozen — leave the body verbatim
         begin = SECTION_CMDS_BEGIN.format(label=label)
         end = SECTION_CMDS_END.format(label=label)
         if begin not in new_content:
@@ -521,10 +574,14 @@ def _stale_regions(original: str, updated: str) -> list[tuple[str, str]]:
     Compare each owned region in `original` vs `updated`. Return a list of
     (region_name, unified_diff_text) for every region whose body changed.
     Regions missing from `original` (e.g. Troubleshooting has no markers) are
-    silently skipped — they're not drift, they're just not wired up.
+    silently skipped — they're not drift, they're just not wired up. Regions
+    listed in IGNORED_REGIONS are also skipped, even when their body differs
+    from what the script would generate.
     """
     drifted: list[tuple[str, str]] = []
     for name, begin, end in _all_regions():
+        if _is_region_ignored(name):
+            continue  # explicitly frozen — drift is allowed
         before = _extract_region_body(original, begin, end)
         after = _extract_region_body(updated, begin, end)
         if before is None or after is None:
@@ -570,6 +627,11 @@ def main() -> int:
             print("(empty)")
         for anchor in ANCHOR_WHITELIST:
             print(f"{anchor.ljust(width)}  ->  #{anchor}  [verbatim]")
+        print("# ignored regions (never regenerated, drift suppressed)")
+        if not IGNORED_REGIONS:
+            print("(empty)")
+        for region in IGNORED_REGIONS:
+            print(f"{region}  [frozen]")
         return 0
 
     original = README.read_text(encoding="utf-8")
@@ -578,9 +640,13 @@ def main() -> int:
     #    rebuilt from the same canonical slugs everything else now uses.
     updated, anchor_changes = _rewrite_section_anchors(original)
 
-    # 2. Regenerate the two index regions in place.
-    updated = _replace_region(updated, HTML_BEGIN, HTML_END, render_html())
-    updated = _replace_region(updated, TEXT_BEGIN, TEXT_END, render_text())
+    # 2. Regenerate the two index regions in place — unless they're frozen
+    #    via IGNORED_REGIONS, in which case we leave the body verbatim and
+    #    drift is suppressed in the --check path.
+    if not _is_region_ignored("COMMAND-INDEX:HTML"):
+        updated = _replace_region(updated, HTML_BEGIN, HTML_END, render_html())
+    if not _is_region_ignored("COMMAND-INDEX:TEXT"):
+        updated = _replace_region(updated, TEXT_BEGIN, TEXT_END, render_text())
 
     # 3. Regenerate the per-section quick-start bash+powershell pairs.
     updated, sections_done = _replace_section_blocks(updated)
@@ -622,17 +688,23 @@ def main() -> int:
 
             sys.stderr.write("\nRun: python3 scripts/gen-command-index.py\n")
             return 1
-        print(
+        msg = (
             "README.md command index, section anchors, and per-section "
             f"quick-start blocks ({len(sections_done)} sections) are up to date."
         )
+        if IGNORED_REGIONS:
+            msg += f" Ignored regions: {len(IGNORED_REGIONS)} ({', '.join(IGNORED_REGIONS)})."
+        print(msg)
         return 0
 
     if updated == original:
-        print(
+        msg = (
             "README.md command index, section anchors, and per-section "
             f"quick-start blocks ({len(sections_done)} sections) already up to date."
         )
+        if IGNORED_REGIONS:
+            msg += f" Ignored regions: {len(IGNORED_REGIONS)} ({', '.join(IGNORED_REGIONS)})."
+        print(msg)
         return 0
     README.write_text(updated, encoding="utf-8")
     msg = (

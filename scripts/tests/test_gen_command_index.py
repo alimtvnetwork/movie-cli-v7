@@ -280,5 +280,59 @@ class CheckDiagnosticsTests(unittest.TestCase):
         self.assertEqual(gci._stale_regions("plain readme\n", "plain readme\n"), [])
 
 
+class IgnoredRegionsTests(unittest.TestCase):
+    """IGNORED_REGIONS must suppress both generation and drift reporting."""
+
+    def setUp(self):
+        # Snapshot module-level ignore state so tests are isolated.
+        self._saved_tuple = gci.IGNORED_REGIONS
+        self._saved_set = gci._IGNORED_REGION_SET
+
+    def tearDown(self):
+        gci.IGNORED_REGIONS = self._saved_tuple
+        gci._IGNORED_REGION_SET = self._saved_set
+
+    def _set_ignored(self, names: tuple[str, ...]):
+        gci.IGNORED_REGIONS = names
+        gci._IGNORED_REGION_SET = frozenset(names)
+
+    def test_canonical_region_names_covers_all_managed_regions(self):
+        # Sanity check: the typo guard's allowlist must include every region
+        # name `_all_regions()` produces, otherwise valid entries would be
+        # rejected at module load.
+        produced = {name for name, _, _ in gci._all_regions()}
+        self.assertEqual(produced, gci._canonical_region_names())
+
+    def test_is_region_ignored_respects_runtime_state(self):
+        self._set_ignored(("COMMAND-INDEX:HTML",))
+        self.assertTrue(gci._is_region_ignored("COMMAND-INDEX:HTML"))
+        self.assertFalse(gci._is_region_ignored("COMMAND-INDEX:TEXT"))
+
+    def test_stale_regions_skips_ignored_region(self):
+        # A region whose body differs would normally be reported as drifted;
+        # adding it to IGNORED_REGIONS must make the report drop it entirely.
+        before = f"{gci.HTML_BEGIN}\nrow A\n{gci.HTML_END}\n"
+        after = f"{gci.HTML_BEGIN}\nrow B\n{gci.HTML_END}\n"
+        # Without ignoring: drift is reported.
+        self.assertEqual(len(gci._stale_regions(before, after)), 1)
+        # With ignoring: drift is suppressed.
+        self._set_ignored(("COMMAND-INDEX:HTML",))
+        self.assertEqual(gci._stale_regions(before, after), [])
+
+    def test_replace_section_blocks_skips_ignored_section(self):
+        # Build a doc with a SECTION-CMDS region whose body differs from
+        # what render_section_block() would generate. With the section
+        # ignored, _replace_section_blocks must NOT touch it.
+        label = gci.SECTION_LABELS[1]  # "File Management"
+        begin = gci.SECTION_CMDS_BEGIN.format(label=label)
+        end = gci.SECTION_CMDS_END.format(label=label)
+        stale_body = "```bash\nFROZEN — do not regenerate\n```"
+        doc = f"prefix\n{begin}\n{stale_body}\n{end}\nsuffix\n"
+        self._set_ignored((f"SECTION-CMDS:{label}",))
+        new_doc, processed = gci._replace_section_blocks(doc)
+        self.assertEqual(new_doc, doc)
+        self.assertNotIn(label, processed)
+
+
 if __name__ == "__main__":
     unittest.main()
