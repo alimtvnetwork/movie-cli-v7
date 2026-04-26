@@ -535,6 +535,47 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
     def _in_skip(pos: int) -> bool:
         return any(s <= pos < e for s, e in skip_spans)
 
+    # Per-section whitelist support: pre-compute the H2 section span for each
+    # _SCOPABLE_LABELS entry so we can answer "what scoped section contains
+    # position N?" in O(1). Sections that don't appear in this README are
+    # simply absent from the map — a scoped whitelist entry pointing at one
+    # of them then never matches anything, which is the safe outcome.
+    scope_spans: dict[str, tuple[int, int]] = {}
+    if _WHITELIST_BY_FINGERPRINT:
+        # Only bother scanning the document when at least one whitelist
+        # entry exists — keeps the unmodified-default path zero-cost.
+        h2_pat = re.compile(r"^## +(.+?)\s*$", flags=re.MULTILINE)
+        h2_matches = list(h2_pat.finditer(content))
+        for idx, m in enumerate(h2_matches):
+            heading_text = m.group(1).strip()
+            # Strip leading emoji + whitespace before comparing — the
+            # README uses headings like "## ✨ Highlights" but "## Quick Start"
+            # for the scopable labels. Belt and braces: also try the raw text.
+            stripped = re.sub(r"^[^A-Za-z]+", "", heading_text).strip()
+            for label in _SCOPABLE_LABELS:
+                if label in (heading_text, stripped):
+                    end = h2_matches[idx + 1].start() if idx + 1 < len(h2_matches) else len(content)
+                    # First-occurrence wins; later duplicates are ignored so a
+                    # single label never has ambiguous spans.
+                    scope_spans.setdefault(label, (m.start(), end))
+
+    def _scope_at(pos: int) -> str | None:
+        """Return the scopable section label whose span contains `pos`, or None."""
+        for label, (s, e) in scope_spans.items():
+            if s <= pos < e:
+                return label
+        return None
+
+    def _is_whitelisted(fp: str, pos: int) -> bool:
+        scopes = _WHITELIST_BY_FINGERPRINT.get(fp)
+        if not scopes:
+            return False
+        if None in scopes:
+            return True  # at least one global entry covers this fingerprint
+        # All entries for this fingerprint are scoped — only suppress when
+        # the link is physically inside one of those sections.
+        return _scope_at(pos) in scopes
+
     changes: list[str] = []
 
     # Patterns: Markdown link target `(#xxx)` and HTML attribute `href="#xxx"`.
@@ -546,7 +587,7 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
             return match.group(0)
         raw = match.group(1)
         fp = re.sub(r"[^a-z0-9]", "", raw.lower())
-        if fp in _WHITELIST_FINGERPRINTS:
+        if _is_whitelisted(fp, match.start()):
             return match.group(0)  # explicitly whitelisted — leave verbatim
         label = fingerprint_to_label.get(fp)
         if label is None:
