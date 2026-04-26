@@ -276,6 +276,10 @@ catch { "⚠️  cannot reach api.github.com  → movie update may fail" }
 > **All ✅?** You're ready to run anything in the [Jump to a command](#jump-to-a-command) section.
 > **Any ❌?** Fix it first — most failures further down the README trace back to one of these checks.
 
+> 🧾 **Diffing `readme.txt` against the Expected output blocks.** All six "✅ Expected output" snippets in the [Jump to a command](#jump-to-a-command) section are plain ` ```text ` fences, so you can pull them out with one awk pass and diff them against your generated `readme.txt`: <br>
+> `awk '/^\*\*✅ Expected output\*\*/{flag=1;next} flag && /^```text/{cap=1;next} flag && cap && /^```/{cap=0;flag=0;print "---"; next} cap' README.md > expected.txt && diff -u expected.txt readme.txt | less` <br>
+> On Windows PowerShell use `Compare-Object (Get-Content expected.txt) (Get-Content readme.txt)`. Lines that differ are usually just your real IDs/sizes vs the README's sample IDs (`123`, `87`, `412`) — see [Sample setup](#sample-setup-used-in-this-readme) for the mapping.
+
 ---
 
 <div align="center">
