@@ -718,8 +718,11 @@ def main() -> int:
 
     if args.list_sections:
         all_labels = (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
+        # Pre-normalize whitelist entries so width math and rendering work
+        # for both the bare-string and (anchor, scope) tuple forms.
+        whitelist_normalized = [_normalize_whitelist_entry(e) for e in ANCHOR_WHITELIST]
         width = max((len(label) for label in all_labels), default=0)
-        width = max(width, *(len(a) for a in ANCHOR_WHITELIST), 0)
+        width = max(width, *(len(anchor) for anchor, _ in whitelist_normalized), 0)
         print("# command sections")
         for label in SECTION_LABELS:
             print(f"{label.ljust(width)}  ->  {SECTION_ANCHORS[label]}")
@@ -727,10 +730,11 @@ def main() -> int:
         for label in EXTRA_ANCHOR_LABELS:
             print(f"{label.ljust(width)}  ->  {EXTRA_ANCHORS[label]}")
         print("# whitelist (never rewritten, never reported)")
-        if not ANCHOR_WHITELIST:
+        if not whitelist_normalized:
             print("(empty)")
-        for anchor in ANCHOR_WHITELIST:
-            print(f"{anchor.ljust(width)}  ->  #{anchor}  [verbatim]")
+        for anchor, scope in whitelist_normalized:
+            tag = "[verbatim]" if scope is None else f"[scoped to ## {scope}]"
+            print(f"{anchor.ljust(width)}  ->  #{anchor}  {tag}")
         print("# ignored regions (never regenerated, drift suppressed)")
         if not IGNORED_REGIONS:
             print("(empty)")
