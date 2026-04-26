@@ -24,6 +24,29 @@ interface JumpSection {
   commands: JumpCommand[];
 }
 
+/**
+ * Vertical offset (px) reserved at the top of the viewport when scrolling to
+ * an anchor, so the heading isn't tucked under a sticky header / mobile bar.
+ * Mobile gets a larger buffer because mobile browsers often render a sticky
+ * URL bar that eats the top of the viewport.
+ */
+const SCROLL_OFFSET_DESKTOP = 80;
+const SCROLL_OFFSET_MOBILE = 96;
+const MOBILE_BREAKPOINT_PX = 640;
+
+function scrollToAnchor(anchor: string) {
+  const target = document.getElementById(anchor);
+  if (!target) {
+    window.location.hash = anchor;
+    return;
+  }
+  const isMobile = window.innerWidth < MOBILE_BREAKPOINT_PX;
+  const offset = isMobile ? SCROLL_OFFSET_MOBILE : SCROLL_OFFSET_DESKTOP;
+  const top = target.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top, behavior: "smooth" });
+  history.replaceState(null, "", `#${anchor}`);
+}
+
 const SECTIONS: JumpSection[] = [
   {
     title: "Scanning & Library",
@@ -140,13 +163,19 @@ export function JumpToCommandTable() {
             >
               <a
                 href={`#${section.anchor}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToAnchor(section.anchor);
+                }}
+                aria-label={`Jump to ${section.title} section (${section.commands.length} commands)`}
+                style={{ scrollMarginTop: SCROLL_OFFSET_MOBILE }}
                 className="flex items-center justify-between gap-2 text-sm font-medium hover:text-primary transition-colors"
               >
                 <span className="flex items-center gap-1.5">
-                  <span>{section.icon}</span>
+                  <span aria-hidden="true">{section.icon}</span>
                   {section.title}
                 </span>
-                <ExternalLink className="h-3 w-3 opacity-60" />
+                <ExternalLink className="h-3 w-3 opacity-60" aria-hidden="true" />
               </a>
               <div className="space-y-0.5">
                 {section.commands.map((c) => (
