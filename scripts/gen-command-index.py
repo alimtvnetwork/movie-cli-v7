@@ -824,7 +824,19 @@ def main() -> int:
         action="store_true",
         help="print the canonical 'label -> #slug' map for the six sections and exit",
     )
+    parser.add_argument(
+        "--breadcrumb-levels",
+        default="2",
+        metavar="LEVELS",
+        help=(
+            "comma-separated heading levels (1-6) that count for the "
+            "'under:' breadcrumb in --check output. Default: 2 (H2 only). "
+            "Out-of-range or non-integer tokens are clamped/ignored with "
+            "a warning; if nothing valid remains, falls back to H2."
+        ),
+    )
     args = parser.parse_args()
+    breadcrumb_levels = _parse_breadcrumb_levels(args.breadcrumb_levels)
 
     if args.list_sections:
         all_labels = (*SECTION_LABELS, *EXTRA_ANCHOR_LABELS)
@@ -880,7 +892,10 @@ def main() -> int:
                     "rewriting:\n"
                 )
                 for change in anchor_changes:
-                    sys.stderr.write(_format_anchor_change(original, change) + "\n")
+                    sys.stderr.write(
+                        _format_anchor_change(original, change, breadcrumb_levels)
+                        + "\n"
+                    )
 
             # 2. Generated-region drift — name each stale region and emit a
             #    unified diff so the failure is reviewable straight from CI logs.
