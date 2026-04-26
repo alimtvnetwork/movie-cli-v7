@@ -414,6 +414,8 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
             return match.group(0)
         raw = match.group(1)
         fp = re.sub(r"[^a-z0-9]", "", raw.lower())
+        if fp in _WHITELIST_FINGERPRINTS:
+            return match.group(0)  # explicitly whitelisted — leave verbatim
         label = fingerprint_to_label.get(fp)
         if label is None:
             return match.group(0)  # not a known section — leave alone
