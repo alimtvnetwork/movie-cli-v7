@@ -1,5 +1,13 @@
 name: E2E
 
+# End-to-end pipeline test. Runs the gated Go integration test (E2E=1) and
+# the shell smoke script against the real `movie` binary with a fake media
+# folder. No secrets are used — TMDB_API_KEY / OMDB_API_KEY are intentionally
+# left empty so offline code paths are exercised.
+#
+# CONSTRAINT (mem://issues/04-ci-log-commit-loop): this workflow MUST NOT
+# commit, push, or write back to the repo under any circumstance.
+
 on:
   push:
     branches: [main]
