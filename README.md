@@ -200,68 +200,73 @@ Each row has both a **Bash** and a **PowerShell** fenced block — pick the one 
 
 One line per command. Search lands on the exact row; the section name on the right tells you where to jump.
 
-```text
-movie cd <id>                              → File Management
-movie changelog                            → Configuration & System
-movie cleanup                              → Maintenance & Debugging
-movie config                               → Configuration & System
-movie config get <key>                     → Configuration & System
-movie config set <key> <value>             → Configuration & System
-movie config set source_folder <path>      → Configuration & System
-movie config set tmdb_api_key <key>        → Configuration & System
-movie db                                   → Maintenance & Debugging
-movie discover                             → Discovery & Organization
-movie duplicates                           → File Management
-movie export                               → Maintenance & Debugging
-movie export --format csv --out <file>     → Maintenance & Debugging
-movie export --format json --out <file>    → Maintenance & Debugging
-movie hello                                → Configuration & System
-movie info <id>                            → Scanning & Library
-movie info <id> --json                     → Scanning & Library
-movie logs                                 → Maintenance & Debugging
-movie ls                                   → Scanning & Library
-movie ls --genre <name>                    → Scanning & Library
-movie ls --limit <n>                       → Scanning & Library
-movie ls --year <yyyy> --sort <field>      → Scanning & Library
-movie move                                 → File Management
-movie move --all                           → File Management
-movie move <id> --to <path>                → File Management
-movie play <id>                            → File Management
-movie play <id> --player <bin>             → File Management
-movie popout                               → File Management
-movie redo                                 → History & Undo
-movie rename                               → File Management
-movie rename <id>                          → File Management
-movie rename --all --pattern <fmt>         → File Management
-movie rescan                               → Scanning & Library
-movie rest                                 → Maintenance & Debugging
-movie rest --open                          → Maintenance & Debugging
-movie rest --port <n>                      → Maintenance & Debugging
-movie scan                                 → Scanning & Library
-movie scan <path>                          → Scanning & Library
-movie scan <path> --dry-run                → Scanning & Library
-movie scan <path> --refresh                → Scanning & Library
-movie search <query>                       → Scanning & Library
-movie search <query> --year <yyyy>         → Scanning & Library
-movie stats                                → Discovery & Organization
-movie stats --by <dimension>               → Discovery & Organization
-movie suggest                              → Discovery & Organization
-movie suggest --genre <name> --limit <n>   → Discovery & Organization
-movie tag add <id> <tag>                   → Discovery & Organization
-movie tag list <id>                        → Discovery & Organization
-movie tag list --all                       → Discovery & Organization
-movie tag remove <id> <tag>                → Discovery & Organization
-movie tag remove <id> --all                → Discovery & Organization
-movie undo                                 → History & Undo
-movie undo --id <history-id>               → History & Undo
-movie undo --list                          → History & Undo
-movie update                               → Configuration & System
-movie version                              → Configuration & System
-movie watch add <id>                       → Discovery & Organization
-movie watch add <id> --priority <level>    → Discovery & Organization
-movie watch list                           → Discovery & Organization
-movie watch list --sort <field>            → Discovery & Organization
-```
+Each row has its own stable anchor (e.g. `#movie-scan`, `#movie-undo-list`) so links from chat, issues, or other docs always land on the exact command. Section names link to the matching expected-output block.
+
+<table>
+<thead><tr><th align="left">Command</th><th align="left">Section</th><th align="left">Anchor</th></tr></thead>
+<tbody>
+<tr id="movie-cd-id"><td><a href="#movie-cd-id"><code>movie cd &lt;id&gt;</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-cd-id</code></td></tr>
+<tr id="movie-changelog"><td><a href="#movie-changelog"><code>movie changelog</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-changelog</code></td></tr>
+<tr id="movie-cleanup"><td><a href="#movie-cleanup"><code>movie cleanup</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-cleanup</code></td></tr>
+<tr id="movie-config"><td><a href="#movie-config"><code>movie config</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-config</code></td></tr>
+<tr id="movie-config-get-key"><td><a href="#movie-config-get-key"><code>movie config get &lt;key&gt;</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-config-get-key</code></td></tr>
+<tr id="movie-config-set-key-value"><td><a href="#movie-config-set-key-value"><code>movie config set &lt;key&gt; &lt;value&gt;</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-config-set-key-value</code></td></tr>
+<tr id="movie-config-set-source-folder-path"><td><a href="#movie-config-set-source-folder-path"><code>movie config set source_folder &lt;path&gt;</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-config-set-source-folder-path</code></td></tr>
+<tr id="movie-config-set-tmdb-api-key-key"><td><a href="#movie-config-set-tmdb-api-key-key"><code>movie config set tmdb_api_key &lt;key&gt;</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-config-set-tmdb-api-key-key</code></td></tr>
+<tr id="movie-db"><td><a href="#movie-db"><code>movie db</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-db</code></td></tr>
+<tr id="movie-discover"><td><a href="#movie-discover"><code>movie discover</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-discover</code></td></tr>
+<tr id="movie-duplicates"><td><a href="#movie-duplicates"><code>movie duplicates</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-duplicates</code></td></tr>
+<tr id="movie-export"><td><a href="#movie-export"><code>movie export</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-export</code></td></tr>
+<tr id="movie-export-format-csv-out-file"><td><a href="#movie-export-format-csv-out-file"><code>movie export --format csv --out &lt;file&gt;</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-export-format-csv-out-file</code></td></tr>
+<tr id="movie-export-format-json-out-file"><td><a href="#movie-export-format-json-out-file"><code>movie export --format json --out &lt;file&gt;</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-export-format-json-out-file</code></td></tr>
+<tr id="movie-hello"><td><a href="#movie-hello"><code>movie hello</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-hello</code></td></tr>
+<tr id="movie-info-id"><td><a href="#movie-info-id"><code>movie info &lt;id&gt;</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-info-id</code></td></tr>
+<tr id="movie-info-id-json"><td><a href="#movie-info-id-json"><code>movie info &lt;id&gt; --json</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-info-id-json</code></td></tr>
+<tr id="movie-logs"><td><a href="#movie-logs"><code>movie logs</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-logs</code></td></tr>
+<tr id="movie-ls"><td><a href="#movie-ls"><code>movie ls</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-ls</code></td></tr>
+<tr id="movie-ls-genre-name"><td><a href="#movie-ls-genre-name"><code>movie ls --genre &lt;name&gt;</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-ls-genre-name</code></td></tr>
+<tr id="movie-ls-limit-n"><td><a href="#movie-ls-limit-n"><code>movie ls --limit &lt;n&gt;</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-ls-limit-n</code></td></tr>
+<tr id="movie-ls-year-yyyy-sort-field"><td><a href="#movie-ls-year-yyyy-sort-field"><code>movie ls --year &lt;yyyy&gt; --sort &lt;field&gt;</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-ls-year-yyyy-sort-field</code></td></tr>
+<tr id="movie-move"><td><a href="#movie-move"><code>movie move</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-move</code></td></tr>
+<tr id="movie-move-all"><td><a href="#movie-move-all"><code>movie move --all</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-move-all</code></td></tr>
+<tr id="movie-move-id-to-path"><td><a href="#movie-move-id-to-path"><code>movie move &lt;id&gt; --to &lt;path&gt;</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-move-id-to-path</code></td></tr>
+<tr id="movie-play-id"><td><a href="#movie-play-id"><code>movie play &lt;id&gt;</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-play-id</code></td></tr>
+<tr id="movie-play-id-player-bin"><td><a href="#movie-play-id-player-bin"><code>movie play &lt;id&gt; --player &lt;bin&gt;</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-play-id-player-bin</code></td></tr>
+<tr id="movie-popout"><td><a href="#movie-popout"><code>movie popout</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-popout</code></td></tr>
+<tr id="movie-redo"><td><a href="#movie-redo"><code>movie redo</code></a></td><td><a href="#history--undo">History & Undo</a></td><td><code>#movie-redo</code></td></tr>
+<tr id="movie-rename"><td><a href="#movie-rename"><code>movie rename</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-rename</code></td></tr>
+<tr id="movie-rename-id"><td><a href="#movie-rename-id"><code>movie rename &lt;id&gt;</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-rename-id</code></td></tr>
+<tr id="movie-rename-all-pattern-fmt"><td><a href="#movie-rename-all-pattern-fmt"><code>movie rename --all --pattern &lt;fmt&gt;</code></a></td><td><a href="#file-management">File Management</a></td><td><code>#movie-rename-all-pattern-fmt</code></td></tr>
+<tr id="movie-rescan"><td><a href="#movie-rescan"><code>movie rescan</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-rescan</code></td></tr>
+<tr id="movie-rest"><td><a href="#movie-rest"><code>movie rest</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-rest</code></td></tr>
+<tr id="movie-rest-open"><td><a href="#movie-rest-open"><code>movie rest --open</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-rest-open</code></td></tr>
+<tr id="movie-rest-port-n"><td><a href="#movie-rest-port-n"><code>movie rest --port &lt;n&gt;</code></a></td><td><a href="#maintenance--debugging">Maintenance & Debugging</a></td><td><code>#movie-rest-port-n</code></td></tr>
+<tr id="movie-scan"><td><a href="#movie-scan"><code>movie scan</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-scan</code></td></tr>
+<tr id="movie-scan-path"><td><a href="#movie-scan-path"><code>movie scan &lt;path&gt;</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-scan-path</code></td></tr>
+<tr id="movie-scan-path-dry-run"><td><a href="#movie-scan-path-dry-run"><code>movie scan &lt;path&gt; --dry-run</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-scan-path-dry-run</code></td></tr>
+<tr id="movie-scan-path-refresh"><td><a href="#movie-scan-path-refresh"><code>movie scan &lt;path&gt; --refresh</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-scan-path-refresh</code></td></tr>
+<tr id="movie-search-query"><td><a href="#movie-search-query"><code>movie search &lt;query&gt;</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-search-query</code></td></tr>
+<tr id="movie-search-query-year-yyyy"><td><a href="#movie-search-query-year-yyyy"><code>movie search &lt;query&gt; --year &lt;yyyy&gt;</code></a></td><td><a href="#scanning--library">Scanning & Library</a></td><td><code>#movie-search-query-year-yyyy</code></td></tr>
+<tr id="movie-stats"><td><a href="#movie-stats"><code>movie stats</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-stats</code></td></tr>
+<tr id="movie-stats-by-dimension"><td><a href="#movie-stats-by-dimension"><code>movie stats --by &lt;dimension&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-stats-by-dimension</code></td></tr>
+<tr id="movie-suggest"><td><a href="#movie-suggest"><code>movie suggest</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-suggest</code></td></tr>
+<tr id="movie-suggest-genre-name-limit-n"><td><a href="#movie-suggest-genre-name-limit-n"><code>movie suggest --genre &lt;name&gt; --limit &lt;n&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-suggest-genre-name-limit-n</code></td></tr>
+<tr id="movie-tag-add-id-tag"><td><a href="#movie-tag-add-id-tag"><code>movie tag add &lt;id&gt; &lt;tag&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-tag-add-id-tag</code></td></tr>
+<tr id="movie-tag-list-id"><td><a href="#movie-tag-list-id"><code>movie tag list &lt;id&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-tag-list-id</code></td></tr>
+<tr id="movie-tag-list-all"><td><a href="#movie-tag-list-all"><code>movie tag list --all</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-tag-list-all</code></td></tr>
+<tr id="movie-tag-remove-id-tag"><td><a href="#movie-tag-remove-id-tag"><code>movie tag remove &lt;id&gt; &lt;tag&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-tag-remove-id-tag</code></td></tr>
+<tr id="movie-tag-remove-id-all"><td><a href="#movie-tag-remove-id-all"><code>movie tag remove &lt;id&gt; --all</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-tag-remove-id-all</code></td></tr>
+<tr id="movie-undo"><td><a href="#movie-undo"><code>movie undo</code></a></td><td><a href="#history--undo">History & Undo</a></td><td><code>#movie-undo</code></td></tr>
+<tr id="movie-undo-id-history-id"><td><a href="#movie-undo-id-history-id"><code>movie undo --id &lt;history-id&gt;</code></a></td><td><a href="#history--undo">History & Undo</a></td><td><code>#movie-undo-id-history-id</code></td></tr>
+<tr id="movie-undo-list"><td><a href="#movie-undo-list"><code>movie undo --list</code></a></td><td><a href="#history--undo">History & Undo</a></td><td><code>#movie-undo-list</code></td></tr>
+<tr id="movie-update"><td><a href="#movie-update"><code>movie update</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-update</code></td></tr>
+<tr id="movie-version"><td><a href="#movie-version"><code>movie version</code></a></td><td><a href="#configuration--system">Configuration & System</a></td><td><code>#movie-version</code></td></tr>
+<tr id="movie-watch-add-id"><td><a href="#movie-watch-add-id"><code>movie watch add &lt;id&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-watch-add-id</code></td></tr>
+<tr id="movie-watch-add-id-priority-level"><td><a href="#movie-watch-add-id-priority-level"><code>movie watch add &lt;id&gt; --priority &lt;level&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-watch-add-id-priority-level</code></td></tr>
+<tr id="movie-watch-list"><td><a href="#movie-watch-list"><code>movie watch list</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-watch-list</code></td></tr>
+<tr id="movie-watch-list-sort-field"><td><a href="#movie-watch-list-sort-field"><code>movie watch list --sort &lt;field&gt;</code></a></td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>#movie-watch-list-sort-field</code></td></tr>
+</tbody>
+</table>
 
 </details>
 
