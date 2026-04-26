@@ -194,6 +194,75 @@ Skip the demo and jump straight to the command you need. Each link drops you int
 
 Each row has both a **Bash** and a **PowerShell** fenced block — pick the one for your shell, then **triple-click any line** (or drag-select the whole block) to copy a real, runnable command. The two blocks differ only where shell syntax matters (paths, env vars, quoting).
 
+<details><summary><strong>🔎 Flat alphabetical command index</strong> — press <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> and type any keyword</summary>
+
+One line per command. Search lands on the exact row; the section name on the right tells you where to jump.
+
+```text
+movie cd <id>                              → File Management
+movie changelog                            → Configuration & System
+movie cleanup                              → Maintenance & Debugging
+movie config                               → Configuration & System
+movie config get <key>                     → Configuration & System
+movie config set <key> <value>             → Configuration & System
+movie config set source_folder <path>      → Configuration & System
+movie config set tmdb_api_key <key>        → Configuration & System
+movie db                                   → Maintenance & Debugging
+movie discover                             → Discovery & Organization
+movie duplicates                           → File Management
+movie export                               → Maintenance & Debugging
+movie export --format csv --out <file>     → Maintenance & Debugging
+movie export --format json --out <file>    → Maintenance & Debugging
+movie hello                                → Configuration & System
+movie info <id>                            → Scanning & Library
+movie info <id> --json                     → Scanning & Library
+movie logs                                 → Maintenance & Debugging
+movie ls                                   → Scanning & Library
+movie ls --genre <name>                    → Scanning & Library
+movie ls --limit <n>                       → Scanning & Library
+movie ls --year <yyyy> --sort <field>      → Scanning & Library
+movie move                                 → File Management
+movie move --all                           → File Management
+movie move <id> --to <path>                → File Management
+movie play <id>                            → File Management
+movie play <id> --player <bin>             → File Management
+movie popout                               → File Management
+movie redo                                 → History & Undo
+movie rename                               → File Management
+movie rename <id>                          → File Management
+movie rename --all --pattern <fmt>         → File Management
+movie rescan                               → Scanning & Library
+movie rest                                 → Maintenance & Debugging
+movie rest --open                          → Maintenance & Debugging
+movie rest --port <n>                      → Maintenance & Debugging
+movie scan                                 → Scanning & Library
+movie scan <path>                          → Scanning & Library
+movie scan <path> --dry-run                → Scanning & Library
+movie scan <path> --refresh                → Scanning & Library
+movie search <query>                       → Scanning & Library
+movie search <query> --year <yyyy>         → Scanning & Library
+movie stats                                → Discovery & Organization
+movie stats --by <dimension>               → Discovery & Organization
+movie suggest                              → Discovery & Organization
+movie suggest --genre <name> --limit <n>   → Discovery & Organization
+movie tag add <id> <tag>                   → Discovery & Organization
+movie tag list <id>                        → Discovery & Organization
+movie tag list --all                       → Discovery & Organization
+movie tag remove <id> <tag>                → Discovery & Organization
+movie tag remove <id> --all                → Discovery & Organization
+movie undo                                 → History & Undo
+movie undo --id <history-id>               → History & Undo
+movie undo --list                          → History & Undo
+movie update                               → Configuration & System
+movie version                              → Configuration & System
+movie watch add <id>                       → Discovery & Organization
+movie watch add <id> --priority <level>    → Discovery & Organization
+movie watch list                           → Discovery & Organization
+movie watch list --sort <field>            → Discovery & Organization
+```
+
+</details>
+
 #### 📂 [Scanning & Library](#scanning--library)
 Match files against TMDb, browse the library.
 ```bash
