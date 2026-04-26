@@ -397,6 +397,8 @@ movie rescan
 movie ls
 ```
 
+> **Path placeholders:** `~/Downloads` = macOS/Linux home folder. On Windows use `C:\Users\<you>\Downloads` or `$env:USERPROFILE\Downloads` in PowerShell.
+
 | Command | Description |
 |---|---|
 | `movie scan [folder]` | Scan folder → DB + TMDb metadata |
@@ -438,6 +440,8 @@ movie move --all ~/Downloads
 # 3. Changed your mind? Reverse the entire batch
 movie undo
 ```
+
+> **Path placeholders:** `~/Downloads` = macOS/Linux. Windows: `C:\Users\<you>\Downloads` or `$env:USERPROFILE\Downloads`.
 
 | Command | Description |
 |---|---|
@@ -482,6 +486,8 @@ movie undo --id 42                   # ← swap 42 for the ID you want to revert
 movie redo
 ```
 
+> **ID placeholder:** `42` is a sample undo ID. Run `movie undo --list` to see your own IDs.
+
 | Command | Description |
 |---|---|
 | `movie undo` | Revert last move/rename/delete/scan operation |
@@ -524,6 +530,8 @@ movie discover Sci-Fi                # ← swap for Action, Comedy, Horror, etc.
 # 3. Bookmark something to watch later (use any ID from `movie ls`)
 movie watch add 3                    # ← swap 3 for your chosen media ID
 ```
+
+> **Number / genre / ID placeholders:** `5` = pick count; `Sci-Fi` = any genre; `3` = media ID from your `movie ls`.
 
 | Command | Description |
 |---|---|
@@ -582,6 +590,8 @@ movie cleanup
 movie cleanup --remove
 ```
 
+> **No placeholders here** — `movie stats` and `movie cleanup` run as-is.
+
 | Command | Description |
 |---|---|
 | `movie cleanup` | Find stale entries where files no longer exist |
@@ -626,6 +636,8 @@ movie config set tmdb_api_key YOUR_KEY        # ← swap YOUR_KEY for your TMDb 
 # 3. Confirm exactly which build is running (use this in bug reports)
 movie version
 ```
+
+> **Key placeholder:** `YOUR_KEY` = your TMDb API token from https://www.themoviedb.org/settings/api.
 
 | Command | Description |
 |---|---|
