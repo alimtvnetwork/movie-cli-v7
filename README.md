@@ -300,7 +300,7 @@ Each row has both a **Bash** and a **PowerShell** fenced block — pick the one 
 
 One line per command. Search lands on the exact row; the section name on the right tells you where to jump.
 
-Each row has its own stable anchor (e.g. `#movie-scan`, `#movie-undo-list`) so links from chat, issues, or other docs always land on the exact command. Section names link to the matching expected-output block. The **Example keyword** column gives you a single distinctive token (`--year`, `--dry-run`, `tmdb_api_key`, `--id`, `--port`, `--to`, …) you can paste into <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> to land on the right argument pattern fast.
+**Click the command** to jump straight to its README subsection (with the bash/PowerShell blocks, args, expected output, and "if it differs" notes). Each row also carries a stable anchor (e.g. `#movie-scan`, `#movie-undo-list`) shown in the rightmost column — share that fragment and links always land on the exact row. The **Example keyword** column gives you a single distinctive token (`--year`, `--dry-run`, `tmdb_api_key`, `--id`, `--port`, `--to`, …) you can paste into <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> to land on the right argument pattern fast.
 
 <table>
 <thead><tr>
