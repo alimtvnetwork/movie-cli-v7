@@ -23,6 +23,51 @@ func (d *DB) ListMedia(offset, limit int) ([]Media, error) {
 	return items, nil
 }
 
+// ListMediaFiltered returns paginated media records using a filter mode.
+// Modes:
+//   - "scanned" (default): only items with a known file path (OriginalFilePath != '')
+//   - "all":     every media row, including metadata-only entries with no file
+//   - "missing": only items with NO file path (metadata-only / never scanned or removed)
+func (d *DB) ListMediaFiltered(offset, limit int, mode string) ([]Media, error) {
+	where := mediaFilterWhere(mode)
+	rows, err := d.Query(`SELECT `+mediaColumns+`
+		FROM Media `+where+`
+		ORDER BY CleanTitle ASC LIMIT ? OFFSET ?`, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items, err := scanMediaRows(rows)
+	if err != nil {
+		return nil, err
+	}
+	d.populateGenres(items)
+	return items, nil
+}
+
+// CountMediaFiltered returns the total count for a given filter mode.
+// See ListMediaFiltered for accepted modes.
+func (d *DB) CountMediaFiltered(mode string) (int, error) {
+	var count int
+	where := mediaFilterWhere(mode)
+	err := d.QueryRow(`SELECT COUNT(*) FROM Media ` + where).Scan(&count)
+	return count, err
+}
+
+// mediaFilterWhere maps a filter mode to its SQL WHERE clause.
+// SHARED: used by ListMediaFiltered and CountMediaFiltered to keep the
+// scanned/all/missing semantics in one place.
+func mediaFilterWhere(mode string) string {
+	switch mode {
+	case "all":
+		return "WHERE 1=1"
+	case "missing":
+		return "WHERE COALESCE(OriginalFilePath, '') = ''"
+	default: // "scanned"
+		return "WHERE OriginalFilePath != ''"
+	}
+}
+
 // SearchMedia searches by title (fuzzy via LIKE).
 func (d *DB) SearchMedia(query string) ([]Media, error) {
 	rows, err := d.Query(`SELECT `+mediaColumns+`

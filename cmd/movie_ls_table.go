@@ -22,14 +22,15 @@ const (
 
 // runMovieLsTable outputs all library items as a formatted table (no pager).
 func runMovieLsTable(database *db.DB) {
-	allMedia, err := database.ListMedia(0, 100000)
+	mode := resolveLsFilterMode()
+	allMedia, err := database.ListMediaFiltered(0, 100000, mode)
 	if err != nil {
 		errlog.Error(msgDatabaseError, err)
 		return
 	}
 
 	if len(allMedia) == 0 {
-		fmt.Println("📭 No media found. Run 'movie scan <folder>' first.")
+		fmt.Println(emptyLsMessage(mode))
 		return
 	}
 
