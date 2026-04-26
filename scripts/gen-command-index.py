@@ -656,29 +656,65 @@ def _nearest_heading_above(content: str, line_no: int) -> tuple[int, str] | None
     precedes the position. Heading text is returned verbatim, including the
     leading '#' run, so callers can render it as-is for visual context.
 
-    Heuristic-friendly: ignores ATX-style headings nested inside fenced
-    code blocks (lines opening with ``` toggle our "inside" state) so a
-    `# comment` in a bash block can't masquerade as a section header.
+    Robust against ATX look-alikes that aren't real headings:
+      * Fenced code blocks using ``` or ~~~. Per CommonMark, a fence opens
+        with ≥3 of the same char (indented up to 3 spaces) and is closed
+        only by a fence using the SAME char with length ≥ the opener's.
+        Inner fences with a different char or shorter length do NOT toggle
+        state — this is what "nested fenced code block" robustness means.
+      * Indented code blocks (lines starting with ≥4 spaces or a tab),
+        which CommonMark treats as code. A `#` here is not a heading.
+      * ATX headings themselves may be indented up to 3 spaces; 4+ spaces
+        of leading whitespace disqualifies them.
     """
     lines = content.splitlines()
     if line_no < 1 or not lines:
         return None
-    inside_fence = False
+    # Active fence descriptor: (char, min_close_length) or None.
+    fence: tuple[str, int] | None = None
     found: tuple[int, str] | None = None
-    # Walk forward up to the target line, tracking fence state and the most
-    # recent real heading. Forward-walk (not backward) because fence state
-    # only resolves correctly in document order.
+    # Walk forward up to the target line. Forward-walk (not backward)
+    # because fence state only resolves correctly in document order.
     upper = min(line_no, len(lines))
     for idx in range(upper):
         line = lines[idx]
-        stripped = line.lstrip()
-        if stripped.startswith("```"):
-            inside_fence = not inside_fence
+        # Count leading spaces (tabs count as code-block indent).
+        indent = len(line) - len(line.lstrip(" "))
+        starts_with_tab = line.startswith("\t")
+        stripped = line.lstrip(" ")
+        # --- Fence handling ---
+        if fence is not None:
+            # Look for a closing fence of the same char, length ≥ opener,
+            # with ≤3 spaces of indent and only whitespace after the run.
+            ch, min_len = fence
+            if indent <= 3 and stripped.startswith(ch * min_len):
+                run = len(stripped) - len(stripped.lstrip(ch))
+                tail = stripped[run:]
+                if run >= min_len and tail.strip() == "":
+                    fence = None
+            # Either way, lines inside a fence cannot be headings.
             continue
-        if inside_fence:
+        # Opening fence: ≤3 spaces indent, ≥3 of ` or ~. The info string
+        # may contain anything except backticks (for ``` fences).
+        if indent <= 3 and (stripped.startswith("```") or stripped.startswith("~~~")):
+            ch = stripped[0]
+            run = len(stripped) - len(stripped.lstrip(ch))
+            info = stripped[run:]
+            # ``` fences forbid backticks in the info string; ~~~ has no
+            # such restriction. A bad info string means it's not a fence.
+            if ch == "`" and "`" in info:
+                pass  # not a real fence opener
+            else:
+                fence = (ch, run)
+                continue
+        # Indented code block: 4+ leading spaces or a leading tab. ATX
+        # headings are disallowed here per CommonMark.
+        if indent >= 4 or starts_with_tab:
             continue
-        # ATX heading: 1–6 '#' followed by a space and at least one char.
-        m = re.match(r"^(#{1,6}) +(\S.*)$", line)
+        # ATX heading: optional 1–3 spaces, then 1–6 '#', then a space and
+        # at least one non-space char. Trailing '#' run is allowed but we
+        # keep the line verbatim for display.
+        m = re.match(r"^ {0,3}(#{1,6}) +(\S.*)$", line)
         if m:
             found = (idx + 1, line.rstrip())
     return found
