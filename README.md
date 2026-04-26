@@ -127,6 +127,65 @@ Every command supports `--help` or `-h` for detailed usage.
 
 <div align="center">
 
+## Sample setup used in this README
+
+</div>
+
+Every "Expected output" snippet below assumes the small reference setup shown here. If your library is larger or your IDs differ, only the **numbers** will change — the shape of the output stays the same.
+
+**Folder layout** (`source_folder = /mnt/storage/Movies` on Linux/macOS, `D:\Media\Movies` on Windows):
+
+```text
+/mnt/storage/Movies/
+├── Inception (2010).mkv
+├── The Matrix (1999).mkv
+├── Arrival (2016).mkv
+├── Interstellar (2014).mkv
+├── The Prestige (2006).mkv
+└── _unsorted/
+    ├── inception.2010.1080p.mkv      ← will be cleaned up by `movie rename`
+    └── old.movie.1998.mkv             ← becomes a stale entry after deletion
+
+/mnt/storage/Sorted/                   ← destination for `movie move`
+└── Action/
+```
+
+**Config values** (set once with `movie config set <key> <value>`):
+
+| Key | Value |
+|---|---|
+| `source_folder` | `/mnt/storage/Movies` |
+| `tmdb_api_key` | *your TMDb v3 key* |
+| `default_player` | `mpv` |
+| `log_level` | `info` |
+
+**ID → title map** (after the first `movie scan`, your IDs may differ — substitute as needed):
+
+| ID | Title | Year | Used in section |
+|---|---|---|---|
+| `1` | Inception | 2010 | Discovery & Organization (`tag add 1 favorite`) |
+| `123` | Inception | 2010 | Scanning & Library, File Management |
+| `124` | The Matrix | 1999 | Scanning & Library |
+| `125` | Arrival | 2016 | Scanning & Library |
+| `131` | The Prestige | 2006 | Discovery & Organization (`suggest`) |
+| `412` | Old Movie (1998) | — | Maintenance & Debugging (stale entry) |
+| `418` | Removed.avi | — | Maintenance & Debugging (stale entry) |
+
+**History entry IDs** (created by past `move` / `rename` / `scan` ops):
+
+| History ID | Op | Target |
+|---|---|---|
+| `87` | move | Inception (2010).mkv → Sorted/Action |
+| `86` | rename | The Matrix (1999).mkv |
+| `85` | scan | /mnt/storage/Movies (12 added) |
+| `42` | *generic placeholder used in `--id 42` examples* | — |
+
+> **Tip:** run `movie ls` after your first scan to see your real media IDs, and `movie undo --list` to see your real history IDs. Replace the sample numbers above with yours when copying commands.
+
+---
+
+<div align="center">
+
 ## Jump to a command
 
 </div>
