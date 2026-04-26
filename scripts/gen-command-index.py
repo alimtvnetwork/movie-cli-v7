@@ -374,7 +374,18 @@ def _rewrite_section_anchors(content: str) -> tuple[str, list[str]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="exit 1 if README would change")
+    parser.add_argument(
+        "--list-sections",
+        action="store_true",
+        help="print the canonical 'label -> #slug' map for the six sections and exit",
+    )
     args = parser.parse_args()
+
+    if args.list_sections:
+        width = max(len(label) for label in SECTION_LABELS)
+        for label in SECTION_LABELS:
+            print(f"{label.ljust(width)}  ->  {SECTION_ANCHORS[label]}")
+        return 0
 
     original = README.read_text(encoding="utf-8")
 
