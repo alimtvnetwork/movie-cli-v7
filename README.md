@@ -374,6 +374,29 @@ All data lives in `./data/` at the project root.
 Each section below shows a real-world example of what the command does.
 Each thumbnail is a short looping walkthrough — hover or click to view the full-size still.
 
+<details>
+<summary>💡 <strong>PowerShell vs Bash quick reference</strong> — escaping paths & passing env vars in the examples below</summary>
+
+The example commands are written in **Bash** (macOS / Linux / WSL / Git Bash). On **Windows PowerShell** a few things differ — use this table to translate any example before running it:
+
+| Concept | Bash (macOS / Linux / WSL) | PowerShell (Windows) |
+|---|---|---|
+| Home folder | `~/Downloads` | `$HOME\Downloads` or `$env:USERPROFILE\Downloads` |
+| Path with spaces | `"My Movies/Action Films"` (double quotes) | `'My Movies\Action Films'` (single quotes — no variable expansion) |
+| Path separator | `/` | `\` (PowerShell also accepts `/`) |
+| Escape a literal quote | `\"` inside `"..."` | `` ` " `` (backtick + quote) or use `'...'` |
+| Read an env var | `$TMDB_KEY` | `$env:TMDB_KEY` |
+| Set env var (one command) | `TMDB_KEY=abc movie scan ~/Downloads` | `$env:TMDB_KEY="abc"; movie scan $HOME\Downloads` |
+| Set env var (whole session) | `export TMDB_KEY=abc` | `$env:TMDB_KEY = "abc"` |
+| Set env var (persistent) | add `export ...` to `~/.bashrc` / `~/.zshrc` | `[Environment]::SetEnvironmentVariable("TMDB_KEY","abc","User")` |
+| Command substitution | `cd $(movie cd Movies)` | `Set-Location (movie cd Movies)` |
+| Line continuation | trailing `\` | trailing `` ` `` (backtick) |
+| Comments | `# comment` | `# comment` (same) |
+
+**Rule of thumb:** if an example uses `~`, `$VAR`, `\"`, or `$(...)`, swap it for the PowerShell equivalent above. Everything else (flags, subcommands, IDs) is identical across shells.
+
+</details>
+
 ### Scanning & Library
 
 <p align="center">
