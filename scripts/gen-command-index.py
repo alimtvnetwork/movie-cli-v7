@@ -574,10 +574,14 @@ def _stale_regions(original: str, updated: str) -> list[tuple[str, str]]:
     Compare each owned region in `original` vs `updated`. Return a list of
     (region_name, unified_diff_text) for every region whose body changed.
     Regions missing from `original` (e.g. Troubleshooting has no markers) are
-    silently skipped — they're not drift, they're just not wired up.
+    silently skipped — they're not drift, they're just not wired up. Regions
+    listed in IGNORED_REGIONS are also skipped, even when their body differs
+    from what the script would generate.
     """
     drifted: list[tuple[str, str]] = []
     for name, begin, end in _all_regions():
+        if _is_region_ignored(name):
+            continue  # explicitly frozen — drift is allowed
         before = _extract_region_body(original, begin, end)
         after = _extract_region_body(updated, begin, end)
         if before is None or after is None:
