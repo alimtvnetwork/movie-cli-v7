@@ -390,11 +390,15 @@ def _replace_section_blocks(content: str) -> tuple[str, list[str]]:
 
     Skips silently if a section's markers don't exist (e.g. Troubleshooting
     has no command list and no markers). Fails loudly if a section IS marked
-    but the markers are malformed (begin without end, etc.).
+    but the markers are malformed (begin without end, etc.). Sections whose
+    region name appears in IGNORED_REGIONS are left strictly untouched, even
+    when their markers are present.
     """
     processed: list[str] = []
     new_content = content
     for label in SECTION_LABELS:
+        if _is_region_ignored(f"SECTION-CMDS:{label}"):
+            continue  # explicitly frozen — leave the body verbatim
         begin = SECTION_CMDS_BEGIN.format(label=label)
         end = SECTION_CMDS_END.format(label=label)
         if begin not in new_content:
