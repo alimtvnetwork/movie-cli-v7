@@ -217,7 +217,7 @@ movie scan "D:\Media\Movies"
 
 > **Assumptions:** `source_folder` is set (`movie config set source_folder /mnt/storage/Movies`), `tmdb_api_key` is set, and that folder contains video files. The sample IDs `123/124/125` come from your own library after the first `movie scan`.
 
-<details><summary><strong>✅ Expected output</strong></summary>
+**✅ Expected output**
 
 ```text
 $ movie scan
@@ -242,8 +242,6 @@ Director: Christopher Nolan
 File:     /mnt/storage/Movies/Inception (2010).mkv
 TMDb:     https://www.themoviedb.org/movie/27205
 ```
-
-</details>
 
 > **If it differs:** the most common mismatch is `0 added` or `tmdb miss` rates near 100% — that means `tmdb_api_key` is unset or invalid. Fix with `movie config set tmdb_api_key <your key>` (get one at https://www.themoviedb.org/settings/api), then re-run `movie scan`. If `movie ls` is empty after a successful scan, your `source_folder` points at the wrong directory — verify with `movie config get source_folder`.
 
@@ -270,7 +268,7 @@ movie move 123 --to "D:\Media\Sorted\Action"
 
 > **Assumptions:** Media ID `123` exists in your DB (run `movie scan` first), the destination folder (`/mnt/storage/Sorted/Action` or `D:\Media\Sorted\Action`) is writable, and `default_player` is configured for `movie play`.
 
-<details><summary><strong>✅ Expected output</strong></summary>
+**✅ Expected output**
 
 ```text
 $ movie move 123 --to /mnt/storage/Sorted/Action
@@ -287,8 +285,6 @@ would rename:
 $ movie play 123
 → launching default player for /mnt/storage/Sorted/Action/Inception (2010).mkv
 ```
-
-</details>
 
 > **If it differs:** `movie move` printing `error: id 123 not found` means your library uses different IDs — run `movie ls` and substitute a real one. `permission denied` on the destination means the target folder isn't writable: `chmod -R u+w /mnt/storage/Sorted` (Linux/macOS) or check folder properties on Windows. `movie play` opening nothing means `default_player` isn't set — fix with `movie config set default_player mpv` (or `vlc`, `mpv.exe`, etc.).
 
@@ -311,7 +307,7 @@ movie redo
 
 > **Assumptions:** At least one prior `movie scan`, `move`, or `rename` has recorded an entry in the history table. The sample IDs `87/86/85` are placeholders — substitute the IDs you see in your own `movie undo --list`.
 
-<details><summary><strong>✅ Expected output</strong></summary>
+**✅ Expected output**
 
 ```text
 $ movie undo --list
@@ -327,8 +323,6 @@ $ movie undo --id 87
 $ movie redo
 ✓ re-applied move (history id 87)
 ```
-
-</details>
 
 > **If it differs:** an empty `movie undo --list` means no reversible operations have been recorded yet — run `movie scan`, `movie move`, or `movie rename` first. `error: history id 87 not found` means `87` is from this README, not your DB; use one from your own `movie undo --list`. If `movie redo` fails with `nothing to redo`, you haven't undone anything in the current session.
 
@@ -353,7 +347,7 @@ movie stats
 
 > **Assumptions:** Library is non-empty (`movie scan` has run), `tmdb_api_key` is set for `movie suggest` / `movie discover`, and media ID `1` exists. Stats numbers reflect your own library, not the sample.
 
-<details><summary><strong>✅ Expected output</strong></summary>
+**✅ Expected output**
 
 ```text
 $ movie suggest
@@ -371,8 +365,6 @@ Top genre:  Action (74)
 Avg rating: 7.4
 Watchlist:  12 pending
 ```
-
-</details>
 
 > **If it differs:** `movie suggest` returning `no recommendations` means your library is too small (TMDb needs at least a few scanned titles to pivot from) — scan more first. Wildly different stats numbers are normal; they reflect *your* library, not the sample. `movie tag add 1 favorite` failing with `media not found` means ID `1` doesn't exist in your DB — pick a real ID from `movie ls`.
 
@@ -399,7 +391,7 @@ movie logs | Tee-Object -FilePath movie.log
 
 > **Assumptions:** Default port `7777` is free for `movie rest`, the current working directory is writable for `movie export --out`, and the DB exists at the configured path. Stale-entry IDs (`412/418`) only appear if files were removed outside the CLI.
 
-<details><summary><strong>✅ Expected output</strong></summary>
+**✅ Expected output**
 
 ```text
 $ movie cleanup --dry-run
@@ -416,8 +408,6 @@ $ movie rest --open
 $ movie export --format csv --out library.csv
 ✓ wrote 248 rows to library.csv
 ```
-
-</details>
 
 > **If it differs:** `movie rest` failing with `address already in use` means port `7777` is taken — pass `--port 8080` (or any free port). `movie cleanup --dry-run` printing nothing is **good** — it means no stale entries exist. `movie export` writing zero rows means the library is empty; run `movie scan` first. If `movie logs` shows nothing, lower the threshold with `movie config set log_level debug`.
 
@@ -442,7 +432,7 @@ movie config set tmdb_api_key $env:TMDB_KEY
 
 > **Assumptions:** The config file exists at its default OS-specific path (created automatically on first run), the user has write access to it, and `movie update` has network access to GitHub releases. Replace `YOUR_KEY` with a real TMDb v3 key.
 
-<details><summary><strong>✅ Expected output</strong></summary>
+**✅ Expected output**
 
 ```text
 $ movie config
@@ -461,8 +451,6 @@ $ movie update
 → checking github.com/alimtvnetwork/movie-cli-v6 for newer releases…
 ✓ already on the latest version (v2.191.0)
 ```
-
-</details>
 
 > **If it differs:** `movie config` showing `tmdb_api_key = (unset)` is the #1 cause of every other failure in this README — set it now. `movie update` failing with a network error usually means GitHub is unreachable from your network or a corporate proxy is blocking it; download the latest binary from the [Releases page](https://github.com/alimtvnetwork/movie-cli-v6/releases) instead. A version older than what `movie update` reports means the upgrade succeeded but your shell is still pointing at the old binary — open a fresh terminal.
 
