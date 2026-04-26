@@ -194,6 +194,8 @@ Skip the demo and jump straight to the command you need. Each link drops you int
 
 Each row has both a **Bash** and a **PowerShell** fenced block — pick the one for your shell, then **triple-click any line** (or drag-select the whole block) to copy a real, runnable command. The two blocks differ only where shell syntax matters (paths, env vars, quoting).
 
+> 💡 **Want one-click copy?** Run `movie rest --open` to launch the dashboard, then press <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd> to open the **command palette** — it fuzzy-searches every command in this section and copies the exact `movie …` string with one click. Single-letter shortcuts (<kbd>S</kbd>, <kbd>F</kbd>, <kbd>H</kbd>, <kbd>D</kbd>, <kbd>M</kbd>, <kbd>C</kbd>) jump to each subsection.
+
 <details><summary><strong>🔎 Flat alphabetical command index</strong> — press <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> and type any keyword</summary>
 
 One line per command. Search lands on the exact row; the section name on the right tells you where to jump.
