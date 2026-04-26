@@ -196,6 +196,8 @@ Each row has both a **Bash** and a **PowerShell** fenced block — pick the one 
 
 > 💡 **Want one-click copy?** Run `movie rest --open` to launch the dashboard, then press <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd> to open the **command palette** — it fuzzy-searches every command in this section and copies the exact `movie …` string with one click. Single-letter shortcuts (<kbd>S</kbd>, <kbd>F</kbd>, <kbd>H</kbd>, <kbd>D</kbd>, <kbd>M</kbd>, <kbd>C</kbd>) jump to each subsection.
 
+> 🔍 **Search this README right here.** On GitHub, press <kbd>/</kbd> to open the file-content search, or use your browser's <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> to find any command, flag, or section name on this page. The flat command index below is built so a single keyword (`scan`, `undo`, `tmdb_api_key`) lands on the exact row.
+
 <details><summary><strong>🔎 Flat alphabetical command index</strong> — press <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> and type any keyword</summary>
 
 One line per command. Search lands on the exact row; the section name on the right tells you where to jump.
