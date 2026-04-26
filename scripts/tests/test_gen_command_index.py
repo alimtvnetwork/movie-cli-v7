@@ -507,6 +507,104 @@ class NearestHeadingTests(unittest.TestCase):
         self.assertEqual(result, (3, "## Inner Heading"))
 
 
+class BreadcrumbLevelsTests(unittest.TestCase):
+    """The --breadcrumb-levels CLI option and its level-filtered helper."""
+
+    def test_h2_only_skips_h3_subheading(self):
+        # With H2 as the only permitted level, an H3 between the H2 and
+        # the target line must be ignored — the H2 is reported instead.
+        content = (
+            "## Section A\n"   # line 1
+            "para\n"            # line 2
+            "### Sub A.1\n"     # line 3
+            "[link]\n"          # line 4
+        )
+        result = gci._nearest_heading_above_levels(content, 4, frozenset({2}))
+        self.assertEqual(result, (1, "## Section A"))
+
+    def test_returns_none_when_only_disallowed_levels_precede(self):
+        # Only H1/H3 precede; with H2 as the only permitted level the
+        # helper must yield None rather than the closest disallowed one.
+        content = (
+            "# Top\n"           # line 1
+            "### Deep\n"        # line 2
+            "[link]\n"          # line 3
+        )
+        result = gci._nearest_heading_above_levels(content, 3, frozenset({2}))
+        self.assertIsNone(result)
+
+    def test_multi_level_set_picks_nearest_match(self):
+        # Permit {2,3}: an H4 between an H3 and the target is ignored,
+        # but the H3 is reported (closer than the H2 above).
+        content = (
+            "## Top\n"          # line 1
+            "### Mid\n"         # line 2
+            "#### Deep\n"       # line 3 (disallowed)
+            "[link]\n"          # line 4
+        )
+        result = gci._nearest_heading_above_levels(content, 4, frozenset({2, 3}))
+        self.assertEqual(result, (2, "### Mid"))
+
+    def test_format_anchor_change_default_is_h2_only(self):
+        # Default `breadcrumb_levels` arg is H2-only — an H3 closer to the
+        # offending line must not appear in the breadcrumb.
+        content = (
+            "## Quick Start\n"           # line 1
+            "### Install\n"               # line 2
+            "[bad](#FILE_MANAGEMENT)\n"  # line 3
+        )
+        change = "  line 3: #FILE_MANAGEMENT → #file-management  (File Management)"
+        decorated = gci._format_anchor_change(content, change)
+        self.assertIn("under: ## Quick Start (line 1)", decorated)
+        self.assertNotIn("### Install", decorated)
+
+    def test_format_anchor_change_honours_caller_levels(self):
+        # Passing {3} flips selection to the H3 instead of the H2.
+        content = (
+            "## Quick Start\n"           # line 1
+            "### Install\n"               # line 2
+            "[bad](#FILE_MANAGEMENT)\n"  # line 3
+        )
+        change = "  line 3: #FILE_MANAGEMENT → #file-management  (File Management)"
+        decorated = gci._format_anchor_change(content, change, frozenset({3}))
+        self.assertIn("under: ### Install (line 2)", decorated)
+
+    def test_parse_breadcrumb_levels_basic_csv(self):
+        self.assertEqual(gci._parse_breadcrumb_levels("2,3"), frozenset({2, 3}))
+
+    def test_parse_breadcrumb_levels_default_token_is_h2(self):
+        # The argparse default is the literal string "2".
+        self.assertEqual(gci._parse_breadcrumb_levels("2"), frozenset({2}))
+
+    def test_parse_breadcrumb_levels_clamps_out_of_range(self):
+        # 0 → 1, 7 → 6. Both clamped values appear in the result.
+        self.assertEqual(
+            gci._parse_breadcrumb_levels("0,7"), frozenset({1, 6})
+        )
+
+    def test_parse_breadcrumb_levels_ignores_non_integer_tokens(self):
+        # 'foo' is dropped; the rest survives.
+        self.assertEqual(
+            gci._parse_breadcrumb_levels("foo,3"), frozenset({3})
+        )
+
+    def test_parse_breadcrumb_levels_ignores_empty_tokens(self):
+        # Trailing/leading commas and whitespace must not crash or pollute.
+        self.assertEqual(
+            gci._parse_breadcrumb_levels(" 2 , , 3 ,"), frozenset({2, 3})
+        )
+
+    def test_parse_breadcrumb_levels_falls_back_to_h2_when_empty(self):
+        # Nothing valid → fall back to the documented default.
+        self.assertEqual(gci._parse_breadcrumb_levels("foo,bar"), frozenset({2}))
+        self.assertEqual(gci._parse_breadcrumb_levels(",,"), frozenset({2}))
+
+    def test_parse_breadcrumb_levels_dedupes(self):
+        self.assertEqual(
+            gci._parse_breadcrumb_levels("2,2,3,3"), frozenset({2, 3})
+        )
+
+
 class IgnoredRegionsTests(unittest.TestCase):
     """IGNORED_REGIONS must suppress both generation and drift reporting."""
 
