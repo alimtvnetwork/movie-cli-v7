@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Terminal, Copy, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { COMMAND_ENTRIES, COMMAND_GROUPS } from "./command-data";
 
 /**
  * Command reference panel for the `movie` CLI.
@@ -26,58 +27,12 @@ interface CommandGroup {
   commands: CommandExample[];
 }
 
-const COMMAND_GROUPS: CommandGroup[] = [
-  {
-    title: "Setup & Info",
-    icon: "⚙️",
-    commands: [
-      { cmd: "movie hello", desc: "Greeting with version" },
-      { cmd: "movie version", desc: "Show version, commit, build date" },
-      { cmd: "movie changelog", desc: "Display the changelog" },
-      { cmd: "movie update", desc: "Self-update to latest release" },
-      { cmd: "movie config", desc: "View configuration" },
-      { cmd: "movie config set tmdb_api_key YOUR_KEY", desc: "Set TMDb API key" },
-      { cmd: "movie config set source_folder /path/to/media", desc: "Set scan source folder" },
-    ],
-  },
-  {
-    title: "Library Management",
-    icon: "📚",
-    commands: [
-      { cmd: "movie scan /path/to/media", desc: "Scan folder → DB + TMDb metadata" },
-      { cmd: "movie ls", desc: "Paginated library list" },
-      { cmd: "movie info 123", desc: "Show details for media ID 123" },
-      { cmd: "movie search inception", desc: "Live TMDb search → save" },
-      { cmd: "movie suggest", desc: "Recommendations & trending" },
-      { cmd: "movie stats", desc: "Library statistics + sizes" },
-      { cmd: "movie export", desc: "Export library data" },
-    ],
-  },
-  {
-    title: "File Operations",
-    icon: "🗂️",
-    commands: [
-      { cmd: "movie move", desc: "Browse & move files (interactive)" },
-      { cmd: "movie move --all", desc: "Batch move all (cross-drive safe)" },
-      { cmd: "movie rename", desc: "Batch clean rename" },
-      { cmd: "movie undo", desc: "Revert last move/rename (with confirm)" },
-      { cmd: "movie play 123", desc: "Open in default player" },
-      { cmd: "movie duplicates", desc: "Detect duplicates" },
-      { cmd: "movie cleanup", desc: "Remove stale DB entries" },
-    ],
-  },
-  {
-    title: "Tags & Watchlist",
-    icon: "🏷️",
-    commands: [
-      { cmd: "movie tag add 1 favorite", desc: "Add tag to media" },
-      { cmd: "movie tag remove 1 favorite", desc: "Remove tag" },
-      { cmd: "movie tag list 1", desc: "List tags for a media item" },
-      { cmd: "movie watch add 123", desc: "Add to watchlist" },
-      { cmd: "movie watch list", desc: "Show watchlist" },
-    ],
-  },
-];
+const GROUP_ICONS: Record<string, string> = {
+  "Setup & Info": "⚙️",
+  "Library Management": "📚",
+  "File Operations": "🗂️",
+  "Tags & Watchlist": "🏷️",
+};
 
 function CommandRow({ cmd, desc }: CommandExample) {
   const [copied, setCopied] = useState(false);
@@ -113,6 +68,19 @@ function CommandRow({ cmd, desc }: CommandExample) {
 }
 
 export function CommandReferencePanel() {
+  const groups = useMemo<CommandGroup[]>(
+    () =>
+      COMMAND_GROUPS.map((title) => ({
+        title,
+        icon: GROUP_ICONS[title] ?? "📦",
+        commands: COMMAND_ENTRIES.filter((e) => e.group === title).map((e) => ({
+          cmd: e.cmd,
+          desc: e.desc,
+        })),
+      })),
+    [],
+  );
+
   return (
     <Card className="border-primary/20">
       <CardHeader className="pb-3">
@@ -147,7 +115,7 @@ export function CommandReferencePanel() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {COMMAND_GROUPS.map((group) => (
+          {groups.map((group) => (
             <div key={group.title} className="space-y-1">
               <div className="flex items-center gap-1.5 px-2 py-1">
                 <span>{group.icon}</span>
