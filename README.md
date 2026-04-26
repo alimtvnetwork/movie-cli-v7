@@ -132,7 +132,7 @@ Every command supports `--help` or `-h` for detailed usage.
 
 Skip the demo and jump straight to the command you need. Each link drops you into the matching **Command Reference** subsection — with the animated walkthrough, copy-paste Bash + PowerShell examples, expected output, and the full subcommand table.
 
-Each row has a fenced code block — click into it and **triple-click any line** (or drag-select the whole block) to copy a real, runnable command.
+Each row has both a **Bash** and a **PowerShell** fenced block — pick the one for your shell, then **triple-click any line** (or drag-select the whole block) to copy a real, runnable command. The two blocks differ only where shell syntax matters (paths, env vars, quoting).
 
 #### 📂 [Scanning & Library](#scanning--library)
 Match files against TMDb, browse the library.
@@ -142,6 +142,15 @@ movie rescan
 movie ls
 movie search "inception"
 movie info 123
+```
+```powershell
+movie scan
+movie rescan
+movie ls
+movie search "inception"
+movie info 123
+# Windows-style scan target:
+movie scan "D:\Media\Movies"
 ```
 
 #### 📦 [File Management](#file-management)
@@ -153,6 +162,15 @@ movie popout
 movie play 123
 movie cd 123
 ```
+```powershell
+movie move
+movie rename
+movie popout
+movie play 123
+movie cd 123
+# Quote Windows paths with spaces:
+movie move 123 --to "D:\Media\Sorted\Action"
+```
 
 #### ↩️ [History & Undo](#history--undo)
 Reverse any move / rename / scan / delete.
@@ -162,10 +180,23 @@ movie undo --list
 movie undo --id 42
 movie redo
 ```
+```powershell
+movie undo
+movie undo --list
+movie undo --id 42
+movie redo
+```
 
 #### 🎯 [Discovery & Organization](#discovery--organization)
 Recommendations, genres, tags, watchlist.
 ```bash
+movie suggest
+movie discover
+movie tag add 1 favorite
+movie watch list
+movie stats
+```
+```powershell
 movie suggest
 movie discover
 movie tag add 1 favorite
@@ -182,6 +213,15 @@ movie logs
 movie rest --open
 movie export
 ```
+```powershell
+movie cleanup
+movie db
+movie logs
+movie rest --open
+movie export
+# Pipe logs into a file (PowerShell redirection):
+movie logs | Tee-Object -FilePath movie.log
+```
 
 #### ⚙️ [Configuration & System](#configuration--system)
 Settings, TMDb key, version, self-update.
@@ -190,6 +230,14 @@ movie config
 movie config set tmdb_api_key YOUR_KEY
 movie version
 movie update
+```
+```powershell
+movie config
+movie config set tmdb_api_key YOUR_KEY
+movie version
+movie update
+# Read the key from a PowerShell env var instead of hardcoding it:
+movie config set tmdb_api_key $env:TMDB_KEY
 ```
 
 #### 🚑 [Troubleshooting](#troubleshooting)
