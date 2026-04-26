@@ -581,6 +581,177 @@ movie changelog --latest
 
 <div align="center">
 
+## Troubleshooting
+
+</div>
+
+The most common errors users hit, what each one means, and the exact command to fix it. Each entry links back to the matching walkthrough in the [Command Reference](#command-reference).
+
+### 1. `tmdb_api_key not set` — TMDb requests are skipped
+
+**Symptom:** `movie scan` runs but every file is reported as `! no TMDb match — saved as Unknown` (see the warning row in the [scan walkthrough](assets/screenshots/cmd-scan-library.gif)).
+
+**Cause:** No TMDb API key configured. The scanner falls back to filename-only parsing.
+
+**Fix:**
+
+```bash
+movie config set tmdb_api_key YOUR_KEY      # see assets/screenshots/cmd-config-system.gif
+movie config                                 # confirm: tmdb_api_key = ********  (set)
+movie rescan                                 # backfill metadata for previously-unmatched entries
+```
+
+If the key is set but matches still fail, see error #5 (rate limits).
+
+---
+
+### 2. `no TMDb match` for a known title
+
+**Symptom:** A file you recognize ends up unmatched in the [scan walkthrough](assets/screenshots/cmd-scan-library.gif), tagged `⚠ no TMDb match`.
+
+**Cause:** The release filename is too noisy for the cleaner (extra release-group tags, unusual separators, foreign titles).
+
+**Fix:** Search and link manually.
+
+```bash
+movie search "The Matrix"           # live TMDb search
+movie info "The Matrix"             # confirm the right title
+movie rescan                        # re-resolve everything still missing metadata
+```
+
+If the title genuinely isn't in TMDb, the OMDb fallback kicks in automatically when `OMDB_API_KEY` is set (see error #6).
+
+---
+
+### 3. `move` refuses to run — destination directory missing
+
+**Symptom:** `movie move` aborts before showing the planned destinations from the [file-management walkthrough](assets/screenshots/cmd-file-management.gif), printing `movies_dir does not exist` or `tv_dir does not exist`.
+
+**Cause:** `movies_dir` / `tv_dir` point to a folder that hasn't been created yet.
+
+**Fix:**
+
+```bash
+movie config                                 # check current paths
+mkdir -p ~/Movies ~/TVShows                  # create the destinations
+movie config set movies_dir ~/Movies         # or repoint to an existing folder
+movie config set tv_dir ~/TVShows
+```
+
+---
+
+### 4. Wrong files moved — need to roll back
+
+**Symptom:** A `movie move --all` or `movie rename` batch put files in unexpected places.
+
+**Fix:** Every operation is tracked. Use the flow shown in the [history & undo walkthrough](assets/screenshots/cmd-history-undo.gif):
+
+```bash
+movie undo --list                # find the batch ID (e.g. 42)
+movie undo --id 42               # revert exactly that batch
+# changed your mind?
+movie redo                       # re-apply the last undone operation
+```
+
+`movie undo` always works in reverse chronological order — there is no "permanent" move.
+
+---
+
+### 5. `TMDb 429 Too Many Requests` — rate limited
+
+**Symptom:** `movie scan` or `movie suggest` (see the [discovery walkthrough](assets/screenshots/cmd-discovery.gif)) prints `tmdb: 429 too many requests` and skips entries.
+
+**Cause:** TMDb caps free keys at ~50 requests / second. Large scans can briefly exceed it.
+
+**Fix:** The scanner backs off automatically; just re-run the resolver after a short pause:
+
+```bash
+sleep 5 && movie rescan          # backfill anything skipped
+movie logs                       # inspect any retained warnings
+```
+
+---
+
+### 6. `OMDB_API_KEY not set` — fallback tier silently disabled
+
+**Symptom:** Some titles still show as `Unknown` even after `movie rescan`, and `movie logs` shows `omdb: tier skipped (no key)`.
+
+**Cause:** OMDb is the secondary provider used when TMDb has no result. It's opt-in and reads only from the environment — never the config file or repo.
+
+**Fix:**
+
+```bash
+export OMDB_API_KEY=your_omdb_key            # add to your shell profile to persist
+movie rescan
+movie logs                                   # confirm the omdb-skip warnings are gone
+```
+
+If you also see `omdb: 401 unauthorized`, the key is wrong — generate a new one at omdbapi.com.
+
+---
+
+### 7. Stale entries — files were moved/deleted outside the CLI
+
+**Symptom:** `movie ls` shows entries whose files no longer exist on disk. `movie stats` (see the [maintenance walkthrough](assets/screenshots/cmd-maintenance.gif)) over-reports `Total size`.
+
+**Fix:**
+
+```bash
+movie cleanup                    # dry-run: list stale entries
+movie cleanup --remove           # actually delete them from the DB
+movie duplicates                 # also surface accidental dupes after a cleanup
+```
+
+---
+
+### 8. `database is locked` — second `movie` process running
+
+**Symptom:** Any command exits with `database is locked` or `SQLITE_BUSY`.
+
+**Cause:** SQLite WAL allows many readers but only one writer at a time. A long-running `movie rest` server or a hung `movie scan` can hold the write lock.
+
+**Fix:**
+
+```bash
+movie db                         # confirms the path of the locked DB
+# stop any running 'movie rest' / 'movie scan'
+ps -ef | grep -i movie           # find lingering processes
+kill <pid>
+```
+
+If the lock persists after killing all processes, delete `data/movie.db-wal` and `data/movie.db-shm` (the live DB file is safe to keep).
+
+---
+
+### 9. `command not found: movie` after `movie update`
+
+**Symptom:** Self-update appears to succeed but the next invocation prints `command not found`.
+
+**Cause:** The new binary was deployed to a directory not on `$PATH`, or shell hash cache is stale.
+
+**Fix:**
+
+```bash
+movie update-cleanup             # remove any half-installed temp binaries
+hash -r                          # bash/zsh: clear the command cache
+which movie                      # verify the resolved path
+movie version                    # confirm the new build (see assets/screenshots/cmd-config-system.gif)
+```
+
+On Windows, restart the terminal so the updated `PATH` is picked up.
+
+---
+
+### Still stuck?
+
+1. Run `movie version` and include the output in any bug report — it pins down the exact commit and build date.
+2. Run `movie logs` — the most recent error rows usually point straight at the failing layer (TMDb / DB / filesystem).
+3. Open an issue with the `version` line, the failing command, and the relevant `logs` excerpt.
+
+---
+
+<div align="center">
+
 ## Command Tree
 
 </div>
