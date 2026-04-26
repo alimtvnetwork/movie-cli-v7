@@ -153,6 +153,8 @@ movie info 123
 movie scan "D:\Media\Movies"
 ```
 
+> **Args:** `<path>` is the folder to scan (defaults to your configured `source_folder`). `123` is a **media ID** — get one from `movie ls`. `"inception"` is any free-text query; quote it if it contains spaces.
+
 #### 📦 [File Management](#file-management)
 Move, rename, flatten, play files.
 ```bash
@@ -172,6 +174,8 @@ movie cd 123
 movie move 123 --to "D:\Media\Sorted\Action"
 ```
 
+> **Args:** `123` is a **media ID** (`movie ls` to find it). `--to <path>` is the destination folder; quote paths with spaces. `move`, `rename`, and `popout` run interactively when no ID is given.
+
 #### ↩️ [History & Undo](#history--undo)
 Reverse any move / rename / scan / delete.
 ```bash
@@ -186,6 +190,8 @@ movie undo --list
 movie undo --id 42
 movie redo
 ```
+
+> **Args:** `--id 42` is a **history entry ID** from `movie undo --list`. Bare `movie undo` reverses the most recent operation. `movie redo` re-applies the last undone op.
 
 #### 🎯 [Discovery & Organization](#discovery--organization)
 Recommendations, genres, tags, watchlist.
@@ -203,6 +209,8 @@ movie tag add 1 favorite
 movie watch list
 movie stats
 ```
+
+> **Args:** `1` is a **media ID** (`movie ls`). `favorite` is any tag name you choose — letters, digits, dashes. `movie watch list` and `movie stats` take no args.
 
 #### 🛠 [Maintenance & Debugging](#maintenance--debugging)
 Stale-entry cleanup, logs, REST server.
@@ -223,6 +231,8 @@ movie export
 movie logs | Tee-Object -FilePath movie.log
 ```
 
+> **Args:** All of these run with no required args. `movie rest --open` opens the dashboard in your browser; add `--port 8080` to override the default port. `movie export` writes to stdout unless you pass `--out <file>`.
+
 #### ⚙️ [Configuration & System](#configuration--system)
 Settings, TMDb key, version, self-update.
 ```bash
@@ -239,6 +249,8 @@ movie update
 # Read the key from a PowerShell env var instead of hardcoding it:
 movie config set tmdb_api_key $env:TMDB_KEY
 ```
+
+> **Args:** `tmdb_api_key` is the **config key name** (others: `source_folder`, `default_player`, `log_level`). `YOUR_KEY` is a real TMDb v3 API key — get one at https://www.themoviedb.org/settings/api. `movie version` and `movie update` take no args.
 
 #### 🚑 [Troubleshooting](#troubleshooting)
 Common errors and how to fix them — `tmdb_api_key not set`, `429`, `database is locked`, stale entries.
