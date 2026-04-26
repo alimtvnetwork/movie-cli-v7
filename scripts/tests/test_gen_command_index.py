@@ -233,5 +233,52 @@ class WhitelistTests(unittest.TestCase):
             self.assertEqual(changes, [])
 
 
+class CheckDiagnosticsTests(unittest.TestCase):
+    """The helpers that decorate `--check` failure output."""
+
+    def test_format_anchor_change_adds_region_tag_and_source_line(self):
+        # Simulate a 5-line README where line 3 is the offending anchor.
+        content = "alpha\nbeta\n[bad](#FILE_MANAGEMENT)\ndelta\nepsilon\n"
+        change = "  line 3: #FILE_MANAGEMENT → #file-management  (File Management)"
+        decorated = gci._format_anchor_change(content, change)
+        self.assertIn("[outside index]", decorated)
+        # The source line itself must appear under the change, prefixed with
+        # '> ' so it visually nests in CI logs.
+        self.assertIn("> [bad](#FILE_MANAGEMENT)", decorated)
+
+    def test_format_anchor_change_handles_missing_line(self):
+        # If the change record references a line past EOF (shouldn't happen
+        # in practice, but defensive), the helper must not crash and must
+        # still emit the region tag.
+        decorated = gci._format_anchor_change("only one line\n", "  line 99: #x → #y  (X)")
+        self.assertIn("[outside index]", decorated)
+        # No '> ' source preview when the line lookup returns empty.
+        self.assertNotIn("\n      > ", decorated)
+
+    def test_stale_regions_returns_empty_when_identical(self):
+        # Wrap a body in a real BEGIN/END marker pair and feed the same
+        # content as both `original` and `updated` — the diff should be empty.
+        body = "<table><tr><td>same</td></tr></table>"
+        wrapped = f"prefix\n{gci.HTML_BEGIN}\n{body}\n{gci.HTML_END}\nsuffix\n"
+        self.assertEqual(gci._stale_regions(wrapped, wrapped), [])
+
+    def test_stale_regions_emits_diff_for_changed_region(self):
+        # Same wrapper, different body inside the markers — the helper must
+        # report exactly one drifted region, named for the marker pair.
+        before = f"{gci.HTML_BEGIN}\nrow A\nrow B\n{gci.HTML_END}\n"
+        after = f"{gci.HTML_BEGIN}\nrow A\nrow C\n{gci.HTML_END}\n"
+        drifted = gci._stale_regions(before, after)
+        self.assertEqual(len(drifted), 1)
+        name, diff = drifted[0]
+        self.assertEqual(name, "COMMAND-INDEX:HTML")
+        self.assertIn("-row B", diff)
+        self.assertIn("+row C", diff)
+
+    def test_stale_regions_skips_absent_markers(self):
+        # Content that never had the markers in the first place must not
+        # be reported as drifted — regions are opt-in.
+        self.assertEqual(gci._stale_regions("plain readme\n", "plain readme\n"), [])
+
+
 if __name__ == "__main__":
     unittest.main()
