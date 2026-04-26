@@ -1008,6 +1008,8 @@ Not sure which error you're seeing? Follow this decision tree to find the right 
 
 The most common errors users hit, what each one means, and the exact command to fix it. Each entry links back to the matching walkthrough in the [Command Reference](#command-reference).
 
+### 1. `tmdb_api_key not set` — TMDb requests are skipped
+
 **Symptom:** `movie scan` runs but every file is reported as `! no TMDb match — saved as Unknown` (see the warning row in the [scan walkthrough](assets/screenshots/cmd-scan-library.gif)).
 
 **Cause:** No TMDb API key configured. The scanner falls back to filename-only parsing.
