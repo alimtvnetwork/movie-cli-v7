@@ -399,6 +399,19 @@ movie ls
 
 > **Path placeholders:** `~/Downloads` = macOS/Linux home folder. On Windows use `C:\Users\<you>\Downloads` or `$env:USERPROFILE\Downloads` in PowerShell.
 
+<details>
+<summary>✅ <strong>Expected output</strong> (sample — yours will list your own files)</summary>
+
+```text
+Scanning ~/Downloads ... found 12 video files
+  ✔ Inception.2010.1080p.mkv          → Inception (2010)            ★ 8.4
+  ✔ The.Batman.2022.WEB.mp4           → The Batman (2022)           ★ 7.8
+  ✔ Dune.Part.Two.2024.2160p.mkv      → Dune: Part Two (2024)       ★ 8.3
+  ⚠ random_clip.mp4                   → no TMDb match (run `movie rescan` later)
+Saved 11 entries to library. Run `movie ls` to browse.
+```
+</details>
+
 | Command | Description |
 |---|---|
 | `movie scan [folder]` | Scan folder → DB + TMDb metadata |
@@ -442,6 +455,19 @@ movie undo
 ```
 
 > **Path placeholders:** `~/Downloads` = macOS/Linux. Windows: `C:\Users\<you>\Downloads` or `$env:USERPROFILE\Downloads`.
+
+<details>
+<summary>✅ <strong>Expected output</strong> (sample preview before confirmation)</summary>
+
+```text
+Planned moves (3):
+  [1] Inception.2010.1080p.mkv      → Movies/Inception (2010)/Inception.2010.1080p.mkv
+  [2] The.Batman.2022.WEB.mp4       → Movies/The Batman (2022)/The Batman.2022.mp4
+  [3] Breaking.Bad.S01E01.mkv       → TV/Breaking Bad/Season 01/S01E01.mkv
+Select [a]ll, [n]one, or numbers (e.g. 1,3): a
+✔ Moved 3 files. Undo with `movie undo` (batch id 87).
+```
+</details>
 
 | Command | Description |
 |---|---|
@@ -488,6 +514,21 @@ movie redo
 
 > **ID placeholder:** `42` is a sample undo ID. Run `movie undo --list` to see your own IDs.
 
+<details>
+<summary>✅ <strong>Expected output</strong> (sample — IDs and timestamps will differ)</summary>
+
+```text
+ID   When              Action   Target
+──   ────────────────  ───────  ─────────────────────────────────────────────
+42   2025-04-20 14:02  move     3 files → Movies/
+41   2025-04-20 13:55  rename   7 files cleaned
+40   2025-04-20 12:10  scan     12 entries added
+
+$ movie undo --id 42
+✔ Reverted batch 42 — 3 files restored to original locations.
+```
+</details>
+
 | Command | Description |
 |---|---|
 | `movie undo` | Revert last move/rename/delete/scan operation |
@@ -532,6 +573,21 @@ movie watch add 3                    # ← swap 3 for your chosen media ID
 ```
 
 > **Number / genre / ID placeholders:** `5` = pick count; `Sci-Fi` = any genre; `3` = media ID from your `movie ls`.
+
+<details>
+<summary>✅ <strong>Expected output</strong> (sample — picks vary based on your library)</summary>
+
+```text
+Top 5 picks for you (based on your top genres: Sci-Fi, Thriller):
+  1. Arrival (2016)              ★ 7.9   Sci-Fi · Drama
+  2. Edge of Tomorrow (2014)     ★ 7.9   Sci-Fi · Action
+  3. Ex Machina (2014)           ★ 7.7   Sci-Fi · Thriller
+  4. Annihilation (2018)         ★ 6.8   Sci-Fi · Horror
+  5. Coherence (2013)            ★ 7.2   Sci-Fi · Mystery
+
+✔ Added "Arrival (2016)" to watchlist (id 3).
+```
+</details>
 
 | Command | Description |
 |---|---|
@@ -592,6 +648,22 @@ movie cleanup --remove
 
 > **No placeholders here** — `movie stats` and `movie cleanup` run as-is.
 
+<details>
+<summary>✅ <strong>Expected output</strong> (sample — numbers reflect your library)</summary>
+
+```text
+Library: 142 titles · 118 movies · 24 TV shows · 1.7 TB
+Top genres:  Drama ████████████ 38   Sci-Fi ████████ 26   Action ██████ 19
+Average rating: ★ 7.4
+
+$ movie cleanup
+Stale entries (files missing on disk): 4
+  - Old.Movie.2009.avi          (id 17)
+  - Removed.Show.S02E03.mkv     (id 88)
+Run `movie cleanup --remove` to delete these from the database.
+```
+</details>
+
 | Command | Description |
 |---|---|
 | `movie cleanup` | Find stale entries where files no longer exist |
@@ -638,6 +710,24 @@ movie version
 ```
 
 > **Key placeholder:** `YOUR_KEY` = your TMDb API token from https://www.themoviedb.org/settings/api.
+
+<details>
+<summary>✅ <strong>Expected output</strong> (sample — your build info will differ)</summary>
+
+```text
+Current configuration:
+  tmdb_api_key   ********************abcd   (set)
+  library_root   ~/Media
+  player         vlc
+  log_level      info
+
+$ movie config set tmdb_api_key YOUR_KEY
+✔ Saved tmdb_api_key.
+
+$ movie version
+mahin v2.178.0   commit a1b2c3d   built 2025-04-26   go1.22.2 darwin/arm64
+```
+</details>
 
 | Command | Description |
 |---|---|
