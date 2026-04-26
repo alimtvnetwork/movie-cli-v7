@@ -453,7 +453,7 @@ movie watch list --sort <field>            →   Discovery & Organization   #mov
 
 </details>
 
-#### 📂 [Scanning & Library](#scanning--library)
+#### 📂 [Scanning & Library](#scan--library)
 Match files against TMDb, browse the library.
 ```bash
 movie scan
