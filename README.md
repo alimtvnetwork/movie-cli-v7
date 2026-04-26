@@ -423,6 +423,21 @@ movie ls
 > **Path placeholders:** `~/Downloads` = macOS/Linux home folder. On Windows use `C:\Users\<you>\Downloads` or `$env:USERPROFILE\Downloads` in PowerShell.
 
 <details>
+<summary>🪟 <strong>PowerShell version</strong> (copy-paste on Windows)</summary>
+
+```powershell
+# 1. Reproduce the walkthrough above
+movie scan "$env:USERPROFILE\Downloads"   # ← swap for your own scan folder
+
+# 2. Re-run for any unmatched titles after the first pass
+movie rescan
+
+# 3. Confirm what landed in the library
+movie ls
+```
+</details>
+
+<details>
 <summary>✅ <strong>Expected output</strong> (sample — yours will list your own files)</summary>
 
 ```text
@@ -478,6 +493,21 @@ movie undo
 ```
 
 > **Path placeholders:** `~/Downloads` = macOS/Linux. Windows: `C:\Users\<you>\Downloads` or `$env:USERPROFILE\Downloads`.
+
+<details>
+<summary>🪟 <strong>PowerShell version</strong> (copy-paste on Windows)</summary>
+
+```powershell
+# 1. Interactive preview (the walkthrough's "Select [a]ll, [n]one, or numbers" prompt)
+movie move "$env:USERPROFILE\Downloads"   # ← swap for your own source folder
+
+# 2. Or batch-route everything by type (Movies\ vs TV\)
+movie move --all "$env:USERPROFILE\Downloads"
+
+# 3. Changed your mind? Reverse the entire batch
+movie undo
+```
+</details>
 
 <details>
 <summary>✅ <strong>Expected output</strong> (sample preview before confirmation)</summary>
@@ -538,6 +568,21 @@ movie redo
 > **ID placeholder:** `42` is a sample undo ID. Run `movie undo --list` to see your own IDs.
 
 <details>
+<summary>🪟 <strong>PowerShell version</strong> (copy-paste on Windows)</summary>
+
+```powershell
+# 1. List recent operations (the walkthrough's "ID  When  Action  Target" table)
+movie undo --list
+
+# 2. Revert the batch you saw — replace 42 with the ID from your own list
+movie undo --id 42                        # ← swap 42 for the ID you want to revert
+
+# 3. Re-apply if you undid by mistake
+movie redo
+```
+</details>
+
+<details>
 <summary>✅ <strong>Expected output</strong> (sample — IDs and timestamps will differ)</summary>
 
 ```text
@@ -596,6 +641,21 @@ movie watch add 3                    # ← swap 3 for your chosen media ID
 ```
 
 > **Number / genre / ID placeholders:** `5` = pick count; `Sci-Fi` = any genre; `3` = media ID from your `movie ls`.
+
+<details>
+<summary>🪟 <strong>PowerShell version</strong> (copy-paste on Windows)</summary>
+
+```powershell
+# 1. Reproduce the walkthrough's 5-item recommendation block
+movie suggest 5                           # ← change the number for more/fewer picks
+
+# 2. Drill into a specific genre (quote names containing a hyphen to be safe)
+movie discover "Sci-Fi"                   # ← swap for Action, Comedy, Horror, etc.
+
+# 3. Bookmark something to watch later (use any ID from `movie ls`)
+movie watch add 3                         # ← swap 3 for your chosen media ID
+```
+</details>
 
 <details>
 <summary>✅ <strong>Expected output</strong> (sample — picks vary based on your library)</summary>
@@ -672,6 +732,21 @@ movie cleanup --remove
 > **No placeholders here** — `movie stats` and `movie cleanup` run as-is.
 
 <details>
+<summary>🪟 <strong>PowerShell version</strong> (copy-paste on Windows)</summary>
+
+```powershell
+# 1. Reproduce the walkthrough's library overview + top-genres chart
+movie stats
+
+# 2. Dry-run a cleanup to see entries whose files no longer exist
+movie cleanup
+
+# 3. Actually remove them once you're happy with the dry-run output
+movie cleanup --remove
+```
+</details>
+
+<details>
 <summary>✅ <strong>Expected output</strong> (sample — numbers reflect your library)</summary>
 
 ```text
@@ -733,6 +808,23 @@ movie version
 ```
 
 > **Key placeholder:** `YOUR_KEY` = your TMDb API token from https://www.themoviedb.org/settings/api.
+
+<details>
+<summary>🪟 <strong>PowerShell version</strong> (copy-paste on Windows)</summary>
+
+```powershell
+# 1. Reproduce the walkthrough's "Current configuration" block
+movie config
+
+# 2. Set your own TMDb API key (replace YOUR_KEY with the real value)
+#    Tip: store it in an env var first so it doesn't end up in shell history:
+#       $env:TMDB_KEY = "your-real-token"
+movie config set tmdb_api_key $env:TMDB_KEY   # ← or pass the literal token in quotes
+
+# 3. Confirm exactly which build is running (use this in bug reports)
+movie version
+```
+</details>
 
 <details>
 <summary>✅ <strong>Expected output</strong> (sample — your build info will differ)</summary>
