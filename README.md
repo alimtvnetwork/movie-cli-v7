@@ -302,13 +302,16 @@ One line per command. Search lands on the exact row; the section name on the rig
 
 **Click the command** to jump straight to its README subsection (with the bash/PowerShell blocks, args, expected output, and "if it differs" notes). Each row also carries a stable anchor (e.g. `#movie-scan`, `#movie-undo-list`) shown in the rightmost column — share that fragment and links always land on the exact row. The **Example keyword** column gives you a minimal command-shaped placeholder (e.g. `movie ls --year `, `movie scan --dry-run `, `movie config set tmdb_api_key `) — paste it into <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>F</kbd> to find every place that argument pattern appears in this README (index row, usage block, expected output, and tips).
 
+> 🔄 **Both the HTML table below and the plain-text block further down are auto-generated** from a single source-of-truth list in `scripts/gen-command-index.py`. Edit only that file when adding/renaming a command, then run `python3 scripts/gen-command-index.py` to refresh both blocks. CI runs `--check` on every push and fails if they drift apart.
+
+<!-- COMMAND-INDEX:HTML:BEGIN -->
 <table>
 <thead><tr>
 <th align="left" width="38%">Command</th>
 <th align="center" width="4%">→</th>
 <th align="left" width="20%">Section</th>
 <th align="left" width="22%">Example keyword</th>
-<th align="right" width="24%">Anchor</th>
+<th align="right" width="16%">Anchor</th>
 </tr></thead>
 <tbody>
 <tr id="movie-cd-id"><td><a href="#file-management" title="Jump to the File Management section"><code>movie cd &lt;id&gt;</code></a></td><td align="center">→</td><td><a href="#file-management">File Management</a></td><td><code>movie cd </code></td><td align="right"><code>#movie-cd-id</code></td></tr>
@@ -358,7 +361,7 @@ One line per command. Search lands on the exact row; the section name on the rig
 <tr id="movie-suggest"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie suggest</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie suggest</code></td><td align="right"><code>#movie-suggest</code></td></tr>
 <tr id="movie-suggest-genre-name-limit-n"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie suggest --genre &lt;name&gt; --limit &lt;n&gt;</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie suggest --genre </code></td><td align="right"><code>#movie-suggest-genre-name-limit-n</code></td></tr>
 <tr id="movie-tag-add-id-tag"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie tag add &lt;id&gt; &lt;tag&gt;</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie tag add </code></td><td align="right"><code>#movie-tag-add-id-tag</code></td></tr>
-<tr id="movie-tag-list-id"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie tag list </code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie tag list </code></td><td align="right"><code>#movie-tag-list-id</code></td></tr>
+<tr id="movie-tag-list-id"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie tag list &lt;id&gt;</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie tag list </code></td><td align="right"><code>#movie-tag-list-id</code></td></tr>
 <tr id="movie-tag-list-all"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie tag list --all</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie tag list --all</code></td><td align="right"><code>#movie-tag-list-all</code></td></tr>
 <tr id="movie-tag-remove-id-tag"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie tag remove &lt;id&gt; &lt;tag&gt;</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie tag remove </code></td><td align="right"><code>#movie-tag-remove-id-tag</code></td></tr>
 <tr id="movie-tag-remove-id-all"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie tag remove &lt;id&gt; --all</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie tag remove --all</code></td><td align="right"><code>#movie-tag-remove-id-all</code></td></tr>
@@ -373,6 +376,7 @@ One line per command. Search lands on the exact row; the section name on the rig
 <tr id="movie-watch-list-sort-field"><td><a href="#discovery--organization" title="Jump to the Discovery & Organization section"><code>movie watch list --sort &lt;field&gt;</code></a></td><td align="center">→</td><td><a href="#discovery--organization">Discovery & Organization</a></td><td><code>movie watch list --sort </code></td><td align="right"><code>#movie-watch-list-sort-field</code></td></tr>
 </tbody>
 </table>
+<!-- COMMAND-INDEX:HTML:END -->
 
 </details>
 
@@ -380,6 +384,7 @@ One line per command. Search lands on the exact row; the section name on the rig
 
 Use this block when reading the README in a terminal (`cat README.md`, `less`, `bat`), in a non-HTML editor, or when piping to `grep` / `fzf`. Every row is padded so the `→` pointer sits in a single column and the **Section** and **Anchor** columns start at the same offset on every line. Copy the whole block — it's ASCII-safe (only the `→` arrow is non-ASCII, U+2192) and renders cleanly in any UTF-8 monospace font.
 
+<!-- COMMAND-INDEX:TEXT:BEGIN -->
 ```text
 Command                                      Section                      Anchor
 ----------------------------------------   -   ------------------------   ------------------------------------
@@ -444,6 +449,7 @@ movie watch add <id> --priority <level>    →   Discovery & Organization   #mov
 movie watch list                           →   Discovery & Organization   #movie-watch-list
 movie watch list --sort <field>            →   Discovery & Organization   #movie-watch-list-sort-field
 ```
+<!-- COMMAND-INDEX:TEXT:END -->
 
 </details>
 
