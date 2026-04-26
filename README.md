@@ -155,6 +155,34 @@ movie scan "D:\Media\Movies"
 
 > **Args:** `<path>` is the folder to scan (defaults to your configured `source_folder`). `123` is a **media ID** — get one from `movie ls`. `"inception"` is any free-text query; quote it if it contains spaces.
 
+<details><summary><strong>✅ Expected output</strong></summary>
+
+```text
+$ movie scan
+→ scanning /mnt/storage/Movies
+   matched   42
+   added     12
+   skipped    3
+   tmdb hit  41 / miss 1
+done in 4.2s
+
+$ movie ls
+ID   TITLE                              YEAR   GENRE     RATING   SIZE
+123  Inception                          2010   Action     8.8     2.1 GB
+124  The Matrix                         1999   Action     8.7     1.8 GB
+125  Arrival                            2016   Sci-Fi     7.9     1.4 GB
+...  (use --limit / --page to paginate)
+
+$ movie info 123
+Inception (2010)         ID 123    ★ 8.8    Runtime 148m
+Genre:    Action, Sci-Fi
+Director: Christopher Nolan
+File:     /mnt/storage/Movies/Inception (2010).mkv
+TMDb:     https://www.themoviedb.org/movie/27205
+```
+
+</details>
+
 #### 📦 [File Management](#file-management)
 Move, rename, flatten, play files.
 ```bash
@@ -176,6 +204,26 @@ movie move 123 --to "D:\Media\Sorted\Action"
 
 > **Args:** `123` is a **media ID** (`movie ls` to find it). `--to <path>` is the destination folder; quote paths with spaces. `move`, `rename`, and `popout` run interactively when no ID is given.
 
+<details><summary><strong>✅ Expected output</strong></summary>
+
+```text
+$ movie move 123 --to /mnt/storage/Sorted/Action
+→ moving "Inception (2010).mkv"
+   from  /mnt/storage/Movies
+   to    /mnt/storage/Sorted/Action
+✓ moved  (history id 87)
+
+$ movie rename 123 --dry-run
+would rename:
+  "inception.2010.1080p.mkv"  →  "Inception (2010).mkv"
+(dry run — no files changed)
+
+$ movie play 123
+→ launching default player for /mnt/storage/Sorted/Action/Inception (2010).mkv
+```
+
+</details>
+
 #### ↩️ [History & Undo](#history--undo)
 Reverse any move / rename / scan / delete.
 ```bash
@@ -192,6 +240,25 @@ movie redo
 ```
 
 > **Args:** `--id 42` is a **history entry ID** from `movie undo --list`. Bare `movie undo` reverses the most recent operation. `movie redo` re-applies the last undone op.
+
+<details><summary><strong>✅ Expected output</strong></summary>
+
+```text
+$ movie undo --list
+ID   WHEN                  OP        TARGET
+87   2025-04-26 14:02:11   move      Inception (2010).mkv
+86   2025-04-26 13:58:40   rename    The Matrix (1999).mkv
+85   2025-04-26 13:51:02   scan      /mnt/storage/Movies (12 added)
+
+$ movie undo --id 87
+? Revert move of "Inception (2010).mkv"? [y/N] y
+✓ reverted (history id 87 → reversed)
+
+$ movie redo
+✓ re-applied move (history id 87)
+```
+
+</details>
 
 #### 🎯 [Discovery & Organization](#discovery--organization)
 Recommendations, genres, tags, watchlist.
@@ -211,6 +278,27 @@ movie stats
 ```
 
 > **Args:** `1` is a **media ID** (`movie ls`). `favorite` is any tag name you choose — letters, digits, dashes. `movie watch list` and `movie stats` take no args.
+
+<details><summary><strong>✅ Expected output</strong></summary>
+
+```text
+$ movie suggest
+Because you watched Inception (2010):
+  • Interstellar (2014)        ★ 8.6    not in library
+  • Tenet (2020)               ★ 7.4    not in library
+  • The Prestige (2006)        ★ 8.5    in library (id 131)
+
+$ movie tag add 1 favorite
+✓ tagged "Inception (2010)" with: favorite
+
+$ movie stats
+Library:    248 titles · 612 GB
+Top genre:  Action (74)
+Avg rating: 7.4
+Watchlist:  12 pending
+```
+
+</details>
 
 #### 🛠 [Maintenance & Debugging](#maintenance--debugging)
 Stale-entry cleanup, logs, REST server.
@@ -233,6 +321,26 @@ movie logs | Tee-Object -FilePath movie.log
 
 > **Args:** All of these run with no required args. `movie rest --open` opens the dashboard in your browser; add `--port 8080` to override the default port. `movie export` writes to stdout unless you pass `--out <file>`.
 
+<details><summary><strong>✅ Expected output</strong></summary>
+
+```text
+$ movie cleanup --dry-run
+stale entries (file no longer exists):
+  ID 412   "Old Movie (1998).mkv"
+  ID 418   "Removed.avi"
+(dry run — pass --yes to delete)
+
+$ movie rest --open
+→ REST server listening on http://127.0.0.1:7777
+→ opened browser at http://127.0.0.1:7777/dashboard
+(press Ctrl+C to stop)
+
+$ movie export --format csv --out library.csv
+✓ wrote 248 rows to library.csv
+```
+
+</details>
+
 #### ⚙️ [Configuration & System](#configuration--system)
 Settings, TMDb key, version, self-update.
 ```bash
@@ -251,6 +359,28 @@ movie config set tmdb_api_key $env:TMDB_KEY
 ```
 
 > **Args:** `tmdb_api_key` is the **config key name** (others: `source_folder`, `default_player`, `log_level`). `YOUR_KEY` is a real TMDb v3 API key — get one at https://www.themoviedb.org/settings/api. `movie version` and `movie update` take no args.
+
+<details><summary><strong>✅ Expected output</strong></summary>
+
+```text
+$ movie config
+source_folder    = /mnt/storage/Movies
+tmdb_api_key     = abcd…5678   (set)
+default_player   = mpv
+log_level        = info
+
+$ movie config set tmdb_api_key abcd1234efgh5678
+✓ tmdb_api_key updated
+
+$ movie version
+movie v2.191.0  (commit a1b2c3d, built 2025-04-26)
+
+$ movie update
+→ checking github.com/alimtvnetwork/movie-cli-v6 for newer releases…
+✓ already on the latest version (v2.191.0)
+```
+
+</details>
 
 #### 🚑 [Troubleshooting](#troubleshooting)
 Common errors and how to fix them — `tmdb_api_key not set`, `429`, `database is locked`, stale entries.
