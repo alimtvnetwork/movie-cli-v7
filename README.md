@@ -1006,6 +1006,7 @@ Not sure which error you're seeing? Follow this decision tree to find the right 
 | `429 too many requests` | Rate limit hit during large scan | [5. `TMDb 429 Too Many Requests`](#5-tmdb-429-too-many-requests--rate-limited) |
 | `database is locked` / `SQLITE_BUSY` | Second `movie` process running | [8. `database is locked`](#8-database-is-locked--second-movie-process-running) |
 
+The most common errors users hit, what each one means, and the exact command to fix it. Each entry links back to the matching walkthrough in the [Command Reference](#command-reference).
 
 ### 1. `tmdb_api_key not set` — TMDb requests are skipped
 
