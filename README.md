@@ -457,20 +457,34 @@ movie watch list --sort <field>            →   Discovery & Organization   #mov
 Match files against TMDb, browse the library.
 <!-- SECTION-CMDS:Scanning & Library:BEGIN -->
 ```bash
-movie scan
-movie rescan
+movie info <id>
+movie info <id> --json
 movie ls
-movie search "inception"
-movie info 123
+movie ls --genre <name>
+movie ls --limit <n>
+movie ls --year <yyyy> --sort <field>
+movie rescan
+movie scan
+movie scan <path>
+movie scan <path> --dry-run
+movie scan <path> --refresh
+movie search <query>
+movie search <query> --year <yyyy>
 ```
 ```powershell
-movie scan
-movie rescan
+movie info <id>
+movie info <id> --json
 movie ls
-movie search "inception"
-movie info 123
-# Windows-style scan target:
-movie scan "D:\Media\Movies"
+movie ls --genre <name>
+movie ls --limit <n>
+movie ls --year <yyyy> --sort <field>
+movie rescan
+movie scan
+movie scan <path>
+movie scan <path> --dry-run
+movie scan <path> --refresh
+movie search <query>
+movie search <query> --year <yyyy>
 ```
 <!-- SECTION-CMDS:Scanning & Library:END -->
 
@@ -510,20 +524,30 @@ TMDb:     https://www.themoviedb.org/movie/27205
 Move, rename, flatten, play files.
 <!-- SECTION-CMDS:File Management:BEGIN -->
 ```bash
+movie cd <id>
+movie duplicates
 movie move
-movie rename
+movie move --all
+movie move <id> --to <path>
+movie play <id>
+movie play <id> --player <bin>
 movie popout
-movie play 123
-movie cd 123
+movie rename
+movie rename <id>
+movie rename --all --pattern <fmt>
 ```
 ```powershell
+movie cd <id>
+movie duplicates
 movie move
-movie rename
+movie move --all
+movie move <id> --to <path>
+movie play <id>
+movie play <id> --player <bin>
 movie popout
-movie play 123
-movie cd 123
-# Quote Windows paths with spaces:
-movie move 123 --to "D:\Media\Sorted\Action"
+movie rename
+movie rename <id>
+movie rename --all --pattern <fmt>
 ```
 <!-- SECTION-CMDS:File Management:END -->
 
@@ -555,16 +579,16 @@ $ movie play 123
 Reverse any move / rename / scan / delete.
 <!-- SECTION-CMDS:History & Undo:BEGIN -->
 ```bash
-movie undo
-movie undo --list
-movie undo --id 42
 movie redo
+movie undo
+movie undo --id <history-id>
+movie undo --list
 ```
 ```powershell
-movie undo
-movie undo --list
-movie undo --id 42
 movie redo
+movie undo
+movie undo --id <history-id>
+movie undo --list
 ```
 <!-- SECTION-CMDS:History & Undo:END -->
 
@@ -595,18 +619,36 @@ $ movie redo
 Recommendations, genres, tags, watchlist.
 <!-- SECTION-CMDS:Discovery & Organization:BEGIN -->
 ```bash
-movie suggest
 movie discover
-movie tag add 1 favorite
-movie watch list
 movie stats
+movie stats --by <dimension>
+movie suggest
+movie suggest --genre <name> --limit <n>
+movie tag add <id> <tag>
+movie tag list <id>
+movie tag list --all
+movie tag remove <id> <tag>
+movie tag remove <id> --all
+movie watch add <id>
+movie watch add <id> --priority <level>
+movie watch list
+movie watch list --sort <field>
 ```
 ```powershell
-movie suggest
 movie discover
-movie tag add 1 favorite
-movie watch list
 movie stats
+movie stats --by <dimension>
+movie suggest
+movie suggest --genre <name> --limit <n>
+movie tag add <id> <tag>
+movie tag list <id>
+movie tag list --all
+movie tag remove <id> <tag>
+movie tag remove <id> --all
+movie watch add <id>
+movie watch add <id> --priority <level>
+movie watch list
+movie watch list --sort <field>
 ```
 <!-- SECTION-CMDS:Discovery & Organization:END -->
 
@@ -641,18 +683,24 @@ Stale-entry cleanup, logs, REST server.
 ```bash
 movie cleanup
 movie db
-movie logs
-movie rest --open
 movie export
+movie export --format csv --out <file>
+movie export --format json --out <file>
+movie logs
+movie rest
+movie rest --open
+movie rest --port <n>
 ```
 ```powershell
 movie cleanup
 movie db
-movie logs
-movie rest --open
 movie export
-# Pipe logs into a file (PowerShell redirection):
-movie logs | Tee-Object -FilePath movie.log
+movie export --format csv --out <file>
+movie export --format json --out <file>
+movie logs
+movie rest
+movie rest --open
+movie rest --port <n>
 ```
 <!-- SECTION-CMDS:Maintenance & Debugging:END -->
 
@@ -684,18 +732,26 @@ $ movie export --format csv --out library.csv
 Settings, TMDb key, version, self-update.
 <!-- SECTION-CMDS:Configuration & System:BEGIN -->
 ```bash
+movie changelog
 movie config
-movie config set tmdb_api_key YOUR_KEY
-movie version
+movie config get <key>
+movie config set <key> <value>
+movie config set source_folder <path>
+movie config set tmdb_api_key <key>
+movie hello
 movie update
+movie version
 ```
 ```powershell
+movie changelog
 movie config
-movie config set tmdb_api_key YOUR_KEY
-movie version
+movie config get <key>
+movie config set <key> <value>
+movie config set source_folder <path>
+movie config set tmdb_api_key <key>
+movie hello
 movie update
-# Read the key from a PowerShell env var instead of hardcoding it:
-movie config set tmdb_api_key $env:TMDB_KEY
+movie version
 ```
 <!-- SECTION-CMDS:Configuration & System:END -->
 
