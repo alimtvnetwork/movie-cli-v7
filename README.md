@@ -384,6 +384,19 @@ Each thumbnail is a short looping walkthrough — hover or click to view the ful
   <em>📸 <code>movie scan</code> walks a folder, cleans messy release names, and matches each file against TMDb.</em>
 </p>
 
+**▶ Try the example from the screenshot** — replace `~/Downloads` with any folder containing video files:
+
+```bash
+# 1. Reproduce the walkthrough above
+movie scan ~/Downloads               # ← swap for your own scan folder
+
+# 2. Re-run for any unmatched titles after the first pass
+movie rescan
+
+# 3. Confirm what landed in the library
+movie ls
+```
+
 | Command | Description |
 |---|---|
 | `movie scan [folder]` | Scan folder → DB + TMDb metadata |
@@ -412,6 +425,19 @@ movie info "The Batman"           # search by title
   <br>
   <em>📸 <code>movie move</code> previews the destination for every file before touching the filesystem — fully reversible with <code>movie undo</code>.</em>
 </p>
+
+**▶ Try the example from the screenshot** — preview destinations, accept with `a`, then undo if needed:
+
+```bash
+# 1. Interactive preview (the walkthrough's "Select [a]ll, [n]one, or numbers" prompt)
+movie move ~/Downloads               # ← swap for your own source folder
+
+# 2. Or batch-route everything by type (Movies/ vs TV/)
+movie move --all ~/Downloads
+
+# 3. Changed your mind? Reverse the entire batch
+movie undo
+```
 
 | Command | Description |
 |---|---|
@@ -443,6 +469,19 @@ cd $(movie cd Movies)             # navigate to scanned folder
   <em>📸 Every move, rename, scan, and delete is tracked. <code>movie undo --list</code> shows what can be reversed; <code>movie redo</code> re-applies it.</em>
 </p>
 
+**▶ Try the example from the screenshot** — list operations, undo a specific batch by ID, then redo it:
+
+```bash
+# 1. List recent operations (the walkthrough's "ID  When  Action  Target" table)
+movie undo --list
+
+# 2. Revert the batch you saw — replace 42 with the ID from your own list
+movie undo --id 42                   # ← swap 42 for the ID you want to revert
+
+# 3. Re-apply if you undid by mistake
+movie redo
+```
+
 | Command | Description |
 |---|---|
 | `movie undo` | Revert last move/rename/delete/scan operation |
@@ -472,6 +511,19 @@ movie history                     # view full operation history
   <br>
   <em>📸 <code>movie suggest</code> reads your library tastes and surfaces both personalized picks and trending titles from TMDb.</em>
 </p>
+
+**▶ Try the example from the screenshot** — get 5 picks, browse a genre, then add one to your watchlist:
+
+```bash
+# 1. Reproduce the walkthrough's 5-item recommendation block
+movie suggest 5                      # ← change the number for more/fewer picks
+
+# 2. Drill into a specific genre
+movie discover Sci-Fi                # ← swap for Action, Comedy, Horror, etc.
+
+# 3. Bookmark something to watch later (use any ID from `movie ls`)
+movie watch add 3                    # ← swap 3 for your chosen media ID
+```
 
 | Command | Description |
 |---|---|
@@ -517,6 +569,19 @@ movie duplicates                  # find duplicate entries
   <em>📸 <code>movie stats</code> renders an instant overview — counts, storage used, top genres, and average rating.</em>
 </p>
 
+**▶ Try the example from the screenshot** — view stats, then prune any stale entries it surfaces:
+
+```bash
+# 1. Reproduce the walkthrough's library overview + top-genres chart
+movie stats
+
+# 2. Dry-run a cleanup to see entries whose files no longer exist
+movie cleanup
+
+# 3. Actually remove them once you're happy with the dry-run output
+movie cleanup --remove
+```
+
 | Command | Description |
 |---|---|
 | `movie cleanup` | Find stale entries where files no longer exist |
@@ -548,6 +613,19 @@ movie export -o ~/library.json    # export full library as JSON
   <br>
   <em>📸 <code>movie config</code> shows every setting; <code>movie version</code> prints the exact build for bug reports.</em>
 </p>
+
+**▶ Try the example from the screenshot** — inspect config, set the TMDb key, then verify the build:
+
+```bash
+# 1. Reproduce the walkthrough's "Current configuration" block
+movie config
+
+# 2. Set your own TMDb API key (replace YOUR_KEY with the real value)
+movie config set tmdb_api_key YOUR_KEY        # ← swap YOUR_KEY for your TMDb token
+
+# 3. Confirm exactly which build is running (use this in bug reports)
+movie version
+```
 
 | Command | Description |
 |---|---|
