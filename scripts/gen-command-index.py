@@ -191,6 +191,27 @@ def _section_anchor(label: str) -> str:
 SECTION_ANCHORS: dict[str, str] = {label: _section_anchor(label) for label in SECTION_LABELS}
 
 
+# ─── Extra hand-typed doc anchors managed by the rewriter ───────────────────
+# These are NOT command sections (no quick-start blocks, no index rows), but
+# they're the most-linked top-level README headings and are easy to misspell
+# (`#quick_start`, `#QuickStart`, `#installation-guide`, …). Listing them here
+# lets _rewrite_section_anchors() fix stale references using the same narrow
+# alphanumeric-fingerprint rule it already uses for the six sections.
+#
+# Add a label here ONLY if README.md actually contains a heading with that
+# exact text — the canonical slug is derived via _section_slug(), so a typo
+# in this list would silently rewrite real links to a dead anchor.
+EXTRA_ANCHOR_LABELS: tuple[str, ...] = (
+    "Installation",
+    "Quick Start",
+    "Troubleshooting",
+)
+
+EXTRA_ANCHORS: dict[str, str] = {
+    label: f"#{_section_slug(label)}" for label in EXTRA_ANCHOR_LABELS
+}
+
+
 def _row_id(command: str) -> str:
     """Stable per-row anchor: 'movie scan <path> --dry-run' → 'movie-scan-path-dry-run'."""
     slug = re.sub(r"[<>]", "", command)
