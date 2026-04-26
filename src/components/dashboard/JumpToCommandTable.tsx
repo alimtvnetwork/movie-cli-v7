@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Compass, Copy, Check, ExternalLink } from "lucide-react";
+import { Compass, Copy, Check, ExternalLink, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -21,6 +21,7 @@ interface JumpSection {
   title: string;
   icon: string;
   anchor: string;
+  shortcut: string;
   commands: JumpCommand[];
 }
 
@@ -52,6 +53,7 @@ const SECTIONS: JumpSection[] = [
     title: "Scanning & Library",
     icon: "📚",
     anchor: "scanning--library",
+    shortcut: "s",
     commands: [
       { cmd: "movie scan /path/to/media", label: "Scan a folder" },
       { cmd: "movie ls", label: "List library" },
@@ -62,6 +64,7 @@ const SECTIONS: JumpSection[] = [
     title: "File Management",
     icon: "🗂️",
     anchor: "file-management",
+    shortcut: "f",
     commands: [
       { cmd: "movie move", label: "Interactive move" },
       { cmd: "movie move --all", label: "Batch move" },
@@ -72,6 +75,7 @@ const SECTIONS: JumpSection[] = [
     title: "History & Undo",
     icon: "⏪",
     anchor: "history--undo",
+    shortcut: "h",
     commands: [
       { cmd: "movie undo", label: "Revert last op" },
       { cmd: "movie history", label: "Show history" },
@@ -81,6 +85,7 @@ const SECTIONS: JumpSection[] = [
     title: "Discovery & Organization",
     icon: "🔍",
     anchor: "discovery--organization",
+    shortcut: "d",
     commands: [
       { cmd: "movie search inception", label: "TMDb search" },
       { cmd: "movie suggest", label: "Recommendations" },
@@ -91,6 +96,7 @@ const SECTIONS: JumpSection[] = [
     title: "Maintenance & Debugging",
     icon: "🛠️",
     anchor: "maintenance--debugging",
+    shortcut: "m",
     commands: [
       { cmd: "movie duplicates", label: "Find duplicates" },
       { cmd: "movie cleanup", label: "Remove stale entries" },
@@ -101,6 +107,7 @@ const SECTIONS: JumpSection[] = [
     title: "Configuration & System",
     icon: "⚙️",
     anchor: "configuration--system",
+    shortcut: "c",
     commands: [
       { cmd: "movie config", label: "View config" },
       { cmd: "movie config set tmdb_api_key YOUR_KEY", label: "Set TMDb key" },
@@ -108,6 +115,37 @@ const SECTIONS: JumpSection[] = [
     ],
   },
 ];
+
+/**
+ * True when the user is currently typing into a form control, so we don't
+ * hijack their keystrokes with single-letter shortcuts.
+ */
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (target.isContentEditable) return true;
+  return false;
+}
+
+function useSectionShortcuts(sections: JumpSection[]) {
+  useEffect(() => {
+    const map = new Map(sections.map((s) => [s.shortcut, s]));
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isTypingTarget(e.target)) return;
+      const section = map.get(e.key.toLowerCase());
+      if (!section) return;
+      e.preventDefault();
+      scrollToAnchor(section.anchor);
+      toast.success(`Jumped to ${section.title}`, {
+        description: `Shortcut: ${section.shortcut.toUpperCase()}`,
+      });
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [sections]);
+}
 
 function CopyButton({ cmd }: { cmd: string }) {
   const [copied, setCopied] = useState(false);
@@ -137,6 +175,8 @@ function CopyButton({ cmd }: { cmd: string }) {
 }
 
 export function JumpToCommandTable() {
+  useSectionShortcuts(SECTIONS);
+
   return (
     <Card className="border-primary/20">
       <CardHeader className="pb-3">
@@ -145,13 +185,14 @@ export function JumpToCommandTable() {
             <Compass className="h-4 w-4 text-primary" />
             Jump to a command
           </CardTitle>
-          <Badge variant="outline" className="text-xs">
-            README mirror
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Keyboard className="h-3 w-3" />
+            Shortcuts on
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground">
           Top commands per section. Copy directly, or jump to the README
-          subsection for full reference.
+          subsection for full reference. Press the highlighted letter to jump.
         </p>
       </CardHeader>
       <CardContent>
@@ -167,7 +208,7 @@ export function JumpToCommandTable() {
                   e.preventDefault();
                   scrollToAnchor(section.anchor);
                 }}
-                aria-label={`Jump to ${section.title} section (${section.commands.length} commands)`}
+                aria-label={`Jump to ${section.title} section (${section.commands.length} commands). Keyboard shortcut: ${section.shortcut.toUpperCase()}`}
                 style={{ scrollMarginTop: SCROLL_OFFSET_MOBILE }}
                 className="flex items-center justify-between gap-2 text-sm font-medium hover:text-primary transition-colors"
               >
@@ -175,7 +216,15 @@ export function JumpToCommandTable() {
                   <span aria-hidden="true">{section.icon}</span>
                   {section.title}
                 </span>
-                <ExternalLink className="h-3 w-3 opacity-60" aria-hidden="true" />
+                <span className="flex items-center gap-1.5">
+                  <kbd
+                    className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground"
+                    aria-hidden="true"
+                  >
+                    {section.shortcut}
+                  </kbd>
+                  <ExternalLink className="h-3 w-3 opacity-60" aria-hidden="true" />
+                </span>
               </a>
               <div className="space-y-0.5">
                 {section.commands.map((c) => (
