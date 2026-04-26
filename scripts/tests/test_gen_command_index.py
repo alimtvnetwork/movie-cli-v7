@@ -350,6 +350,75 @@ class CheckDiagnosticsTests(unittest.TestCase):
         self.assertEqual(gci._stale_regions("plain readme\n", "plain readme\n"), [])
 
 
+class NearestHeadingTests(unittest.TestCase):
+    """The breadcrumb helper used by _format_anchor_change."""
+
+    def test_returns_nearest_heading_at_any_level(self):
+        content = (
+            "# Top\n"          # line 1
+            "intro\n"           # line 2
+            "## Section A\n"    # line 3
+            "body\n"            # line 4
+            "### Sub A.1\n"     # line 5
+            "[link]\n"          # line 6  ← target
+        )
+        result = gci._nearest_heading_above(content, 6)
+        self.assertEqual(result, (5, "### Sub A.1"))
+
+    def test_falls_back_to_higher_level_when_no_intervening_subheading(self):
+        content = (
+            "## Section\n"   # line 1
+            "para\n"          # line 2
+            "[link]\n"        # line 3  ← target, no sub-heading between
+        )
+        result = gci._nearest_heading_above(content, 3)
+        self.assertEqual(result, (1, "## Section"))
+
+    def test_returns_none_when_no_heading_precedes(self):
+        content = "para 1\npara 2\n[link]\n"
+        self.assertIsNone(gci._nearest_heading_above(content, 3))
+
+    def test_ignores_atx_lookalike_inside_fenced_code_block(self):
+        # A `# comment` inside a bash block is not a real heading. Without
+        # fence-tracking the helper would incorrectly report it as the
+        # nearest section header.
+        content = (
+            "## Real Section\n"   # line 1
+            "before\n"             # line 2
+            "```bash\n"            # line 3  (open fence)
+            "# not a heading\n"    # line 4
+            "echo hi\n"            # line 5
+            "```\n"                # line 6  (close fence)
+            "[link]\n"             # line 7  ← target
+        )
+        result = gci._nearest_heading_above(content, 7)
+        self.assertEqual(result, (1, "## Real Section"))
+
+    def test_target_line_itself_is_inclusive(self):
+        # If the offending anchor is on the heading line itself (rare but
+        # possible for `## [text](#anchor)`), the heading IS the breadcrumb.
+        content = "## [Inline](#bad)\n"
+        result = gci._nearest_heading_above(content, 1)
+        self.assertEqual(result, (1, "## [Inline](#bad)"))
+
+    def test_format_anchor_change_includes_under_breadcrumb(self):
+        # End-to-end: _format_anchor_change must surface the heading line.
+        content = "## Quick Start\n[bad](#FILE_MANAGEMENT)\n"
+        change = "  line 2: #FILE_MANAGEMENT → #file-management  (File Management)"
+        decorated = gci._format_anchor_change(content, change)
+        self.assertIn("under: ## Quick Start (line 1)", decorated)
+        self.assertIn("> [bad](#FILE_MANAGEMENT)", decorated)
+
+    def test_format_anchor_change_omits_breadcrumb_when_no_heading(self):
+        # No heading precedes the offending line — the breadcrumb line must
+        # not appear at all (don't print "under: None").
+        content = "[bad](#FILE_MANAGEMENT)\n"
+        change = "  line 1: #FILE_MANAGEMENT → #file-management  (File Management)"
+        decorated = gci._format_anchor_change(content, change)
+        self.assertNotIn("under:", decorated)
+        self.assertIn("> [bad](#FILE_MANAGEMENT)", decorated)
+
+
 class IgnoredRegionsTests(unittest.TestCase):
     """IGNORED_REGIONS must suppress both generation and drift reporting."""
 
