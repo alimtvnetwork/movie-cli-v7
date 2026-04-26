@@ -106,7 +106,11 @@ class FingerprintRewriteTests(unittest.TestCase):
         return gci._rewrite_section_anchors(body)
 
     def test_double_hyphen_section_canonicalises(self):
-        body = "See [scan](#scan--library) and [hist](#history-undo)."
+        # `#scanning_library` and `#history-undo` both fingerprint-match
+        # their managed labels (alphanumerics only), so the rewriter must
+        # rewrite them to the canonical doubled-hyphen forms produced by
+        # `_section_slug` for "Scanning & Library" and "History & Undo".
+        body = "See [scan](#scanning_library) and [hist](#history-undo)."
         new, changes = self._rewrite(body)
         self.assertIn("#scanning--library", new)
         self.assertIn("#history--undo", new)
