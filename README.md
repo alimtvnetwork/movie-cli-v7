@@ -397,6 +397,49 @@ The example commands are written in **Bash** (macOS / Linux / WSL / Git Bash). O
 
 </details>
 
+<details>
+<summary>🔎 <strong>Check your env vars</strong> — confirm <code>TMDB_KEY</code> is set before running the examples</summary>
+
+Run this once at the start of a session. It prints `set` / `MISSING` for each variable the CLI looks at, so you catch a missing TMDb token before a `movie scan` fails halfway through.
+
+**Bash (macOS / Linux / WSL / Git Bash)**
+
+```bash
+for v in TMDB_KEY TMDB_API_KEY MOVIE_CONFIG MOVIE_DB_PATH; do
+  if [ -n "${!v}" ]; then
+    echo "✔ $v is set (${#v} chars: ${!v:0:4}…)"
+  else
+    echo "✘ $v is MISSING"
+  fi
+done
+```
+
+**PowerShell (Windows)**
+
+```powershell
+foreach ($v in 'TMDB_KEY','TMDB_API_KEY','MOVIE_CONFIG','MOVIE_DB_PATH') {
+  $val = [Environment]::GetEnvironmentVariable($v)
+  if ($val) {
+    Write-Host "✔ $v is set ($($val.Length) chars: $($val.Substring(0,[Math]::Min(4,$val.Length)))…)"
+  } else {
+    Write-Host "✘ $v is MISSING"
+  }
+}
+```
+
+Expected output when everything is configured:
+
+```text
+✔ TMDB_KEY is set (32 chars: a1b2…)
+✘ TMDB_API_KEY is MISSING        ← optional alias, safe to ignore if TMDB_KEY is set
+✔ MOVIE_CONFIG is set (28 chars: /Use…)
+✘ MOVIE_DB_PATH is MISSING       ← optional, falls back to the default DB location
+```
+
+Only `TMDB_KEY` is required for TMDb-backed commands (`scan`, `search`, `discover`, `suggest`). If it shows `MISSING`, set it with `export TMDB_KEY=...` (Bash) or `$env:TMDB_KEY = "..."` (PowerShell), or persist it via `movie config set tmdb_api_key YOUR_KEY`.
+
+</details>
+
 ### Scanning & Library
 
 <p align="center">
