@@ -35,6 +35,10 @@ func (c *Client) SearchWithFallback(title string, year int) ([]SearchResult, err
 		return results, nil
 	}
 
+	if results := c.tryOmdbFallback(title, year); len(results) > 0 {
+		return results, nil
+	}
+
 	if results := c.tryImdbViaWeb(title, year); len(results) > 0 {
 		return results, nil
 	}
