@@ -166,6 +166,62 @@ if [ "$MODE" = "dry-run" ]; then
 fi
 
 # ─── Fix mode ─────────────────────────────────────────────────
+
+# Optional fuzzy pre-pass: handle whitespace/formatting variants
+# (m a h i n, m-a-h-i-n, m_a_h_i_n, m.a.h.i.n, zero-width-joined, etc.)
+# before the strict sed pass mops up any remaining canonical occurrences.
+fuzzy_replaced=0
+fuzzy_files=0
+if [ "$FUZZY" -eq 1 ]; then
+    echo "── Fuzzy pre-pass: normalizing whitespace/formatting variants ──"
+    # Build a candidate file list: anything text-like, minus excluded dirs
+    # and the self-exclude list. Use git ls-files when available for speed
+    # and accuracy; fall back to find.
+    if command -v git >/dev/null 2>&1 && [ -d .git ]; then
+        candidates=$(git ls-files 2>/dev/null)
+    else
+        candidates=$(find . -type f \
+            -not -path '*/.git/*' -not -path '*/.release/*' \
+            -not -path '*/node_modules/*' -not -path '*/dist/*' \
+            -not -path '*/build/*' -not -path '*/.gitmap/*' \
+            2>/dev/null | sed 's|^\./||')
+    fi
+    # Exclude self files by basename.
+    self_basenames=( "ci.yml" "check-binary-name.sh" "_fuzzy_rewrite.py"
+                     "guard-forbidden-terms.sh" "audit-legacy-paths.sh"
+                     "rename-acronyms.py" "check-acronym-naming.py"
+                     "CHANGELOG.md" "banned-legacy-name.md" )
+    filtered=$(printf '%s\n' "$candidates" | while IFS= read -r p; do
+        [ -z "$p" ] && continue
+        skip=0
+        bn=$(basename "$p")
+        for sb in "${self_basenames[@]}"; do
+            [ "$bn" = "$sb" ] && { skip=1; break; }
+        done
+        [ "$skip" -eq 0 ] && printf '%s\n' "$p"
+    done)
+    # Run the Python rewriter; it only touches files that actually match.
+    if [ -n "$filtered" ]; then
+        fuzzy_out=$(printf '%s\n' "$filtered" | python3 scripts/_fuzzy_rewrite.py - 2>/dev/null || true)
+        fuzzy_err=$(printf '%s\n' "$filtered" | python3 scripts/_fuzzy_rewrite.py - 2>&1 >/dev/null || true)
+        if [ -n "$fuzzy_out" ]; then
+            while IFS= read -r jl; do
+                [ -z "$jl" ] && continue
+                fp=$(printf '%s' "$jl" | python3 -c "import sys,json;d=json.loads(sys.stdin.read());print(d['path'],d['replaced'])")
+                printf "  ~ fuzzy  %s\n" "$fp"
+                fuzzy_files=$((fuzzy_files + 1))
+            done <<< "$fuzzy_out"
+            fuzzy_replaced=$(printf '%s' "$fuzzy_err" | python3 -c "import sys,json;
+data=sys.stdin.read().strip().splitlines()
+print(json.loads(data[-1]).get('total_replaced',0) if data else 0)" 2>/dev/null || echo 0)
+        fi
+        : "${fuzzy_replaced:=0}"
+        echo "  Fuzzy files   : ${fuzzy_files}"
+        echo "  Fuzzy replaced: ${fuzzy_replaced}"
+    fi
+    echo ""
+fi
+
 files=$(find_offending_files)
 if [ -z "$files" ]; then
     echo "✅ Nothing to fix — repo already uses '${EXPECTED}' everywhere."
