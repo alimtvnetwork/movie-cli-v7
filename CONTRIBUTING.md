@@ -12,6 +12,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Project Naming Rules](#project-naming-rules)
 - [Acronym MixedCaps Rules](#acronym-mixedcaps-rules)
 - [Undo / Redo Worked Examples](#undo--redo-worked-examples)
+- [Undo / Redo Edge Cases](#undo--redo-edge-cases)
 - [Pre-push Checklist](#pre-push-checklist)
 - [Commit Messages](#commit-messages)
 - [Pull Requests](#pull-requests)
@@ -278,6 +279,147 @@ original order (`4712` then `4713`).
 > **Scope reminder:** undo/redo cover `move`, `rename`, and `popout`
 > only. They do **not** touch TMDb metadata, tags, watchlist entries,
 > or scan results — those have no `ActionHistory` row to revert.
+
+---
+
+## Undo / Redo Edge Cases
+
+This section documents every "unhappy path" you may hit. Each case lists
+the exact log line, exit code, and DB/filesystem state so you can
+troubleshoot without reading source.
+
+### 1. Nothing to undo / redo
+
+When no matching history row exists in scope:
+
+```bash
+$ movie undo
+📭 No operations to undo in this scope.
+
+$ movie redo
+📭 No reverted operations to redo in this scope.
+```
+
+- **Exit code:** `20` (`ExitNothingMatched`) — distinct from `0` so
+  scripts can branch on "empty" vs "succeeded".
+- **DB state:** unchanged. No row is read or written.
+- **Filesystem:** untouched.
+- **Common causes:** running from a directory with no history rows
+  (default scope is cwd — pass `--global` to ignore it), every recent
+  row is already reverted (try `movie undo --list`), or `--include` /
+  `--exclude` globs filtered every candidate out (the summary line
+  reports the skipped count).
+
+### 2. Targeting an already-reverted (or already-applied) action
+
+```bash
+$ movie undo --id 4712
+⚠️  Action 4712 has already been reverted.
+
+$ movie redo --id 4712
+⚠️  Action 4712 is not reverted — nothing to redo.
+```
+
+- **Exit code:** `20` (`ExitNothingMatched`).
+- **DB state:** unchanged — `IsReverted` is not flipped twice.
+- **Why:** undo only acts on `IsReverted=0` rows and redo only on
+  `IsReverted=1` rows. This is what protects you from double-applying
+  the same revert.
+
+### 3. Missing source file (move undo / redo)
+
+The recorded `ToPath` (undo) or `FromPath` (redo) no longer exists —
+typically because the user moved or deleted it manually outside the CLI.
+
+```bash
+$ movie undo --move-id 42
+[undo] kind=Move         move_id=42   before=/dst/x.mkv after=/src/x.mkv
+❌ Undo move 42 failed: file not found at /dst/x.mkv — may have been moved manually
+```
+
+- **Exit code:** `2` (`ExitGenericError`).
+- **DB state:** unchanged. `MoveHistory.IsReverted` is **not** flipped,
+  so a subsequent `movie undo --move-id 42` will retry once you put
+  the file back (or fix the path manually).
+- **Filesystem:** no partial move — `MoveFile` is never called when the
+  pre-flight `os.Stat` fails.
+- **Recovery:** restore the file at the printed `before=` path, then
+  re-run the same command; or use `movie undo --list` to pick a
+  different target.
+
+### 4. Destination conflict (file already at the target path)
+
+If `before=` and `after=` both exist (e.g. you manually copied the file
+back before running undo, or two history rows point at the same
+destination), `MoveFile` will refuse to overwrite:
+
+- **Exit code:** `2` (`ExitGenericError`).
+- **DB state:** unchanged.
+- **Filesystem:** both files remain in place — no data is lost.
+- **Recovery:** delete or rename whichever copy is stale, then re-run.
+  Inspect with `ls -la <before> <after>` first; the structured
+  `[undo] … before= after=` log line tells you exactly which two paths
+  to compare.
+
+### 5. Missing snapshot (action undo / redo)
+
+Action types that rebuild rows from a JSON snapshot (`Delete`,
+`ScanRemove`, `RescanUpdate`, `Restore`) require `MediaSnapshot` to be
+present. If the row is missing it (legacy data, manual edit):
+
+```
+❌ Undo action 99 failed: no snapshot available for action 99 — cannot restore
+```
+
+- **Exit code:** `2` (`ExitGenericError`).
+- **DB state:** unchanged.
+- **Recovery:** there is none — the snapshot is the only source of
+  truth for what to restore. Skip the row with `movie undo --list` and
+  pick the next undoable action.
+
+### 6. Partial batch undo / redo
+
+`movie undo --batch` / `movie redo --batch` walk every action in the
+batch in LIFO / FIFO order. If some succeed and others fail:
+
+```
+⚠️  Batch a1b2c3d4: 7 reverted, 2 failed.
+```
+
+- **Exit code:**
+  - `0` if at least one action succeeded (partial success is **not**
+    an error so cron jobs can keep running).
+  - `2` only when **every** action in the batch failed.
+- **DB state:** each succeeded action has `IsReverted` flipped; failed
+  ones stay as they were. The batch is therefore in a *mixed* state —
+  re-running the same `--batch` command will retry only the still-
+  unreverted (or still-reverted, for redo) rows.
+- **Logging:** every failure is printed via `errlog.Warn` with the
+  offending `action_id`, so the full failure list is grep-able from
+  the run output.
+
+### 7. Scope rejection at the confirmation prompt
+
+When you run undo/redo from a non-`$HOME` cwd without `--global`, the
+CLI shows a preview of how many rows are in scope and asks to confirm:
+
+```
+Undo will act on 0 moves, 3 actions under /current/dir. Continue? [y/N]:
+```
+
+- Answering `n` (or hitting Enter) exits with code `10`
+  (`ExitScopeRejected`). Nothing is changed.
+- Pass `--yes` (or `--assume-yes`) for scripted runs to skip the prompt.
+
+### Quick reference — exit codes
+
+| Code | Constant              | Meaning                                          |
+| ---- | --------------------- | ------------------------------------------------ |
+| 0    | `ExitOK`              | At least one row reverted/replayed successfully  |
+| 2    | `ExitGenericError`    | Filesystem error, missing snapshot, full failure |
+| 20   | `ExitNothingMatched`  | Empty scope, already-reverted, no candidates     |
+| 10   | `ExitScopeRejected`   | User declined the cwd-scope confirmation prompt  |
+| 11   | `ExitRowDeclined`     | User answered `n` to the per-row confirm prompt  |
 
 ---
 
