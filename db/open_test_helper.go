@@ -22,6 +22,7 @@ package db
 
 import (
 	"database/sql"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 
@@ -49,6 +50,30 @@ func OpenInMemoryForTest(basePath string) (*DB, error) {
 	if err := d.migrateSchema(); err != nil {
 		conn.Close()
 		return nil, apperror.Wrap("migrate schema", err)
+	}
+	return d, nil
+}
+
+// OpenAtPathForTest opens (or creates) the on-disk movie.db located under
+// basePath/data/movie.db and runs the standard migration. This mirrors the
+// real Open() path layout so integration tests can share one database with
+// a separately-built CLI binary placed in basePath.
+//
+// PRODUCTION CODE MUST NEVER CALL THIS. Used by cmd/ end-to-end tests
+// only.
+func OpenAtPathForTest(basePath string) (*DB, error) {
+	dataDir := filepath.Join(basePath, "data")
+	if err := createDataDirs(dataDir); err != nil {
+		return nil, err
+	}
+	conn, err := openAndConfigureDB(dataDir)
+	if err != nil {
+		return nil, err
+	}
+	d := &DB{DB: conn, BasePath: dataDir}
+	if err := d.migrateSchema(); err != nil {
+		conn.Close()
+		return nil, apperror.Wrap("migration failed", err)
 	}
 	return d, nil
 }
