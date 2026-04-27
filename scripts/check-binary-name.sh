@@ -44,11 +44,13 @@ EXPECTED="movie"
 MODE="check"
 VERBOSE=0
 JSON_PATH=""
+FUZZY=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --fix)        MODE="fix" ;;
         --dry-run)    MODE="dry-run" ;;
+        --fuzzy)      FUZZY=1 ;;
         --verbose|-v) VERBOSE=1 ;;
         --json)       JSON_PATH="${2:-}"; shift ;;
         --json=*)     JSON_PATH="${1#--json=}" ;;
@@ -74,6 +76,8 @@ EXCLUDES=(
     --exclude-dir=build
     --exclude=CHANGELOG.md
     --exclude=check-binary-name.sh
+    --exclude=_fuzzy_rewrite.py
+    --exclude=guard-forbidden-terms.sh
 )
 
 # Find every file containing any casing of the legacy token.
@@ -164,6 +168,68 @@ if [ "$MODE" = "dry-run" ]; then
 fi
 
 # ─── Fix mode ─────────────────────────────────────────────────
+
+# Optional fuzzy pre-pass: handle whitespace/formatting variants
+# (m a h i n, m-a-h-i-n, m_a_h_i_n, m.a.h.i.n, zero-width-joined, etc.)
+# before the strict sed pass mops up any remaining canonical occurrences.
+fuzzy_replaced=0
+fuzzy_files=0
+if [ "$FUZZY" -eq 1 ]; then
+    echo "── Fuzzy pre-pass: normalizing whitespace/formatting variants ──"
+    # Build a candidate file list: anything text-like, minus excluded dirs
+    # and the self-exclude list. Use git ls-files when available for speed
+    # and accuracy; fall back to find.
+    if command -v git >/dev/null 2>&1 && [ -d .git ]; then
+        candidates=$(git ls-files 2>/dev/null)
+    else
+        candidates=$(find . -type f \
+            -not -path '*/.git/*' -not -path '*/.release/*' \
+            -not -path '*/node_modules/*' -not -path '*/dist/*' \
+            -not -path '*/build/*' -not -path '*/.gitmap/*' \
+            2>/dev/null | sed 's|^\./||')
+    fi
+    # Exclude self files by basename.
+    self_basenames=( "ci.yml" "check-binary-name.sh" "_fuzzy_rewrite.py"
+                     "guard-forbidden-terms.sh" "audit-legacy-paths.sh"
+                     "rename-acronyms.py" "check-acronym-naming.py"
+                     "CHANGELOG.md" "banned-legacy-name.md" )
+    filtered=$(printf '%s\n' "$candidates" | while IFS= read -r p; do
+        [ -z "$p" ] && continue
+        skip=0
+        bn=$(basename "$p")
+        for sb in "${self_basenames[@]}"; do
+            [ "$bn" = "$sb" ] && { skip=1; break; }
+        done
+        [ "$skip" -eq 0 ] && printf '%s\n' "$p"
+    done)
+    # Run the Python rewriter; it only touches files that actually match.
+    if [ -n "$filtered" ]; then
+        # Run once, capture stdout (per-file JSON lines) and stderr
+        # (totals JSON line) into separate temp files.
+        fuzzy_stdout=$(mktemp); fuzzy_stderr=$(mktemp)
+        printf '%s\n' "$filtered" | python3 scripts/_fuzzy_rewrite.py - \
+            > "$fuzzy_stdout" 2> "$fuzzy_stderr" || true
+        if [ -s "$fuzzy_stdout" ]; then
+            while IFS= read -r jl; do
+                [ -z "$jl" ] && continue
+                fp=$(printf '%s' "$jl" | python3 -c "import sys,json;d=json.loads(sys.stdin.read());print(d['path'],d['replaced'])")
+                printf "  ~ fuzzy  %s\n" "$fp"
+                fuzzy_files=$((fuzzy_files + 1))
+            done < "$fuzzy_stdout"
+        fi
+        if [ -s "$fuzzy_stderr" ]; then
+            fuzzy_replaced=$(tail -n1 "$fuzzy_stderr" | python3 -c "import sys,json;
+try: print(json.loads(sys.stdin.read()).get('total_replaced',0))
+except Exception: print(0)" 2>/dev/null || echo 0)
+        fi
+        rm -f "$fuzzy_stdout" "$fuzzy_stderr"
+        : "${fuzzy_replaced:=0}"
+        echo "  Fuzzy files   : ${fuzzy_files}"
+        echo "  Fuzzy replaced: ${fuzzy_replaced}"
+    fi
+    echo ""
+fi
+
 files=$(find_offending_files)
 if [ -z "$files" ]; then
     echo "✅ Nothing to fix — repo already uses '${EXPECTED}' everywhere."
@@ -200,8 +266,8 @@ done <<< "$files"
 
 echo ""
 echo "── Summary ───────────────────────────────────────────────────"
-echo "  Files updated : ${files_changed}"
-echo "  Replacements  : ${total_changes}"
+echo "  Files updated : ${files_changed}  (strict)  +  ${fuzzy_files:-0}  (fuzzy)"
+echo "  Replacements  : ${total_changes}  (strict)  +  ${fuzzy_replaced:-0}  (fuzzy)"
 
 # Verify nothing slipped through.
 remaining=$(list_violations)
@@ -233,6 +299,8 @@ ts=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "unknown")
     printf '  "timestamp": "%s",\n' "$ts"
     printf '  "files_changed": %d,\n' "$files_changed"
     printf '  "total_replacements": %d,\n' "$total_changes"
+    printf '  "fuzzy_files": %d,\n' "${fuzzy_files:-0}"
+    printf '  "fuzzy_replacements": %d,\n' "${fuzzy_replaced:-0}"
     printf '  "remaining": %d,\n' "$remaining_count"
     printf '  "patterns": {\n'
     printf '    "UPPER_PREFIX": "<LEGACY>_ -> MOVIE_",\n'
