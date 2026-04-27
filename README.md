@@ -16,6 +16,41 @@
 
 _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track your collection._
 
+<br>
+
+<img src="assets/screenshots/cmd-scan-library.gif" alt="Movie CLI scanning a library in real time" width="780">
+
+<sub>↑ One command, one binary — scan, match against TMDb, and organize your whole library.</sub>
+
+<br><br>
+
+**🚀 Install in 10 seconds — anyone, any OS:**
+
+<table>
+<tr>
+<td><b>🐧 Linux / macOS</b></td>
+<td>
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
+```
+
+</td>
+</tr>
+<tr>
+<td><b>🪟 Windows (PowerShell)</b></td>
+<td>
+
+```powershell
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | iex
+```
+
+</td>
+</tr>
+</table>
+
+<sub>Auto-detects your OS &amp; architecture · Installs the latest pre-built binary · Falls back to a source build if no release is published · See <a href="#installation">Installation</a> for flags, pinned versions, and verification.</sub>
+
 </div>
 
 ---
