@@ -20,8 +20,6 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Architecture Overview](#architecture-overview)
 - [Testing](#testing)
 - [Release Process](#release-process)
-- [Maintainer](#maintainer)
-- [Questions?](#questions)
 
 ---
 
