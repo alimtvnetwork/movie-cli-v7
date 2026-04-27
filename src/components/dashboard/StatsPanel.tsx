@@ -170,7 +170,7 @@ function SummaryCard({
           <Icon className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <p className="font-display text-2xl font-bold leading-none">{value}</p>
+          <p className="font-ubuntu-heading text-2xl font-bold leading-none">{value}</p>
           <p className="text-xs text-muted-foreground mt-1">{label}</p>
         </div>
       </CardContent>

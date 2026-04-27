@@ -136,3 +136,14 @@ All colors MUST be HSL.
     @apply font-display;
   }
 }
+
+@layer utilities {
+  /* Single source of truth for typography roles.
+     Use these in components instead of font-display / font-sans directly. */
+  .font-ubuntu-heading {
+    @apply font-display;
+  }
+  .font-poppins-body {
+    @apply font-sans;
+  }
+}
