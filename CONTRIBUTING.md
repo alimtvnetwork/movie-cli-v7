@@ -418,8 +418,8 @@ Undo will act on 0 moves, 3 actions under /current/dir. Continue? [y/N]:
 | 0    | `ExitOK`              | At least one row reverted/replayed successfully  |
 | 2    | `ExitGenericError`    | Filesystem error, missing snapshot, full failure |
 | 20   | `ExitNothingMatched`  | Empty scope, already-reverted, no candidates     |
-| 30   | `ExitScopeRejected`   | User declined the cwd-scope confirmation prompt  |
-| 40   | `ExitRowDeclined`     | User answered `n` to the per-row confirm prompt  |
+| 10   | `ExitScopeRejected`   | User declined the cwd-scope confirmation prompt  |
+| 11   | `ExitRowDeclined`     | User answered `n` to the per-row confirm prompt  |
 
 ---
 
