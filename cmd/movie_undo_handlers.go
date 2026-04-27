@@ -322,6 +322,7 @@ func runSingleUndoAction(database *db.DB, scanner *bufio.Scanner, a *db.ActionRe
 func undoSingleMoveCode(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord) int {
 	fmt.Println("⏪ Last move operation:")
 	fmt.Printf("   %s → %s\n", m.ToPath, m.FromPath)
+	LogUndoMoveTarget(m)
 	if !confirmUndo(scanner) {
 		return ExitRowDeclined
 	}
@@ -336,6 +337,7 @@ func undoSingleMoveCode(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecor
 // undoSingleActionCode mirrors undoSingleMoveCode for actions.
 func undoSingleActionCode(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord) int {
 	printActionUndo(a)
+	LogUndoActionTarget(a)
 	if !confirmUndo(scanner) {
 		return ExitRowDeclined
 	}
