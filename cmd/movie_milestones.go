@@ -32,8 +32,8 @@ const (
 var tsRegex = regexp.MustCompile(`\b(\d{2}-[A-Za-z]{3}-\d{4} \d{2}:\d{2} (?:AM|PM))\b`)
 
 type milestoneEntry struct {
-	Raw     string
 	Time    time.Time
+	Raw     string
 	HasTime bool
 }
 
