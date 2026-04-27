@@ -153,6 +153,16 @@ jobs:
           # command blocks for Linux, macOS, and Windows.
           bash scripts/check-quickstart.sh .
 
+      - name: CONTRIBUTING.md TOC anchor guard
+        if: needs.sha-check.outputs.already-built != 'true'
+        run: |
+          # Ensure every '#anchor' in the Table of Contents matches a real
+          # '## ' heading (and vice versa) under GitHub's slugging rules.
+          # Catches the silent 404 you get when adding a section like
+          # 'Undo / Redo Worked Examples' without updating the TOC entry —
+          # GitHub renders the link but it jumps to nowhere.
+          bash scripts/check-contributing-toc.sh CONTRIBUTING.md
+
       - name: User-facing docs v6 reference guard
         if: needs.sha-check.outputs.already-built != 'true'
         run: |
