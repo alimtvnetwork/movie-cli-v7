@@ -6,7 +6,21 @@
 #   (default) check  — report violations, exit 1 if any
 #   --dry-run        — show what --fix would change, exit 0
 #   --fix            — rewrite files in place, print summary, exit 0
+#   --json PATH      — also write JSON summary to PATH (default with --fix:
+#                      /mnt/documents/binary-name-fix-summary.json if writable,
+#                      else .lovable/reports/binary-name-fix-summary.json)
 #   --verbose, -v    — extra detail in check mode
+#
+# JSON schema (fix mode):
+#   {
+#     "expected": "movie",
+#     "timestamp": "2026-04-27T12:34:56+08:00",
+#     "files_changed": N, "total_replacements": N, "remaining": N,
+#     "files": [
+#       { "path": "...", "before": N, "after": N, "replaced": N,
+#         "by_pattern": { "UPPER_PREFIX": N, "UPPER": N, "TITLE": N, "LOWER": N } }
+#     ]
+#   }
 #
 # Replacement rules (case-sensitive, applied in this order). The legacy
 # token is referred to here as <LEGACY> so this file does not itself contain
@@ -21,6 +35,7 @@
 #   bash scripts/check-binary-name.sh
 #   bash scripts/check-binary-name.sh --dry-run
 #   bash scripts/check-binary-name.sh --fix
+#   bash scripts/check-binary-name.sh --fix --json /tmp/summary.json
 
 set -uo pipefail
 
