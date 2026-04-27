@@ -230,6 +230,27 @@ jobs:
           fi
           echo "✅ No user-facing references to movie-cli-v6 in README, QUICKSTART, or install scripts."
 
+      - name: Legacy module-path auditor (strict)
+        if: needs.sha-check.outputs.already-built != 'true'
+        run: |
+          # Repo-wide audit covering 4 variants:
+          #   VERSIONED   — movie-cli-v[1-6]
+          #   UNVERSIONED — github.com/alimtvnetwork/movie-cli (no -vN)
+          #   TAGGED      — movie-cli[-vN]@vX.Y.Z pinned tags
+          #   REPLACE     — go.mod `replace` directives pointing at movie-cli
+          #
+          # HISTORICAL matches in CHANGELOG.md, spec/, .lovable/, this
+          # workflow, and the auditor itself are allowed. Anything else
+          # fails the build.
+          set -e
+          if ! bash scripts/audit-legacy-paths.sh --strict; then
+            echo ""
+            echo "::error::Legacy module-path auditor found ACTIVE references."
+            echo "Run 'bash scripts/audit-legacy-paths.sh' locally for the full report."
+            exit 1
+          fi
+          echo "✅ Legacy module-path auditor: 0 active references."
+
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
     name: Vulnerability Scan
