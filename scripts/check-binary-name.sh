@@ -9,9 +9,12 @@
 #   --verbose, -v    — extra detail in check mode
 #
 # Replacement rules (case-sensitive, applied in this order):
-#     MAHIN_   -> MOVIE_         (env var prefixes)
-#     Mahin    -> Movie          (TitleCase)
-#     mahin    -> movie          (lowercase, including paths/user-agents)
+# Replacement rules (case-sensitive, applied in this order). The legacy
+# token is referred to here as <LEGACY> so this file does not itself contain
+# the banned literal and trip the broader CI guard:
+#     <LEGACY>_  (UPPER) -> MOVIE_     (env var prefixes)
+#     <Legacy>   (Title) -> Movie      (TitleCase)
+#     <legacy>   (lower) -> movie      (paths, user-agents, CLI examples)
 #
 # Exit codes: 0 ok | 1 violations (check mode) | 2 bad usage
 #
