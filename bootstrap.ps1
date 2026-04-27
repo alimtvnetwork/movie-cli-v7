@@ -24,7 +24,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$RepoUrl = "https://github.com/alimtvnetwork/movie-cli-v6"
+    [string]$RepoUrl = "https://github.com/alimtvnetwork/movie-cli-v7"
 )
 
 $ErrorActionPreference = 'Stop'

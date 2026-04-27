@@ -9,7 +9,7 @@ troubleshooting, see [README.md](README.md) and
 ## 🐧 Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.sh | bash
 movie version
 ```
 
@@ -24,7 +24,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ## 🍎 macOS
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.sh | bash
 movie version
 ```
 
@@ -39,7 +39,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ## 🪟 Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | iex
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.ps1 | iex
 movie version
 ```
 
@@ -55,12 +55,12 @@ $env:PATH += ";$HOME\bin"
 
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/verify.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/verify.sh | bash
 ```
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/verify.ps1 | iex
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/verify.ps1 | iex
 ```
 
 Expected: `All required checks passed — movie CLI is ready.`

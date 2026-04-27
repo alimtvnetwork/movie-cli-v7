@@ -25,7 +25,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/alimtvnetwork/movie-cli-v6/apperror"
+	"github.com/alimtvnetwork/movie-cli-v7/apperror"
 )
 
 // OpenInMemoryForTest opens a fresh in-memory SQLite database, runs the

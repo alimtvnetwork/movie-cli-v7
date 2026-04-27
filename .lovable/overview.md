@@ -4,7 +4,7 @@
 **Type:** Go 1.22 CLI application (NOT a web app)
 **Binary:** `movie` (`movie.exe` on Windows)
 **Repo folder:** `movie-cli`
-**Module:** `github.com/alimtvnetwork/movie-cli-v6`
+**Module:** `github.com/alimtvnetwork/movie-cli-v7`
 **Updated:** 2026-04-20
 
 ## Purpose

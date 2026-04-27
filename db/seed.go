@@ -2,7 +2,7 @@
 package db
 
 import (
-	"github.com/alimtvnetwork/movie-cli-v6/apperror"
+	"github.com/alimtvnetwork/movie-cli-v7/apperror"
 )
 
 // seedFileActions inserts the 15 predefined FileAction types.

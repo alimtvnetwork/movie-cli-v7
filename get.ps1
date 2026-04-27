@@ -16,7 +16,7 @@
 
 .NOTES
   Invoked via:
-    irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | iex
+    irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.ps1 | iex
 #>
 
 [CmdletBinding()]
@@ -28,7 +28,7 @@ $ErrorActionPreference = 'Stop'
 
 # ── Config ────────────────────────────────────────────────────
 $Owner       = 'alimtvnetwork'
-$Repo        = 'movie-cli-v6'
+$Repo        = 'movie-cli-v7'
 $Branch      = 'main'
 $ReleaseUrl  = "https://github.com/$Owner/$Repo/releases/latest/download/install.ps1"
 $SourceUrl   = "https://raw.githubusercontent.com/$Owner/$Repo/$Branch/install.ps1"
