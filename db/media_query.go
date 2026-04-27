@@ -25,7 +25,7 @@ func (d *DB) ListMedia(offset, limit int) ([]Media, error) {
 
 // ListMediaFiltered returns paginated media records using a filter mode.
 // Modes:
-//   - "scanned" (default): only items with a known file path (OriginalFilePath != '')
+//   - "scanned" (default): only items with a known file path (OriginalFilePath != ”)
 //   - "all":     every media row, including metadata-only entries with no file
 //   - "missing": only items with NO file path (metadata-only / never scanned or removed)
 func (d *DB) ListMediaFiltered(offset, limit int, mode string) ([]Media, error) {
