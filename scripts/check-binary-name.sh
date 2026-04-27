@@ -120,7 +120,8 @@ if [ "$MODE" = "dry-run" ]; then
     fcount=0
     while IFS= read -r f; do
         [ -z "$f" ] && continue
-        n=$(grep -c -E "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null || echo 0)
+        n=$(grep -cE "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null | tr -d '[:space:]')
+        : "${n:=0}"
         printf "  %4d  %s\n" "$n" "$f"
         total=$((total + n))
         fcount=$((fcount + 1))
