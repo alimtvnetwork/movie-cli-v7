@@ -49,6 +49,7 @@ say()  { printf '\033[1;36m[stale-repo]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[stale-repo]\033[0m %s\n' "$*" >&2; }
 err()  { printf '\033[1;31m[stale-repo]\033[0m %s\n' "$*" >&2; }
 ok()   { printf '\033[1;32m[stale-repo]\033[0m %s\n' "$*"; }
+vsay() { [ "$VERBOSE" -eq 1 ] && printf '\033[2;37m[stale-repo:verbose]\033[0m %s\n' "$*" || true; }
 
 confirm() {
     local prompt="$1"
