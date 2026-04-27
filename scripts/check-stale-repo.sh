@@ -131,11 +131,11 @@ fi
 confirm "Run: git fetch $REMOTE" || { err "Aborted."; exit 3; }
 git fetch "$REMOTE" || { err "fetch failed"; exit 2; }
 
-confirm "Run: git reset --hard $REMOTE/$BRANCH (destroys local commits on $CURRENT_BRANCH)" \
+confirm "Step 2/3 — Run: git reset --hard $REMOTE/$BRANCH (destroys local commits on $CURRENT_BRANCH)" \
     || { err "Aborted."; exit 3; }
 git reset --hard "$REMOTE/$BRANCH" || { err "reset failed"; exit 2; }
 
-confirm "Run: git clean -fd (removes untracked files & dirs)" \
+confirm "Step 3/3 — Run: git clean -fd (removes untracked files & dirs)" \
     || { warn "Skipped clean. Repo is reset but may still contain untracked files."; exit 0; }
 git clean -fd || { err "clean failed"; exit 2; }
 
