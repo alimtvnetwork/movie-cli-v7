@@ -86,13 +86,23 @@ list_violations() {
     grep -rn -E "${EXCLUDES[@]}" -e "${LEGACY_LC}" -e "${LEGACY_TC}" -e "${LEGACY_UC}" . 2>/dev/null || true
 }
 
-# Apply substitutions to a single file. Returns count of replaced occurrences.
+# Apply substitutions to a single file. Echoes 6 space-separated integers:
+#   replaced before after upper_prefix upper title lower
+# (per-pattern counts measured *before* the in-place rewrite).
 fix_file() {
     local f="$1"
-    local before after
+    local before after up_prefix up tl lo
     before=$(grep -cE "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null | tr -d '[:space:]')
     : "${before:=0}"
-    [ "$before" -eq 0 ] && { echo 0; return; }
+    if [ "$before" -eq 0 ]; then
+        echo "0 0 0 0 0 0 0"; return
+    fi
+    # Per-pattern occurrence counts (sum of occurrences, not matched lines).
+    up_prefix=$(grep -oE "${LEGACY_UC}_" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
+    up=$(grep -oE "${LEGACY_UC}[^_]|${LEGACY_UC}\$" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
+    tl=$(grep -oE "${LEGACY_TC}" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
+    lo=$(grep -oE "${LEGACY_LC}" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
+    : "${up_prefix:=0}"; : "${up:=0}"; : "${tl:=0}"; : "${lo:=0}"
     sed -i \
         -e "s/${LEGACY_UC}_/MOVIE_/g" \
         -e "s/${LEGACY_UC}/MOVIE/g" \
@@ -101,7 +111,7 @@ fix_file() {
         "$f"
     after=$(grep -cE "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null | tr -d '[:space:]')
     : "${after:=0}"
-    echo "$((before - after))"
+    echo "$((before - after)) ${before} ${after} ${up_prefix} ${up} ${tl} ${lo}"
 }
 
 # ─── Check mode ───────────────────────────────────────────────
