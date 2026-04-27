@@ -55,6 +55,51 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION"
 
+      - name: Pre-release migration audit checklist
+        run: |
+          set -euo pipefail
+          echo "── Step 1: legacy module-path auditor (strict) ─────────"
+          if ! bash scripts/audit-legacy-paths.sh --strict; then
+            echo "::error::Pre-release blocked — ACTIVE legacy module references found."
+            echo "::error::See spec/03-general/07-legacy-path-audit.md and run scripts/legacy-replacement-map.sh for fixes."
+            exit 1
+          fi
+
+          echo "── Step 2: verify required surfaces are clean ──────────"
+          SURFACES=(
+            "go.mod"
+            "README.md"
+            "install.sh"
+            "install.ps1"
+            "run.ps1"
+            "get.sh"
+            "get.ps1"
+          )
+          BAD=()
+          for f in "${SURFACES[@]}"; do
+            [ -f "$f" ] || continue
+            if grep -nE 'github\.com/alimtvnetwork/movie-cli(-v[1-6])?(@v[0-9]|[^v0-9-]|$)' "$f" \
+                 | grep -vE 'movie-cli-v7' >/dev/null 2>&1; then
+              BAD+=("$f")
+            fi
+          done
+          if [ ${#BAD[@]} -gt 0 ]; then
+            echo "::error::Surfaces still reference legacy module paths: ${BAD[*]}"
+            exit 1
+          fi
+
+          echo "── Step 3: go mod tidy is up to date ───────────────────"
+          cp go.mod /tmp/go.mod.before
+          cp go.sum /tmp/go.sum.before
+          go mod tidy
+          if ! diff -q /tmp/go.mod.before go.mod >/dev/null || ! diff -q /tmp/go.sum.before go.sum >/dev/null; then
+            echo "::error::go.mod/go.sum out of date — run 'go mod tidy' before tagging."
+            diff /tmp/go.mod.before go.mod || true
+            exit 1
+          fi
+
+          echo "✅ Pre-release migration audit checklist passed."
+
       - name: Embed icon for Windows builds
         run: |
           go install github.com/tc-hib/go-winres@v0.3.3
