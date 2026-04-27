@@ -115,6 +115,7 @@ func redoActionByID(database *db.DB, scanner *bufio.Scanner, id int64) int {
 	if action.Detail != "" {
 		fmt.Printf("   %s\n", action.Detail)
 	}
+	LogRedoActionTarget(action)
 	if !confirmRedo(scanner) {
 		return ExitRowDeclined
 	}
@@ -151,6 +152,7 @@ func redoMoveByID(database *db.DB, scanner *bufio.Scanner, id int64) int {
 
 	fmt.Println("⏩ Redo move:")
 	fmt.Printf("   %s → %s\n", target.FromPath, target.ToPath)
+	LogRedoMoveTarget(target)
 	if !confirmRedo(scanner) {
 		return ExitRowDeclined
 	}
@@ -283,6 +285,7 @@ func runSingleRedoAction(database *db.DB, scanner *bufio.Scanner, a *db.ActionRe
 func redoSingleMoveCode(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecord) int {
 	fmt.Println("⏩ Redo last move:")
 	fmt.Printf("   %s → %s\n", m.FromPath, m.ToPath)
+	LogRedoMoveTarget(m)
 	if !confirmRedo(scanner) {
 		return ExitRowDeclined
 	}
@@ -296,6 +299,7 @@ func redoSingleMoveCode(database *db.DB, scanner *bufio.Scanner, m *db.MoveRecor
 
 func redoSingleActionCode(database *db.DB, scanner *bufio.Scanner, a *db.ActionRecord) int {
 	printActionRedo(a)
+	LogRedoActionTarget(a)
 	if !confirmRedo(scanner) {
 		return ExitRowDeclined
 	}
