@@ -14,8 +14,31 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Ubuntu', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Fallback stacks tuned to minimize layout shift while web fonts load.
+        // 'Poppins Fallback' / 'Ubuntu Fallback' are size-adjusted local fonts
+        // defined in src/index.css using local system fonts.
+        sans: [
+          'Poppins',
+          'Poppins Fallback',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+        ],
+        display: [
+          'Ubuntu',
+          'Ubuntu Fallback',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+        ],
       },
       colors: {
         border: "hsl(var(--border))",
