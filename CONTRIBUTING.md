@@ -159,25 +159,47 @@ committing.
 Run these locally before pushing — they are the same checks CI enforces, so
 catching issues here saves a round-trip.
 
+Each step lists the exact CI **workflow → job → step** that re-runs it, plus
+where to find the log/artifact when something fails. Workflow files live in
+[`.github/workflows/`](.github/workflows/); GitHub Actions logs for a run are
+at `https://github.com/<owner>/<repo>/actions/runs/<run-id>` and step logs are
+expandable under the named step.
+
 ```bash
 # 1. Format & vet
+#    CI: ci.yml → job "Lint" → step "Go vet"
+#    Log: Actions → CI → Lint → "Go vet"
 gofmt -l .                # must print nothing
 go vet ./...
 
-# 2. Lint (mirrors CI's golangci-lint job)
+# 2. Lint (golangci-lint)
+#    CI: ci.yml → job "Lint" → step "golangci-lint" (golangci/golangci-lint-action@v6)
+#    Log: Actions → CI → Lint → "golangci-lint"
 golangci-lint run --timeout=5m
 
 # 3. Identifier-only acronym MixedCaps guard
+#    CI: ci.yml → job "Lint" → step "Acronym MixedCaps guard"
+#    Log: Actions → CI → Lint → "Acronym MixedCaps guard"
 python3 scripts/check-acronym-naming.py
 
 # 4. Legacy module-path auditor (must report 0 ACTIVE)
+#    CI: ci.yml → job "Lint" → step "Legacy module-path auditor (strict)"
+#    Log:      Actions → CI → Lint → "Legacy module-path auditor (strict)"
+#    Artifact: Actions → CI run → Artifacts → "legacy-audit-report"
+#              (uploaded by step "Upload legacy audit report", retained 14 days)
 bash scripts/audit-legacy-paths.sh --strict
 
 # 5. Build & test the whole tree
+#    Build CI: ci.yml → job "Build (<os>/<arch>)" → step "Build binary"
+#              Artifact: "movie-<os>-<arch>" per matrix entry
+#    Test  CI: ci.yml → job "Test (unit)" and "Test (integration)" → step "Run tests"
+#              Artifact: "test-results-unit" / "test-results-integration"
+#              Summary:  job "Test Summary" → step "Summarize test results"
 go build ./...
 go test  ./...
 
 # 6. Bump version (any code change requires at least a minor bump)
+#    CI: enforced at release time by release.yml (pre-release audit job)
 $EDITOR version/info.go
 ```
 
@@ -187,6 +209,17 @@ One-shot equivalent for steps 1–5:
 bash scripts/pre-release.sh
 ```
 
+Other related CI jobs (not part of the per-push checklist, but worth knowing
+where the logs live):
+
+| Concern | Workflow → Job | Log location |
+|---------|----------------|--------------|
+| Vulnerability scan (`govulncheck`) | `ci.yml` → **Vulnerability Scan** → "Run govulncheck" | Actions → CI → Vulnerability Scan |
+| Cross-compile matrix | `ci.yml` → **Build (\<os\>/\<arch\>)** | Actions → CI → Build → Artifacts |
+| Release pre-flight audit | `release.yml` → pre-release audit job | Actions → Release → audit step |
+| End-to-end smoke | `e2e.yml` | Actions → E2E |
+| Standalone vuln workflow | `vulncheck.yml` | Actions → Vulncheck |
+
 If the acronym guard fails, run the codemod, review the diff, and re-run
 the checklist:
 
@@ -194,6 +227,7 @@ the checklist:
 python3 scripts/rename-acronyms.py --write
 python3 scripts/check-acronym-naming.py
 ```
+
 
 ---
 
