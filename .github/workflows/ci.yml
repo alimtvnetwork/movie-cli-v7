@@ -95,25 +95,56 @@ jobs:
           # (or the push) is diverged and downstream consumers will get a
           # broken state. The script is read-only (no --apply).
           set -e
-          # Ensure we have full history + the latest origin/main ref.
-          git fetch --quiet --unshallow origin main 2>/dev/null \
-            || git fetch --quiet origin main
+          REMOTE="origin"
+          BRANCH="main"
+          # Ensure we have full history + the latest $REMOTE/$BRANCH ref.
+          git fetch --quiet --unshallow "$REMOTE" "$BRANCH" 2>/dev/null \
+            || git fetch --quiet "$REMOTE" "$BRANCH"
           set +e
-          bash scripts/check-stale-repo.sh
+          REMOTE="$REMOTE" BRANCH="$BRANCH" bash scripts/check-stale-repo.sh
           rc=$?
           set -e
           case "$rc" in
             0)
-              echo "✅ Repo is in sync with origin/main."
+              echo "✅ Repo is in sync with $REMOTE/$BRANCH."
               ;;
             1)
-              echo "::error::Local repo appears DIVERGED from origin/main."
-              echo "::error::Run locally: bash scripts/check-stale-repo.sh --apply"
-              echo "::error::Or manually: git fetch origin && git reset --hard origin/main && git clean -fd"
+              LOCAL_SHA="$(git rev-parse HEAD)"
+              REMOTE_SHA="$(git rev-parse "$REMOTE/$BRANCH")"
+              BEHIND="$(git rev-list --count "$LOCAL_SHA".."$REMOTE_SHA" 2>/dev/null || echo '?')"
+              AHEAD="$(git rev-list --count  "$REMOTE_SHA".."$LOCAL_SHA" 2>/dev/null || echo '?')"
+              echo "::error title=Stale repo::Local repo is DIVERGED from $REMOTE/$BRANCH"
+              {
+                echo "### ❌ Stale repo detected"
+                echo ""
+                echo "| Field | Value |"
+                echo "| --- | --- |"
+                echo "| Tracking | \`$REMOTE/$BRANCH\` |"
+                echo "| Local HEAD  | \`${LOCAL_SHA:0:10}\` |"
+                echo "| Remote HEAD | \`${REMOTE_SHA:0:10}\` |"
+                echo "| Behind remote | **$BEHIND** commit(s) |"
+                echo "| Ahead of remote | **$AHEAD** commit(s) (will be discarded) |"
+                echo ""
+                echo "#### Remediation (local)"
+                echo '```bash'
+                echo "# Guided / interactive (recommended):"
+                echo "REMOTE=$REMOTE BRANCH=$BRANCH bash scripts/check-stale-repo.sh --apply"
+                echo ""
+                echo "# Or manually:"
+                echo "git fetch $REMOTE"
+                echo "git reset --hard $REMOTE/$BRANCH"
+                echo "git clean -fd"
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+              echo "::error::Behind $REMOTE/$BRANCH by $BEHIND commit(s); ahead by $AHEAD commit(s)."
+              echo "::error::Local  HEAD: ${LOCAL_SHA:0:10}"
+              echo "::error::Remote HEAD: ${REMOTE_SHA:0:10}"
+              echo "::error::Fix: REMOTE=$REMOTE BRANCH=$BRANCH bash scripts/check-stale-repo.sh --apply"
+              echo "::error::Manual: git fetch $REMOTE && git reset --hard $REMOTE/$BRANCH && git clean -fd"
               exit 1
               ;;
             *)
-              echo "::error::stale-repo check failed with exit code $rc (git/fetch error)."
+              echo "::error::stale-repo check failed with exit code $rc (git/fetch error against $REMOTE/$BRANCH)."
               exit 1
               ;;
           esac
