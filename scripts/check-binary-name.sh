@@ -258,8 +258,8 @@ done <<< "$files"
 
 echo ""
 echo "── Summary ───────────────────────────────────────────────────"
-echo "  Files updated : ${files_changed}"
-echo "  Replacements  : ${total_changes}"
+echo "  Files updated : ${files_changed}  (strict)  +  ${fuzzy_files:-0}  (fuzzy)"
+echo "  Replacements  : ${total_changes}  (strict)  +  ${fuzzy_replaced:-0}  (fuzzy)"
 
 # Verify nothing slipped through.
 remaining=$(list_violations)
@@ -291,6 +291,8 @@ ts=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "unknown")
     printf '  "timestamp": "%s",\n' "$ts"
     printf '  "files_changed": %d,\n' "$files_changed"
     printf '  "total_replacements": %d,\n' "$total_changes"
+    printf '  "fuzzy_files": %d,\n' "${fuzzy_files:-0}"
+    printf '  "fuzzy_replacements": %d,\n' "${fuzzy_replaced:-0}"
     printf '  "remaining": %d,\n' "$remaining_count"
     printf '  "patterns": {\n'
     printf '    "UPPER_PREFIX": "<LEGACY>_ -> MOVIE_",\n'
