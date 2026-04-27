@@ -20,8 +20,17 @@ export USERPROFILE="${HOME}"
 export TMDB_API_KEY=""
 export TMDB_TOKEN=""
 export OMDB_API_KEY=""
+# Make Go module cache files writable so cleanup can rm -rf the workdir.
+# By default Go marks downloaded modules read-only (mode 0444), which makes
+# `rm -rf $HOME/go/pkg/mod/...` fail with "Permission denied" in CI.
+export GOFLAGS="${GOFLAGS:-} -modcacherw"
 
-cleanup() { rm -rf "${WORK_DIR}"; }
+cleanup() {
+  # Restore write permissions on any read-only files (module cache, etc.)
+  # before removing, so rm -rf cannot fail on permission errors.
+  chmod -R u+w "${WORK_DIR}" 2>/dev/null || true
+  rm -rf "${WORK_DIR}"
+}
 trap cleanup EXIT
 
 echo "▶ Building movie CLI → ${BINARY}"
