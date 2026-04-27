@@ -249,73 +249,23 @@ Run these checks **before** any command in the [Jump to a command](#jump-to-a-co
 | ☐ | Network access to `api.themoviedb.org` | needed for TMDb metadata |
 | ☐ | Network access to GitHub releases | needed for `movie update` |
 
-### 🐧 Bash / zsh — copy-paste verifier
+### 🚀 Quick bootstrap check
+
+After installing, run two commands — the first confirms the binary is on `$PATH`, the second runs every check above automatically:
 
 ```bash
-# 1. Binary on PATH
 command -v movie >/dev/null && echo "✅ movie found: $(command -v movie)" || echo "❌ movie NOT on PATH"
-
-# 2. Config keys present (uses `movie config get`, returns empty if unset)
-for key in tmdb_api_key source_folder default_player; do
-  val=$(movie config get "$key" 2>/dev/null)
-  [ -n "$val" ] && echo "✅ $key = $val" || echo "❌ $key is unset  → movie config set $key <value>"
-done
-
-# 3. source_folder exists and has video files
-src=$(movie config get source_folder 2>/dev/null)
-if [ -d "$src" ]; then
-  count=$(find "$src" -maxdepth 3 -type f \( -iname '*.mkv' -o -iname '*.mp4' -o -iname '*.avi' -o -iname '*.mov' \) | wc -l)
-  [ "$count" -gt 0 ] && echo "✅ $src has $count video file(s)" || echo "⚠️  $src exists but has no .mkv/.mp4/.avi/.mov"
-else
-  echo "❌ source_folder does not exist: $src"
-fi
-
-# 4. Port 7777 free (for `movie rest`)
-(command -v lsof >/dev/null && lsof -i :7777 -sTCP:LISTEN >/dev/null 2>&1) \
-  && echo "⚠️  port 7777 is in use  → movie rest --port 8080" \
-  || echo "✅ port 7777 is free"
-
-# 5. Network reachability
-curl -sf --max-time 5 https://api.themoviedb.org/3/configuration?api_key=test >/dev/null \
-  && echo "✅ api.themoviedb.org reachable" \
-  || echo "❌ cannot reach api.themoviedb.org  → check network/proxy"
-curl -sf --max-time 5 -o /dev/null https://api.github.com \
-  && echo "✅ api.github.com reachable (movie update will work)" \
-  || echo "⚠️  cannot reach api.github.com  → movie update may fail"
+movie doctor
 ```
 
-### 🪟 PowerShell — copy-paste verifier
+On Windows PowerShell, the equivalent first line is:
 
 ```powershell
-# 1. Binary on PATH
-if (Get-Command movie -ErrorAction SilentlyContinue) {
-  "✅ movie found: $((Get-Command movie).Source)"
-} else { "❌ movie NOT on PATH" }
-
-# 2. Config keys present
-foreach ($key in 'tmdb_api_key','source_folder','default_player') {
-  $val = (movie config get $key 2>$null)
-  if ($val) { "✅ $key = $val" } else { "❌ $key is unset  → movie config set $key <value>" }
-}
-
-# 3. source_folder exists and has video files
-$src = (movie config get source_folder 2>$null)
-if ($src -and (Test-Path $src)) {
-  $count = (Get-ChildItem $src -Recurse -File -Include *.mkv,*.mp4,*.avi,*.mov -Depth 3 -ErrorAction SilentlyContinue).Count
-  if ($count -gt 0) { "✅ $src has $count video file(s)" } else { "⚠️  $src exists but has no .mkv/.mp4/.avi/.mov" }
-} else { "❌ source_folder does not exist: $src" }
-
-# 4. Port 7777 free
-if (Get-NetTCPConnection -LocalPort 7777 -State Listen -ErrorAction SilentlyContinue) {
-  "⚠️  port 7777 is in use  → movie rest --port 8080"
-} else { "✅ port 7777 is free" }
-
-# 5. Network reachability
-try { Invoke-WebRequest "https://api.themoviedb.org/3/configuration?api_key=test" -TimeoutSec 5 -UseBasicParsing | Out-Null; "✅ api.themoviedb.org reachable" }
-catch { "❌ cannot reach api.themoviedb.org  → check network/proxy" }
-try { Invoke-WebRequest "https://api.github.com" -TimeoutSec 5 -UseBasicParsing | Out-Null; "✅ api.github.com reachable (movie update will work)" }
-catch { "⚠️  cannot reach api.github.com  → movie update may fail" }
+if (Get-Command movie -ErrorAction SilentlyContinue) { "✅ movie found: $((Get-Command movie).Source)" } else { "❌ movie NOT on PATH" }
+movie doctor
 ```
+
+`movie doctor` runs the config-key, source-folder, port `7777`, PATH, deploy and version checks built into the binary, prints the same ✅ / ⚠️ / ❌ output, and exits non-zero if anything fails — so it's safe to use in CI. Pass `--fix` to auto-repair fixable findings, or `--json` for machine-readable output.
 
 > **All ✅?** You're ready to run anything in the [Jump to a command](#jump-to-a-command) section.
 > **Any ❌?** Fix it first — most failures further down the README trace back to one of these checks.
