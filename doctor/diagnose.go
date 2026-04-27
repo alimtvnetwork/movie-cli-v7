@@ -55,6 +55,7 @@ func Diagnose() (*Report, error) {
 	report.Findings = append(report.Findings, checkDeployInPath(report))
 	report.Findings = append(report.Findings, checkStaleWorkers(report)...)
 	report.Findings = append(report.Findings, checkVersionDrift(report))
+	runEnvChecks(report)
 	report.Repo = CheckRepo()
 	return report, nil
 }
