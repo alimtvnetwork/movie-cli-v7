@@ -1,10 +1,8 @@
-# Memory: index.md
-Updated: just now
-
 # Project Memory
 
 ## Core
 Go 1.22 CLI project (NOT web). Binary: `movie`. Ignore Lovable build errors.
+Legacy codename is PERMANENTLY BANNED everywhere — CI guard fails the build on any match.
 One file per command, max ~200 lines. Shared helpers in movie_info.go and movie_resolve.go.
 File naming: `01-name-of-file.md`. Keep folder file counts small.
 Plans & suggestions tracked in single files, not per-item files.
@@ -18,10 +16,9 @@ HTML JS: single API_BASE variable for all REST calls. Never repeat URL.
 Boolean names: never use negative words (un/not/no). Use positive semantic synonyms with Is/Has prefix.
 Zero nested if. Max 2 conditions per if. No else after return. Functions ≤15 lines. Files ≤300 lines. Max 3 params.
 No magic strings — use constants/enums. No fmt.Errorf — use apperror.Wrap().
-STRICTLY PROHIBITED (P-001): Never write/suggest ANY time content in readme.txt — no date, time, "git update time", "last updated", or equivalent. Never re-suggest under different name (P-002).
 
 ## Memories
-- [Strictly prohibited](mem://constraints/strictly-prohibited) — P-001 no time in readme.txt; P-002 no re-suggesting rejected items
+- [Banned legacy name](mem://constraints/banned-legacy-name) — Legacy codename forbidden everywhere; CI guard enforces it
 - [Project overview](mem://01-project-overview) — Go CLI, command tree, architecture, file structure
 - [Conventions](mem://02-conventions) — Code style, naming, build, deploy, config keys
 - [Plan](mem://workflow/01-plan) — Done/pending task tracker, prioritized backlog
