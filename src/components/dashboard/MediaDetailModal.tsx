@@ -41,7 +41,7 @@ export function MediaDetailModal({ media, open, onOpenChange }: MediaDetailModal
               ? <Film className="h-5 w-5 text-badge-movie" />
               : <Tv className="h-5 w-5 text-badge-tv" />}
             {media.title}
-            <span className="font-sans text-sm font-normal text-muted-foreground">({media.year})</span>
+            <span className="!font-sans text-sm font-normal text-muted-foreground">({media.year})</span>
           </DialogTitle>
           <DialogDescription className="sr-only">Details for {media.title}</DialogDescription>
         </DialogHeader>
