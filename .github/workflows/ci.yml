@@ -208,17 +208,16 @@ jobs:
           #
           # Reports are always generated (pass or fail) and uploaded as a
           # build artifact for easy review.
-          set +e
-          mkdir -p audit-reports
-          bash scripts/audit-legacy-paths.sh        > audit-reports/legacy-audit.txt  2>&1
-          bash scripts/audit-legacy-paths.sh --json > audit-reports/legacy-audit.json 2>/dev/null
-          bash scripts/audit-legacy-paths.sh --strict
-          rc=$?
           set -e
+          report_dir="${RUNNER_TEMP:-.}/legacy-audit-report"
+          mkdir -p "$report_dir"
+          bash scripts/audit-legacy-paths.sh        > "$report_dir/legacy-audit.txt"  2>&1
+          bash scripts/audit-legacy-paths.sh --json > "$report_dir/legacy-audit.json" 2>/dev/null
+          active_count=$(python3 -c 'import json; data=json.load(open("'"$report_dir"'/legacy-audit.json")); print(data.get("summary", {}).get("active", len(data.get("active", []))))')
           # Surface the human-readable report in the job log.
           echo "── Legacy module-path audit report ──"
-          cat audit-reports/legacy-audit.txt
-          if [ "$rc" -ne 0 ]; then
+          cat "$report_dir/legacy-audit.txt"
+          if [ "$active_count" -gt 0 ]; then
             echo ""
             echo "::error::Legacy module-path auditor found ACTIVE references."
             echo "Download the 'legacy-audit-report' artifact for full details."
@@ -231,7 +230,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: legacy-audit-report
-          path: audit-reports/
+          path: ${{ runner.temp }}/legacy-audit-report/
           retention-days: 14
           if-no-files-found: ignore
 
