@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Size-adjusted fallback font faces.
+   While Poppins / Ubuntu are downloading, the browser renders these local
+   system fonts with adjusted metrics so the swap causes minimal layout shift.
+   See: https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/size-adjust */
+@font-face {
+  font-family: 'Poppins Fallback';
+  src: local('Arial');
+  size-adjust: 112%;
+  ascent-override: 92%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Ubuntu Fallback';
+  src: local('Arial');
+  size-adjust: 106%;
+  ascent-override: 88%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
