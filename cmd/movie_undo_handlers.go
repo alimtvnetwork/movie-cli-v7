@@ -5,8 +5,8 @@ import (
 	"bufio"
 	"fmt"
 
-	"github.com/alimtvnetwork/movie-cli-v6/db"
-	"github.com/alimtvnetwork/movie-cli-v6/errlog"
+	"github.com/alimtvnetwork/movie-cli-v7/db"
+	"github.com/alimtvnetwork/movie-cli-v7/errlog"
 )
 
 // History fetch limits — used by BOTH preview (--list) and execution

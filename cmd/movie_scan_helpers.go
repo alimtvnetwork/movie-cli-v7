@@ -13,9 +13,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/apperror"
-	"github.com/alimtvnetwork/movie-cli-v6/db"
-	"github.com/alimtvnetwork/movie-cli-v6/version"
+	"github.com/alimtvnetwork/movie-cli-v7/apperror"
+	"github.com/alimtvnetwork/movie-cli-v7/db"
+	"github.com/alimtvnetwork/movie-cli-v7/version"
 )
 
 // resolveScanDir determines and validates the scan directory from args.

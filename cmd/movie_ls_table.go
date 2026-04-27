@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/db"
-	"github.com/alimtvnetwork/movie-cli-v6/errlog"
+	"github.com/alimtvnetwork/movie-cli-v7/db"
+	"github.com/alimtvnetwork/movie-cli-v7/errlog"
 )
 
 // table column widths

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/db"
+	"github.com/alimtvnetwork/movie-cli-v7/db"
 )
 
 // printMediaDetailTable outputs a media item as a formatted key-value table.

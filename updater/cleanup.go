@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/apperror"
+	"github.com/alimtvnetwork/movie-cli-v7/apperror"
 )
 
 // powershellConfigName is the build/deploy config file at the repo root.

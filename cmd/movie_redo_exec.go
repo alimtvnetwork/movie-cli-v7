@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/apperror"
-	"github.com/alimtvnetwork/movie-cli-v6/db"
-	"github.com/alimtvnetwork/movie-cli-v6/errlog"
+	"github.com/alimtvnetwork/movie-cli-v7/apperror"
+	"github.com/alimtvnetwork/movie-cli-v7/db"
+	"github.com/alimtvnetwork/movie-cli-v7/errlog"
 )
 
 // executeMoveRedo re-applies a previously reverted file move.

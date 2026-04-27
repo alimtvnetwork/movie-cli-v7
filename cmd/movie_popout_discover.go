@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/cleaner"
-	"github.com/alimtvnetwork/movie-cli-v6/db"
-	"github.com/alimtvnetwork/movie-cli-v6/errlog"
+	"github.com/alimtvnetwork/movie-cli-v7/cleaner"
+	"github.com/alimtvnetwork/movie-cli-v7/db"
+	"github.com/alimtvnetwork/movie-cli-v7/errlog"
 )
 
 // discoverNestedVideos walks the directory tree and finds video files that are

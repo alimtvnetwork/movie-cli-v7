@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/apperror"
+	"github.com/alimtvnetwork/movie-cli-v7/apperror"
 )
 
 // executeUpdateWindows writes a temp PowerShell script and runs it.

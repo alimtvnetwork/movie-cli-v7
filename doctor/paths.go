@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/alimtvnetwork/movie-cli-v6/apperror"
+	"github.com/alimtvnetwork/movie-cli-v7/apperror"
 )
 
 const powershellConfigName = "powershell.json"
