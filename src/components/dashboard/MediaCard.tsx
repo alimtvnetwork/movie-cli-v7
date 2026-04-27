@@ -15,6 +15,7 @@ function PosterFallback({ title }: { title: string }) {
   return (
     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
       <span className="font-display text-4xl font-bold text-muted-foreground/60">
+        {/* PosterFallback initial — heading-style display text */}
         {title.charAt(0).toUpperCase()}
       </span>
     </div>
