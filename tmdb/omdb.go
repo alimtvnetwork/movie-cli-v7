@@ -18,16 +18,16 @@ import (
 	"time"
 )
 
-// omdbAPIKeyEnv is the environment variable that holds the user's OMDb key.
+// omdbApiKeyEnv is the environment variable that holds the user's OMDb key.
 // Users obtain a free key at https://www.omdbapi.com/apikey.aspx and export
 // it before running the CLI:  export OMDB_API_KEY=xxxxxxxx
-const omdbAPIKeyEnv = "OMDB_API_KEY"
+const omdbApiKeyEnv = "OMDB_API_KEY"
 
-// omdbBaseURL is the OMDb HTTPS endpoint.
-const omdbBaseURL = "https://www.omdbapi.com/"
+// omdbBaseUrl is the OMDb HTTPS endpoint.
+const omdbBaseUrl = "https://www.omdbapi.com/"
 
-// omdbHTTPTimeout caps OMDb requests so a slow upstream cannot stall scans.
-const omdbHTTPTimeout = 8 * time.Second
+// omdbHttpTimeout caps OMDb requests so a slow upstream cannot stall scans.
+const omdbHttpTimeout = 8 * time.Second
 
 // omdbResponse mirrors the subset of the OMDb payload we consume.
 type omdbResponse struct {
@@ -42,7 +42,7 @@ type omdbResponse struct {
 // SHARED: used by tryOmdbFallback and HasOmdb so the key source stays in
 // one place.
 func omdbAPIKey() string {
-	return os.Getenv(omdbAPIKeyEnv)
+	return os.Getenv(omdbApiKeyEnv)
 }
 
 // HasOmdb reports whether an OMDB_API_KEY is configured. Exported so callers
@@ -85,10 +85,10 @@ func fetchOmdbImdbID(apiKey, title string, year int) string {
 	if year > 0 {
 		params.Set("y", strconv.Itoa(year))
 	}
-	reqURL := omdbBaseURL + "?" + params.Encode()
+	reqUrl := omdbBaseUrl + "?" + params.Encode()
 
-	httpClient := &http.Client{Timeout: omdbHTTPTimeout}
-	req, reqErr := http.NewRequest(http.MethodGet, reqURL, nil)
+	httpClient := &http.Client{Timeout: omdbHttpTimeout}
+	req, reqErr := http.NewRequest(http.MethodGet, reqUrl, nil)
 	if reqErr != nil {
 		return ""
 	}
