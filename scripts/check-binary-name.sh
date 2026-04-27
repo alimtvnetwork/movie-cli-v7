@@ -43,15 +43,19 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EXPECTED="movie"
 MODE="check"
 VERBOSE=0
+JSON_PATH=""
 
-for arg in "$@"; do
-    case "$arg" in
+while [ $# -gt 0 ]; do
+    case "$1" in
         --fix)        MODE="fix" ;;
         --dry-run)    MODE="dry-run" ;;
         --verbose|-v) VERBOSE=1 ;;
-        -h|--help)    sed -n '2,22p' "$0"; exit 0 ;;
-        *) echo "Unknown arg: $arg" >&2; exit 2 ;;
+        --json)       JSON_PATH="${2:-}"; shift ;;
+        --json=*)     JSON_PATH="${1#--json=}" ;;
+        -h|--help)    sed -n '2,36p' "$0"; exit 0 ;;
+        *) echo "Unknown arg: $1" >&2; exit 2 ;;
     esac
+    shift
 done
 
 cd "$ROOT"
