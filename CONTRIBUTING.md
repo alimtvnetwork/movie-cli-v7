@@ -11,6 +11,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Code Guidelines](#code-guidelines)
 - [Project Naming Rules](#project-naming-rules)
 - [Acronym MixedCaps Rules](#acronym-mixedcaps-rules)
+- [Undo / Redo Worked Examples](#undo--redo-worked-examples)
 - [Pre-push Checklist](#pre-push-checklist)
 - [Commit Messages](#commit-messages)
 - [Pull Requests](#pull-requests)
