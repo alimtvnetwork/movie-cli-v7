@@ -266,12 +266,12 @@ bash scripts/check-binary-name.sh
 go build ./...
 go test  ./...
 
-# 6. Bump version (any code change requires at least a minor bump)
+# 7. Bump version (any code change requires at least a minor bump)
 #    CI: enforced at release time by release.yml (pre-release audit job)
 $EDITOR version/info.go
 ```
 
-One-shot equivalent for steps 1–5:
+One-shot equivalent for steps 1–6:
 
 ```bash
 bash scripts/pre-release.sh
