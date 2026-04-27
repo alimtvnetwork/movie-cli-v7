@@ -19,13 +19,23 @@ REMOTE="${REMOTE:-origin}"
 BRANCH="${BRANCH:-main}"
 APPLY=0
 ASSUME_YES=0
+VERBOSE=0
 
 for arg in "$@"; do
     case "$arg" in
         --apply) APPLY=1 ;;
         --yes|-y) ASSUME_YES=1 ;;
+        --verbose|-v) VERBOSE=1 ;;
         -h|--help)
             sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+            cat <<'USAGE'
+
+Flags:
+  --apply       Interactively run remediation (fetch/reset/clean).
+  --yes, -y     Skip confirmation prompts (use with --apply).
+  --verbose, -v Print computed SHAs, commit messages, and status checks.
+  -h, --help    Show this help.
+USAGE
             exit 0
             ;;
         *)
@@ -39,6 +49,7 @@ say()  { printf '\033[1;36m[stale-repo]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[stale-repo]\033[0m %s\n' "$*" >&2; }
 err()  { printf '\033[1;31m[stale-repo]\033[0m %s\n' "$*" >&2; }
 ok()   { printf '\033[1;32m[stale-repo]\033[0m %s\n' "$*"; }
+vsay() { [ "$VERBOSE" -eq 1 ] && printf '\033[2;37m[stale-repo:verbose]\033[0m %s\n' "$*" || true; }
 
 confirm() {
     local prompt="$1"
@@ -89,6 +100,37 @@ AHEAD="$(git rev-list --count "$REMOTE_SHA".."$LOCAL_SHA" 2>/dev/null || echo "?
 DIRTY=0
 git diff --quiet && git diff --cached --quiet || DIRTY=1
 UNTRACKED="$(git ls-files --others --exclude-standard | wc -l | tr -d ' ')"
+
+if [ "$VERBOSE" -eq 1 ]; then
+    LOCAL_MSG_V="$(git log -1 --pretty=format:'%h %an %ad %s' --date=iso HEAD 2>/dev/null)"
+    REMOTE_MSG_V="$(git log -1 --pretty=format:'%h %an %ad %s' --date=iso "$REMOTE/$BRANCH" 2>/dev/null)"
+    MERGE_BASE="$(git merge-base "$LOCAL_SHA" "$REMOTE_SHA" 2>/dev/null || echo '(none)')"
+    REMOTE_URL="$(git remote get-url "$REMOTE" 2>/dev/null || echo '(unknown)')"
+    UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo '(none)')"
+    DIFF_FILES="$(git diff --name-only HEAD 2>/dev/null | wc -l | tr -d ' ')"
+    STAGED_FILES="$(git diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')"
+    vsay "─── Verbose diagnostics ───"
+    vsay "Remote URL       : $REMOTE_URL"
+    vsay "Configured upstream: $UPSTREAM"
+    vsay "Current branch   : $CURRENT_BRANCH"
+    vsay "Local  SHA (full): $LOCAL_SHA"
+    vsay "Remote SHA (full): $REMOTE_SHA"
+    vsay "Merge-base       : $MERGE_BASE"
+    vsay "Local  HEAD msg  : $LOCAL_MSG_V"
+    vsay "Remote HEAD msg  : $REMOTE_MSG_V"
+    vsay "Behind / Ahead   : $BEHIND / $AHEAD"
+    vsay "Dirty (unstaged) : $DIRTY  (changed files: $DIFF_FILES, staged: $STAGED_FILES)"
+    vsay "Untracked files  : $UNTRACKED"
+    if [ "$UNTRACKED" -gt 0 ]; then
+        vsay "Untracked list:"
+        git ls-files --others --exclude-standard | sed 's/^/    /' >&2
+    fi
+    if [ "$DIRTY" -eq 1 ]; then
+        vsay "Modified files:"
+        git diff --name-status HEAD 2>/dev/null | sed 's/^/    /' >&2
+    fi
+    vsay "─── End verbose diagnostics ───"
+fi
 
 warn "Repo is OUT OF SYNC."
 warn "  behind origin:    $BEHIND commit(s)"
