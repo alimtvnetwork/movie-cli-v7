@@ -55,7 +55,7 @@ if [ -z "$AUDIT_JSON" ]; then
     echo "Auditor produced no output" >&2; exit 2
 fi
 
-RESULT="$(CANONICAL="$CANONICAL" JSON_OUT="$JSON_OUT" python3 - <<'PY' <<<"$AUDIT_JSON"
+RESULT="$(CANONICAL="$CANONICAL" JSON_OUT="$JSON_OUT" AUDIT_JSON="$AUDIT_JSON" python3 - <<'PY'
 import json, os, re, sys
 
 canonical = os.environ["CANONICAL"]
