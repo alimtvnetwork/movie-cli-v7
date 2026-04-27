@@ -36,12 +36,12 @@ export function MediaDetailModal({ media, open, onOpenChange }: MediaDetailModal
     <Dialog open={open} onOpenChange={(o) => { if (!o) setImgError(false); onOpenChange(o); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-display text-xl">
+          <DialogTitle className="flex items-center gap-2 font-ubuntu-heading text-xl">
             {media.type === "movie"
               ? <Film className="h-5 w-5 text-badge-movie" />
               : <Tv className="h-5 w-5 text-badge-tv" />}
             {media.title}
-            <span className="!font-sans text-sm font-normal text-muted-foreground">({media.year})</span>
+            <span className="!font-poppins-body text-sm font-normal text-muted-foreground">({media.year})</span>
           </DialogTitle>
           <DialogDescription className="sr-only">Details for {media.title}</DialogDescription>
         </DialogHeader>

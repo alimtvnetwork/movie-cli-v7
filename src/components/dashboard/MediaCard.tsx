@@ -14,8 +14,7 @@ interface MediaCardProps {
 function PosterFallback({ title }: { title: string }) {
   return (
     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-      <span className="font-display text-4xl font-bold text-muted-foreground/60">
-        {/* PosterFallback initial — heading-style display text */}
+      <span className="font-ubuntu-heading text-4xl font-bold text-muted-foreground/60">
         {title.charAt(0).toUpperCase()}
       </span>
     </div>
@@ -48,7 +47,7 @@ export function MediaCard({ media, onClick }: MediaCardProps) {
 
       <div className="space-y-2 p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 font-display text-sm font-semibold text-card-foreground">
+          <h3 className="line-clamp-1 font-ubuntu-heading text-sm font-semibold text-card-foreground">
             {media.title}
           </h3>
           <Badge
