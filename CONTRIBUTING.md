@@ -250,7 +250,14 @@ python3 scripts/check-acronym-naming.py
 #              (uploaded by step "Upload legacy audit report", retained 14 days)
 bash scripts/audit-legacy-paths.sh --strict
 
-# 5. Build & test the whole tree
+# 5. Project naming guards (canonical name is `movie`)
+#    CI: ci.yml → job "Lint" → step "Forbidden term guard"
+#                            → step "Binary name consistency check"
+#    Auto-fix: bash scripts/check-binary-name.sh --fix [--fuzzy]
+bash scripts/guard-forbidden-terms.sh
+bash scripts/check-binary-name.sh
+
+# 6. Build & test the whole tree
 #    Build CI: ci.yml → job "Build (<os>/<arch>)" → step "Build binary"
 #              Artifact: "movie-<os>-<arch>" per matrix entry
 #    Test  CI: ci.yml → job "Test (unit)" and "Test (integration)" → step "Run tests"
