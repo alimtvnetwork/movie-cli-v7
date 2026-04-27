@@ -1553,7 +1553,7 @@ $ movie config set tmdb_api_key YOUR_KEY
 ✔ Saved tmdb_api_key.
 
 $ movie version
-mahin v2.178.0   commit a1b2c3d   built 2025-04-26   go1.22.2 darwin/arm64
+movie v2.178.0   commit a1b2c3d   built 2025-04-26   go1.22.2 darwin/arm64
 ```
 </details>
 
