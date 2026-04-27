@@ -67,7 +67,7 @@ active = data.get("active", [])
 # Match the legacy needle inside the source line.
 re_versioned   = re.compile(r'github\.com/alimtvnetwork/movie-cli-v[1-6](@v[0-9][^\s"\']*)?')
 re_tagged_any  = re.compile(r'github\.com/alimtvnetwork/movie-cli(-v[1-7])?@v[0-9][^\s"\']*')
-re_unversioned = re.compile(r'github\.com/alimtvnetwork/movie-cli(?![-/\w])(@v[0-9][^\s"\']*)?')
+re_unversioned = re.compile(r'github\.com/alimtvnetwork/movie-cli(?!-v\d)(@v[0-9][^\s"\']*)?')
 
 def derive(variant, content):
     """Return list of (old, new) replacements for one source line."""
