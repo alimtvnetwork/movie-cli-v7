@@ -84,37 +84,8 @@ jobs:
 
       - name: Forbidden term guard
         if: needs.sha-check.outputs.already-built != 'true'
-        run: |
-          # The project name is "movie". The previous legacy name and any
-          # derived patterns (/tmp/<legacy>, <LEGACY>_DB, .<legacy>/,
-          # <legacy>-cli, etc.) are permanently banned across the repo.
-          set -e
-          # Patterns that must never appear. Case-insensitive.
-          # NOTE: split string literals so this file itself doesn't trip the guard.
-          patterns=( 'm''ahin' 'M''AHIN' )
-          violations=$(grep -rn -E -i \
-              --exclude-dir=.git --exclude-dir=.release --exclude-dir=node_modules \
-              --exclude-dir=dist --exclude-dir=build \
-              --exclude=CHANGELOG.md \
-              --exclude=ci.yml \
-              -e "$(IFS='|'; echo "${patterns[*]}")" . 2>/dev/null || true)
-          if [ -n "$violations" ]; then
-            echo "Forbidden legacy-name references found:"
-            echo "$violations"
-            echo ""
-            while IFS= read -r line; do
-              [ -z "$line" ] && continue
-              file=$(printf '%s' "$line" | cut -d: -f1)
-              lineno=$(printf '%s' "$line" | cut -d: -f2)
-              content=$(printf '%s' "$line" | cut -d: -f3-)
-              echo "::error file=${file},line=${lineno}::Forbidden legacy name: ${content}"
-            done <<< "$violations"
-            echo ""
-            echo "The legacy project name is permanently banned. Use 'movie' instead."
-            echo "Also banned: /tmp/<legacy>, <LEGACY>_DB, .<legacy>/, <legacy>-cli."
-            exit 1
-          fi
-          echo "✅ No forbidden legacy-name references."
+        run: bash scripts/guard-forbidden-terms.sh
+
 
 
       - name: Binary name consistency check
