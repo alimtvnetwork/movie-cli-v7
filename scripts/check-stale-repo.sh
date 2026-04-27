@@ -128,7 +128,36 @@ if [ "$DIRTY" -eq 1 ] || [ "$UNTRACKED" -gt 0 ]; then
     fi
 fi
 
-confirm "Run: git fetch $REMOTE" || { err "Aborted."; exit 3; }
+# --- 3a. Final pre-flight summary ---------------------------------------
+LATEST_LOCAL_MSG="$(git log -1 --pretty=format:'%h %s' HEAD 2>/dev/null)"
+LATEST_REMOTE_MSG="$(git log -1 --pretty=format:'%h %s' "$REMOTE/$BRANCH" 2>/dev/null)"
+
+cat <<EOF
+
+────────────────────────────────────────────────────────────────────────
+              FINAL CONFIRMATION — review before applying
+────────────────────────────────────────────────────────────────────────
+  Repository       : $REPO_ROOT
+  Branch           : $CURRENT_BRANCH  →  $REMOTE/$BRANCH
+  Local  HEAD      : ${LOCAL_SHA:0:10}   $LATEST_LOCAL_MSG
+  Remote HEAD      : ${REMOTE_SHA:0:10}   $LATEST_REMOTE_MSG
+  Behind remote    : $BEHIND commit(s)    [will be pulled in]
+  Ahead of remote  : $AHEAD commit(s)     [will be DISCARDED]
+  Dirty worktree   : $([ $DIRTY -eq 1 ] && echo "YES — uncommitted changes will be LOST" || echo "no")
+  Untracked files  : $UNTRACKED  $([ $UNTRACKED -gt 0 ] && echo "[will be DELETED by clean -fd]")
+
+  Commands that will run (in order):
+      git fetch $REMOTE
+      git reset --hard $REMOTE/$BRANCH
+      git clean -fd
+────────────────────────────────────────────────────────────────────────
+
+EOF
+
+confirm "Proceed with the above remediation?" \
+    || { err "Aborted by user. No changes made."; exit 3; }
+
+confirm "Step 1/3 — Run: git fetch $REMOTE" || { err "Aborted."; exit 3; }
 git fetch "$REMOTE" || { err "fetch failed"; exit 2; }
 
 confirm "Step 2/3 — Run: git reset --hard $REMOTE/$BRANCH (destroys local commits on $CURRENT_BRANCH)" \
