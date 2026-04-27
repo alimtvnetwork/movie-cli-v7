@@ -19,13 +19,23 @@ REMOTE="${REMOTE:-origin}"
 BRANCH="${BRANCH:-main}"
 APPLY=0
 ASSUME_YES=0
+VERBOSE=0
 
 for arg in "$@"; do
     case "$arg" in
         --apply) APPLY=1 ;;
         --yes|-y) ASSUME_YES=1 ;;
+        --verbose|-v) VERBOSE=1 ;;
         -h|--help)
             sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+            cat <<'USAGE'
+
+Flags:
+  --apply       Interactively run remediation (fetch/reset/clean).
+  --yes, -y     Skip confirmation prompts (use with --apply).
+  --verbose, -v Print computed SHAs, commit messages, and status checks.
+  -h, --help    Show this help.
+USAGE
             exit 0
             ;;
         *)
