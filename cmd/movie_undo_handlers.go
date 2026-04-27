@@ -153,6 +153,7 @@ func undoActionByID(database *db.DB, scanner *bufio.Scanner, id int64) int {
 	if action.Detail != "" {
 		fmt.Printf("   %s\n", action.Detail)
 	}
+	LogUndoActionTarget(action)
 	if !confirmUndo(scanner) {
 		return ExitRowDeclined
 	}
@@ -189,6 +190,7 @@ func undoMoveByID(database *db.DB, scanner *bufio.Scanner, id int64) int {
 
 	fmt.Println("⏪ Undo move:")
 	fmt.Printf("   %s → %s\n", target.ToPath, target.FromPath)
+	LogUndoMoveTarget(target)
 	if !confirmUndo(scanner) {
 		return ExitRowDeclined
 	}
