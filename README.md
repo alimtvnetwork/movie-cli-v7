@@ -111,6 +111,8 @@ irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | 
 
 ## Quick Start
 
+_In a hurry? See **[QUICKSTART.md](QUICKSTART.md)** — minimal copy-paste commands for Linux, macOS, and Windows._
+
 </div>
 
 ### Install latest release
