@@ -69,17 +69,17 @@ list_violations() {
 fix_file() {
     local f="$1"
     local before after
-    before=$(grep -c -E "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null || echo 0)
+    before=$(grep -cE "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null | tr -d '[:space:]')
+    : "${before:=0}"
     [ "$before" -eq 0 ] && { echo 0; return; }
-    # Order matters: uppercase first (so MAHIN_ doesn't get partially mangled),
-    # then TitleCase, then lowercase.
     sed -i \
         -e "s/${LEGACY_UC}_/MOVIE_/g" \
         -e "s/${LEGACY_UC}/MOVIE/g" \
         -e "s/${LEGACY_TC}/Movie/g" \
         -e "s/${LEGACY_LC}/${EXPECTED}/g" \
         "$f"
-    after=$(grep -c -E "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null || echo 0)
+    after=$(grep -cE "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null | tr -d '[:space:]')
+    : "${after:=0}"
     echo "$((before - after))"
 }
 
