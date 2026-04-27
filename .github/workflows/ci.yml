@@ -180,6 +180,13 @@ jobs:
           fi
           echo "✅ README command index in sync with scripts/gen-command-index.py."
 
+      - name: QUICKSTART link & platform guard
+        if: needs.sha-check.outputs.already-built != 'true'
+        run: |
+          # Ensure QUICKSTART.md exists, is linked from README.md, and has
+          # command blocks for Linux, macOS, and Windows.
+          bash scripts/check-quickstart.sh .
+
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
     name: Vulnerability Scan
