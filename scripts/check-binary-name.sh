@@ -76,6 +76,8 @@ EXCLUDES=(
     --exclude-dir=build
     --exclude=CHANGELOG.md
     --exclude=check-binary-name.sh
+    --exclude=_fuzzy_rewrite.py
+    --exclude=guard-forbidden-terms.sh
 )
 
 # Find every file containing any casing of the legacy token.
