@@ -36,8 +36,12 @@ fi
 
 slugify() {
     # Read one line on stdin, emit the GitHub-style anchor on stdout.
-    # awk is used (not sed -E with bash regex) to keep the script portable
-    # between BSD/macOS and GNU/Linux runners.
+    # Rules (verified against github.com renderer):
+    #   1. Lowercase.
+    #   2. Drop every char that is NOT a letter, digit, space, or '-'.
+    #   3. Replace EACH remaining space with '-' (do NOT collapse runs —
+    #      that is why "Undo / Redo" → "undo--redo": the two spaces around
+    #      '/' both survive step 2 and each becomes its own '-').
     awk '{
         s = tolower($0)
         out = ""
@@ -45,7 +49,7 @@ slugify() {
             c = substr(s, i, 1)
             if (c ~ /[a-z0-9 -]/) out = out c
         }
-        gsub(/[ ]+/, "-", out)
+        gsub(/ /, "-", out)
         print out
     }'
 }
