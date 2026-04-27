@@ -9,6 +9,8 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
 - [Code Guidelines](#code-guidelines)
+- [Acronym MixedCaps Rules](#acronym-mixedcaps-rules)
+- [Pre-push Checklist](#pre-push-checklist)
 - [Commit Messages](#commit-messages)
 - [Pull Requests](#pull-requests)
 - [Issue Reporting](#issue-reporting)
@@ -116,6 +118,82 @@ See the [Install Guide](spec/03-general/01-install-guide.md) for detailed setup 
 - Prefer stdlib over third-party packages
 - Any new dependency requires justification in the PR description
 - Current deps: Cobra (CLI), modernc.org/sqlite (no CGo)
+
+---
+
+## Acronym MixedCaps Rules
+
+Spec: [`spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md`](spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md)
+
+In Go **identifiers**, the following acronyms must be written in MixedCaps
+form whenever they are followed by another uppercase letter (i.e. mid-word).
+Comments and string literals are exempt — only identifier names are checked.
+
+| Acronym | Use in identifiers | Examples (✅ / ❌) |
+|---------|--------------------|--------------------|
+| `IMDb`  | `Imdb`             | `ImdbId`, `fetchImdbRecord` / `IMDbID`, `fetchIMDbRecord` |
+| `TMDb`  | `Tmdb`             | `TmdbClient` / `TMDbClient` |
+| `API`   | `Api`              | `ApiKey`, `ApiBaseUrl` / `APIKey`, `APIBaseURL` |
+| `HTTP`  | `Http`             | `HttpClient`, `HttpTimeout` / `HTTPClient` |
+| `URL`   | `Url`              | `UrlPath`, `BaseUrl` / `URLPath`, `BaseURL` |
+| `JSON`  | `Json`             | `JsonResponse`, `parseJsonBody` / `JSONResponse` |
+| `SQL`   | `Sql`              | `SqlBuilder` / `SQLBuilder` |
+| `HTML`  | `Html`             | `HtmlReport` / `HTMLReport` |
+| `XML`   | `Xml`              | `XmlParser` / `XMLParser` |
+
+**Trailing initialism is allowed** (the acronym is not followed by another
+uppercase letter): `imdbID`, `tmdbID`, `baseURL`, `reqURL` are fine.
+
+### Tools
+
+- Check only:&nbsp;&nbsp; `python3 scripts/check-acronym-naming.py`
+- Auto-rename:&nbsp; `python3 scripts/rename-acronyms.py --write`
+
+The codemod skips comments and string/rune literals; review the diff before
+committing.
+
+---
+
+## Pre-push Checklist
+
+Run these locally before pushing — they are the same checks CI enforces, so
+catching issues here saves a round-trip.
+
+```bash
+# 1. Format & vet
+gofmt -l .                # must print nothing
+go vet ./...
+
+# 2. Lint (mirrors CI's golangci-lint job)
+golangci-lint run --timeout=5m
+
+# 3. Identifier-only acronym MixedCaps guard
+python3 scripts/check-acronym-naming.py
+
+# 4. Legacy module-path auditor (must report 0 ACTIVE)
+bash scripts/audit-legacy-paths.sh --strict
+
+# 5. Build & test the whole tree
+go build ./...
+go test  ./...
+
+# 6. Bump version (any code change requires at least a minor bump)
+$EDITOR version/info.go
+```
+
+One-shot equivalent for steps 1–5:
+
+```bash
+bash scripts/pre-release.sh
+```
+
+If the acronym guard fails, run the codemod, review the diff, and re-run
+the checklist:
+
+```bash
+python3 scripts/rename-acronyms.py --write
+python3 scripts/check-acronym-naming.py
+```
 
 ---
 
