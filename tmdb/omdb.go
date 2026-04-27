@@ -37,11 +37,11 @@ type omdbResponse struct {
 	Type     string `json:"Type"` // "movie" | "series" | "episode"
 }
 
-// omdbAPIKey reads the OMDb key from the environment. Empty string means
+// omdbApiKey reads the OMDb key from the environment. Empty string means
 // the fallback is disabled.
 // SHARED: used by tryOmdbFallback and HasOmdb so the key source stays in
 // one place.
-func omdbAPIKey() string {
+func omdbApiKey() string {
 	return os.Getenv(omdbApiKeyEnv)
 }
 
@@ -49,14 +49,14 @@ func omdbAPIKey() string {
 // (e.g. `movie doctor` or status output) can advertise the fallback state
 // without poking env vars themselves.
 func HasOmdb() bool {
-	return omdbAPIKey() != ""
+	return omdbApiKey() != ""
 }
 
 // tryOmdbFallback queries OMDb for the title (+ optional year) and, if it
 // returns an IMDb id, resolves it back to TMDb via /find. Returns nil on
 // any failure — OMDb is best-effort, never fatal.
 func (c *Client) tryOmdbFallback(title string, year int) []SearchResult {
-	key := omdbAPIKey()
+	key := omdbApiKey()
 	if key == "" {
 		return nil
 	}
