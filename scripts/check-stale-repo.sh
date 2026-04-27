@@ -111,20 +111,26 @@ if [ "$APPLY" -eq 0 ]; then
     exit 1
 fi
 
-# --- 3. Apply mode -------------------------------------------------------
-if [ "$DIRTY" -eq 1 ] || [ "$UNTRACKED" -gt 0 ]; then
-    warn "You have local modifications and/or untracked files."
+# --- 3. Apply mode: plan backup refs (do not create yet) ----------------
+BACKUP_BRANCH=""
+BACKUP_BASE_SHA=""
+STASH_MSG=""
+WILL_BACKUP=0
+WILL_STASH=0
+
+if [ "$DIRTY" -eq 1 ] || [ "$UNTRACKED" -gt 0 ] || [ "$AHEAD" != "0" ]; then
+    warn "You have local commits, modifications, and/or untracked files."
     warn "These will be PERMANENTLY LOST by reset --hard + clean -fd."
-    if ! confirm "Create a safety backup branch before proceeding?"; then
-        say "Skipping backup."
-    else
-        BACKUP="backup/stale-repo-$(date +%Y%m%d-%H%M%S)"
-        git branch "$BACKUP" >/dev/null 2>&1 \
-            && ok "Created backup branch: $BACKUP"
-        if [ "$DIRTY" -eq 1 ]; then
-            git stash push --include-untracked -m "stale-repo backup $(date -u +%FT%TZ)" \
-                >/dev/null 2>&1 && ok "Stashed working changes (see: git stash list)"
+    if confirm "Create a safety backup branch + stash before proceeding?"; then
+        WILL_BACKUP=1
+        BACKUP_BRANCH="backup/stale-repo-$(date +%Y%m%d-%H%M%S)"
+        BACKUP_BASE_SHA="$LOCAL_SHA"
+        if [ "$DIRTY" -eq 1 ] || [ "$UNTRACKED" -gt 0 ]; then
+            WILL_STASH=1
+            STASH_MSG="stale-repo backup $(date -u +%FT%TZ)"
         fi
+    else
+        say "Skipping backup."
     fi
 fi
 
@@ -146,7 +152,14 @@ cat <<EOF
   Dirty worktree   : $([ $DIRTY -eq 1 ] && echo "YES — uncommitted changes will be LOST" || echo "no")
   Untracked files  : $UNTRACKED  $([ $UNTRACKED -gt 0 ] && echo "[will be DELETED by clean -fd]")
 
+  Backup plan:
+      Backup branch  : $([ $WILL_BACKUP -eq 1 ] && echo "$BACKUP_BRANCH  →  ${BACKUP_BASE_SHA:0:10}" || echo "(none — no backup will be created)")
+      Stash entry    : $([ $WILL_STASH  -eq 1 ] && echo "\"$STASH_MSG\"" || echo "(none)")
+      Recover with   : $([ $WILL_BACKUP -eq 1 ] && echo "git checkout $BACKUP_BRANCH$([ $WILL_STASH -eq 1 ] && echo " && git stash pop")" || echo "(no recovery ref — changes will be unrecoverable)")
+
   Commands that will run (in order):
+      $([ $WILL_BACKUP -eq 1 ] && echo "git branch $BACKUP_BRANCH $BACKUP_BASE_SHA")
+      $([ $WILL_STASH  -eq 1 ] && echo "git stash push --include-untracked -m \"$STASH_MSG\"")
       git fetch $REMOTE
       git reset --hard $REMOTE/$BRANCH
       git clean -fd
@@ -157,11 +170,33 @@ EOF
 confirm "Proceed with the above remediation?" \
     || { err "Aborted by user. No changes made."; exit 3; }
 
+# --- 3b. Create backup refs now (after confirmation) --------------------
+if [ "$WILL_BACKUP" -eq 1 ]; then
+    if git branch "$BACKUP_BRANCH" "$BACKUP_BASE_SHA" >/dev/null 2>&1; then
+        ok "Created backup branch: $BACKUP_BRANCH @ ${BACKUP_BASE_SHA:0:10}"
+    else
+        err "Failed to create backup branch $BACKUP_BRANCH"; exit 2
+    fi
+fi
+if [ "$WILL_STASH" -eq 1 ]; then
+    if git stash push --include-untracked -m "$STASH_MSG" >/dev/null 2>&1; then
+        STASH_REF="$(git stash list | grep -F "$STASH_MSG" | head -1 | cut -d: -f1)"
+        ok "Stashed working changes as: ${STASH_REF:-stash@{0}}  (\"$STASH_MSG\")"
+    else
+        warn "Nothing to stash (worktree became clean)."
+    fi
+fi
+
 confirm "Step 1/3 — Run: git fetch $REMOTE" || { err "Aborted."; exit 3; }
 git fetch "$REMOTE" || { err "fetch failed"; exit 2; }
 
-confirm "Step 2/3 — Run: git reset --hard $REMOTE/$BRANCH (destroys local commits on $CURRENT_BRANCH)" \
-    || { err "Aborted."; exit 3; }
+DESTRUCTIVE_PROMPT="Step 2/3 — DESTRUCTIVE: git reset --hard $REMOTE/$BRANCH (discards $AHEAD local commit(s) on $CURRENT_BRANCH"
+if [ "$WILL_BACKUP" -eq 1 ]; then
+    DESTRUCTIVE_PROMPT="$DESTRUCTIVE_PROMPT; recoverable via $BACKUP_BRANCH)"
+else
+    DESTRUCTIVE_PROMPT="$DESTRUCTIVE_PROMPT; NO BACKUP — UNRECOVERABLE)"
+fi
+confirm "$DESTRUCTIVE_PROMPT" || { err "Aborted."; exit 3; }
 git reset --hard "$REMOTE/$BRANCH" || { err "reset failed"; exit 2; }
 
 confirm "Step 3/3 — Run: git clean -fd (removes untracked files & dirs)" \
