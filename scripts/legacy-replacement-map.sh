@@ -60,7 +60,7 @@ import json, os, re, sys
 
 canonical = os.environ["CANONICAL"]
 json_out  = os.environ["JSON_OUT"] == "1"
-data = json.load(sys.stdin)
+data = json.loads(os.environ["AUDIT_JSON"])
 
 active = data.get("active", [])
 
