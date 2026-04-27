@@ -2,10 +2,11 @@
 // entries from MILESTONES.md by date or keyword.
 //
 // Filtering:
-//   --date YYYY-MM-DD   keep entries whose timestamp matches the given day
-//   --since YYYY-MM-DD  keep entries on or after the given day
-//   --keyword TEXT      case-insensitive substring match against the entry
-//   --limit N           cap the number of printed entries (0 = no cap)
+//
+//	--date YYYY-MM-DD   keep entries whose timestamp matches the given day
+//	--since YYYY-MM-DD  keep entries on or after the given day
+//	--keyword TEXT      case-insensitive substring match against the entry
+//	--limit N           cap the number of printed entries (0 = no cap)
 package cmd
 
 import (
@@ -22,8 +23,8 @@ import (
 )
 
 const (
-	milestonesFile   = "MILESTONES.md"
-	milestoneTSLayout = "02-Jan-2006 03:04 PM"
+	milestonesFile     = "MILESTONES.md"
+	milestoneTSLayout  = "02-Jan-2006 03:04 PM"
 	milestoneDayLayout = "2006-01-02"
 )
 
@@ -31,8 +32,8 @@ const (
 var tsRegex = regexp.MustCompile(`\b(\d{2}-[A-Za-z]{3}-\d{4} \d{2}:\d{2} (?:AM|PM))\b`)
 
 type milestoneEntry struct {
-	Raw  string
-	Time time.Time
+	Raw     string
+	Time    time.Time
 	HasTime bool
 }
 
