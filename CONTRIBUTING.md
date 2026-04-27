@@ -9,6 +9,8 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
 - [Code Guidelines](#code-guidelines)
+- [Acronym MixedCaps Rules](#acronym-mixedcaps-rules)
+- [Pre-push Checklist](#pre-push-checklist)
 - [Commit Messages](#commit-messages)
 - [Pull Requests](#pull-requests)
 - [Issue Reporting](#issue-reporting)
@@ -116,6 +118,116 @@ See the [Install Guide](spec/03-general/01-install-guide.md) for detailed setup 
 - Prefer stdlib over third-party packages
 - Any new dependency requires justification in the PR description
 - Current deps: Cobra (CLI), modernc.org/sqlite (no CGo)
+
+---
+
+## Acronym MixedCaps Rules
+
+Spec: [`spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md`](spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md)
+
+In Go **identifiers**, the following acronyms must be written in MixedCaps
+form whenever they are followed by another uppercase letter (i.e. mid-word).
+Comments and string literals are exempt — only identifier names are checked.
+
+| Acronym | Use in identifiers | Examples (✅ / ❌) |
+|---------|--------------------|--------------------|
+| `IMDb`  | `Imdb`             | `ImdbId`, `fetchImdbRecord` / `IMDbID`, `fetchIMDbRecord` |
+| `TMDb`  | `Tmdb`             | `TmdbClient` / `TMDbClient` |
+| `API`   | `Api`              | `ApiKey`, `ApiBaseUrl` / `APIKey`, `APIBaseURL` |
+| `HTTP`  | `Http`             | `HttpClient`, `HttpTimeout` / `HTTPClient` |
+| `URL`   | `Url`              | `UrlPath`, `BaseUrl` / `URLPath`, `BaseURL` |
+| `JSON`  | `Json`             | `JsonResponse`, `parseJsonBody` / `JSONResponse` |
+| `SQL`   | `Sql`              | `SqlBuilder` / `SQLBuilder` |
+| `HTML`  | `Html`             | `HtmlReport` / `HTMLReport` |
+| `XML`   | `Xml`              | `XmlParser` / `XMLParser` |
+
+**Trailing initialism is allowed** (the acronym is not followed by another
+uppercase letter): `imdbID`, `tmdbID`, `baseURL`, `reqURL` are fine.
+
+### Tools
+
+- Check only:&nbsp;&nbsp; `python3 scripts/check-acronym-naming.py`
+- Auto-rename:&nbsp; `python3 scripts/rename-acronyms.py --write`
+
+The codemod skips comments and string/rune literals; review the diff before
+committing.
+
+---
+
+## Pre-push Checklist
+
+Run these locally before pushing — they are the same checks CI enforces, so
+catching issues here saves a round-trip.
+
+Each step lists the exact CI **workflow → job → step** that re-runs it, plus
+where to find the log/artifact when something fails. Workflow files live in
+[`.github/workflows/`](.github/workflows/); GitHub Actions logs for a run are
+at `https://github.com/<owner>/<repo>/actions/runs/<run-id>` and step logs are
+expandable under the named step.
+
+```bash
+# 1. Format & vet
+#    CI: ci.yml → job "Lint" → step "Go vet"
+#    Log: Actions → CI → Lint → "Go vet"
+gofmt -l .                # must print nothing
+go vet ./...
+
+# 2. Lint (golangci-lint)
+#    CI: ci.yml → job "Lint" → step "golangci-lint" (golangci/golangci-lint-action@v6)
+#    Log: Actions → CI → Lint → "golangci-lint"
+golangci-lint run --timeout=5m
+
+# 3. Identifier-only acronym MixedCaps guard
+#    CI: ci.yml → job "Lint" → step "Acronym MixedCaps guard"
+#    Log: Actions → CI → Lint → "Acronym MixedCaps guard"
+python3 scripts/check-acronym-naming.py
+
+# 4. Legacy module-path auditor (must report 0 ACTIVE)
+#    CI: ci.yml → job "Lint" → step "Legacy module-path auditor (strict)"
+#    Log:      Actions → CI → Lint → "Legacy module-path auditor (strict)"
+#    Artifact: Actions → CI run → Artifacts → "legacy-audit-report"
+#              (uploaded by step "Upload legacy audit report", retained 14 days)
+bash scripts/audit-legacy-paths.sh --strict
+
+# 5. Build & test the whole tree
+#    Build CI: ci.yml → job "Build (<os>/<arch>)" → step "Build binary"
+#              Artifact: "movie-<os>-<arch>" per matrix entry
+#    Test  CI: ci.yml → job "Test (unit)" and "Test (integration)" → step "Run tests"
+#              Artifact: "test-results-unit" / "test-results-integration"
+#              Summary:  job "Test Summary" → step "Summarize test results"
+go build ./...
+go test  ./...
+
+# 6. Bump version (any code change requires at least a minor bump)
+#    CI: enforced at release time by release.yml (pre-release audit job)
+$EDITOR version/info.go
+```
+
+One-shot equivalent for steps 1–5:
+
+```bash
+bash scripts/pre-release.sh
+```
+
+Other related CI jobs (not part of the per-push checklist, but worth knowing
+where the logs live):
+
+| Concern | Workflow → Job | Log location |
+|---------|----------------|--------------|
+| Vulnerability scan (`govulncheck`) | `ci.yml` → **Vulnerability Scan** → "Run govulncheck" | Actions → CI → Vulnerability Scan |
+| Cross-compile matrix | `ci.yml` → **Build (\<os\>/\<arch\>)** | Actions → CI → Build → Artifacts |
+| Release pre-flight audit | `release.yml` → pre-release audit job | Actions → Release → audit step |
+| End-to-end smoke | `e2e.yml` | Actions → E2E |
+| Standalone vuln workflow | `vulncheck.yml` | Actions → Vulncheck |
+
+If the acronym guard fails, run the codemod, review the diff, and re-run
+the checklist:
+
+```bash
+python3 scripts/rename-acronyms.py --write
+python3 scripts/check-acronym-naming.py
+```
+
 
 ---
 

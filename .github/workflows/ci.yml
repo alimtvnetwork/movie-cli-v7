@@ -73,30 +73,14 @@ jobs:
           # Enforce spec/01-coding-guidelines/.../09-acronym-naming.md:
           # No identifier may contain IMDb|TMDb|API|HTTP|URL|JSON|SQL|HTML|XML
           # immediately followed by another uppercase letter.
-          # Allowlist: trailing-initialism short locals (imdbID, tmdbID, *URL).
+          #
+          # IMPORTANT: this guard inspects IDENTIFIERS ONLY. Line, block, and
+          # trailing comments (// ... and /* ... */) plus string/rune literals
+          # are stripped before matching, so prose like "the OMDb HTTPS URL"
+          # in a doc comment is intentionally allowed.
           set -e
-          ALLOWLIST='\b(imdbID|tmdbID|imgURL|reqURL|posterURL|baseURL|apiURL|fullURL|targetURL|rawURL|nextURL|prevURL|sourceURL|destURL|webhookURL|callbackURL|redirectURL|releaseURL|downloadURL|assetURL|repoURL|cloneURL|htmlURL|avatarURL|profileURL)\b'
-          PATTERN='\b(IMDb|TMDb|API|HTTP|URL|JSON|SQL|HTML|XML)[A-Z]'
-          violations=$(grep -rn -E "$PATTERN" --include='*.go' . | grep -vE "$ALLOWLIST" || true)
-          if [ -n "$violations" ]; then
-            echo "Acronym MixedCaps violations (see spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md):"
-            echo "$violations"
-            echo ""
-            # Emit one GitHub annotation per violation so the Files-changed
-            # view highlights the exact file:line. Format from grep -n is
-            # path:line:content.
-            while IFS= read -r line; do
-              [ -z "$line" ] && continue
-              file=$(printf '%s' "$line" | cut -d: -f1)
-              lineno=$(printf '%s' "$line" | cut -d: -f2)
-              content=$(printf '%s' "$line" | cut -d: -f3-)
-              echo "::error file=${file},line=${lineno}::Acronym MixedCaps: ${content}"
-            done <<< "$violations"
-            echo ""
-            echo "Fix: rename IMDb→Imdb, TMDb→Tmdb, API→Api, HTTP→Http, URL→Url, JSON→Json, SQL→Sql, HTML→Html, XML→Xml in identifiers."
-            exit 1
-          fi
-          echo "✅ No acronym MixedCaps violations."
+          python3 scripts/check-acronym-naming.py
+
 
       - name: Forbidden term guard
         if: needs.sha-check.outputs.already-built != 'true'
@@ -231,6 +215,7 @@ jobs:
           echo "✅ No user-facing references to movie-cli-v6 in README, QUICKSTART, or install scripts."
 
       - name: Legacy module-path auditor (strict)
+        id: legacy-audit
         if: needs.sha-check.outputs.already-built != 'true'
         run: |
           # Repo-wide audit covering 4 variants:
@@ -239,17 +224,34 @@ jobs:
           #   TAGGED      — movie-cli[-vN]@vX.Y.Z pinned tags
           #   REPLACE     — go.mod `replace` directives pointing at movie-cli
           #
-          # HISTORICAL matches in CHANGELOG.md, spec/, .lovable/, this
-          # workflow, and the auditor itself are allowed. Anything else
-          # fails the build.
+          # Reports are always generated (pass or fail) and uploaded as a
+          # build artifact for easy review.
+          set +e
+          mkdir -p audit-reports
+          bash scripts/audit-legacy-paths.sh        > audit-reports/legacy-audit.txt  2>&1
+          bash scripts/audit-legacy-paths.sh --json > audit-reports/legacy-audit.json 2>/dev/null
+          bash scripts/audit-legacy-paths.sh --strict
+          rc=$?
           set -e
-          if ! bash scripts/audit-legacy-paths.sh --strict; then
+          # Surface the human-readable report in the job log.
+          echo "── Legacy module-path audit report ──"
+          cat audit-reports/legacy-audit.txt
+          if [ "$rc" -ne 0 ]; then
             echo ""
             echo "::error::Legacy module-path auditor found ACTIVE references."
-            echo "Run 'bash scripts/audit-legacy-paths.sh' locally for the full report."
+            echo "Download the 'legacy-audit-report' artifact for full details."
             exit 1
           fi
           echo "✅ Legacy module-path auditor: 0 active references."
+
+      - name: Upload legacy audit report
+        if: always() && needs.sha-check.outputs.already-built != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-audit-report
+          path: audit-reports/
+          retention-days: 14
+          if-no-files-found: ignore
 
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
