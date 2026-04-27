@@ -25,16 +25,22 @@ for arg in "$@"; do
     case "$arg" in
         --apply) APPLY=1 ;;
         --yes|-y) ASSUME_YES=1 ;;
+        --apply-noninteractive|--non-interactive|--noninteractive)
+            APPLY=1; ASSUME_YES=1 ;;
         --verbose|-v) VERBOSE=1 ;;
         -h|--help)
             sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
             cat <<'USAGE'
 
 Flags:
-  --apply       Interactively run remediation (fetch/reset/clean).
-  --yes, -y     Skip confirmation prompts (use with --apply).
-  --verbose, -v Print computed SHAs, commit messages, and status checks.
-  -h, --help    Show this help.
+  --apply                   Interactively run remediation (fetch/reset/clean).
+  --yes, -y                 Skip confirmation prompts (use with --apply).
+  --apply-noninteractive    Shortcut for --apply --yes (CI / automation).
+                            Still prints the full final-confirmation summary
+                            before running any destructive command.
+  --verbose, -v             Print computed SHAs, commit messages, and status
+                            checks used in the final confirmation summary.
+  -h, --help                Show this help.
 USAGE
             exit 0
             ;;
@@ -44,6 +50,9 @@ USAGE
             ;;
     esac
 done
+
+NONINTERACTIVE=0
+[ "$APPLY" -eq 1 ] && [ "$ASSUME_YES" -eq 1 ] && NONINTERACTIVE=1
 
 say()  { printf '\033[1;36m[stale-repo]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[stale-repo]\033[0m %s\n' "$*" >&2; }
@@ -208,6 +217,14 @@ cat <<EOF
 ────────────────────────────────────────────────────────────────────────
 
 EOF
+
+if [ "$NONINTERACTIVE" -eq 1 ]; then
+    NONINTERACTIVE_PAUSE_SECS="${NONINTERACTIVE_PAUSE_SECS:-5}"
+    warn "NON-INTERACTIVE MODE (--apply --yes): all confirms auto-accepted."
+    warn "Destructive commands above will execute in ${NONINTERACTIVE_PAUSE_SECS}s."
+    warn "Press Ctrl-C now to abort."
+    sleep "$NONINTERACTIVE_PAUSE_SECS" 2>/dev/null || true
+fi
 
 confirm "Proceed with the above remediation?" \
     || { err "Aborted by user. No changes made."; exit 3; }
