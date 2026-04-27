@@ -57,6 +57,7 @@ RAW="$(grep -rnE "$PATTERN" \
     --exclude-dir=node_modules \
     --exclude-dir=.release \
     --exclude-dir=.gitmap \
+    --exclude-dir=audit-reports \
     . 2>/dev/null || true)"
 
 # Drop matches that are exactly the canonical path with no tag and no
