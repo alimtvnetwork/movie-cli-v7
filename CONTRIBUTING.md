@@ -121,6 +121,67 @@ See the [Install Guide](spec/03-general/01-install-guide.md) for detailed setup 
 
 ---
 
+## Project Naming Rules
+
+The user-facing binary, the Go module's display name, all CLI examples,
+docs, env vars, paths, user-agents, and dotfolder conventions MUST use the
+canonical name **`movie`**.
+
+The previous codename (referred to throughout this guide as `<LEGACY>` so
+that this document does not itself contain the banned token) is permanently
+retired. CI fails the build on any case-insensitive match outside the
+allowed historical zones (CHANGELOG and the checker's own source).
+
+### Substitution Mapping
+
+When migrating any file (including external snippets pasted in), apply
+these case-preserving substitutions in order:
+
+| Found            | Replace with | Use case                          |
+|------------------|--------------|-----------------------------------|
+| `<LEGACY>_<X>`   | `MOVIE_<X>`  | env var prefixes (`MOVIE_DB`, `MOVIE_HOME`) |
+| `<LEGACY>`       | `MOVIE`      | uppercase usage in shell/Go consts |
+| `<Legacy>`       | `Movie`      | TitleCase prose, struct field names |
+| `<legacy>`       | `movie`      | binary name, paths, user-agents, CLI examples |
+
+### Examples
+
+| ❌ Banned                                | ✅ Correct                              |
+|-----------------------------------------|-----------------------------------------|
+| `` `<legacy>` v2.178.0 ``               | `` `movie` v2.178.0 ``                  |
+| `go build -o /tmp/<legacy> .`           | `go build -o /tmp/movie .`              |
+| `export <LEGACY>_DB=...`                | `export MOVIE_DB=...`                   |
+| `<legacy>-cli/2.x` (User-Agent)         | `movie-cli/2.x`                         |
+| `~/.<legacy>/config.json`               | `~/.movie/config.json` (or per spec, `.movie-output/`) |
+| `<legacy> scan testdata/library`        | `movie scan testdata/library`           |
+
+The fuzzy auto-fixer also normalizes whitespace/formatting variants such as
+`m a h i n`, `m-a-h-i-n`, `m_a_h_i_n`, `m.a.h.i.n`, and zero-width-joined
+forms — but you should never write them in the first place.
+
+### Tooling
+
+| Mode      | Command                                                          | What it does |
+|-----------|------------------------------------------------------------------|--------------|
+| Check     | `bash scripts/check-binary-name.sh`                              | Lists every offending occurrence with `file:line` and exits non-zero. Used by CI. |
+| Dry-run   | `bash scripts/check-binary-name.sh --dry-run`                    | Previews per-file replacement counts without writing. |
+| Fix       | `bash scripts/check-binary-name.sh --fix`                        | Applies the strict case-preserving substitutions in place. |
+| Fuzzy fix | `bash scripts/check-binary-name.sh --fix --fuzzy`                | Also normalizes whitespace/formatting variants before the strict pass. |
+| JSON      | `bash scripts/check-binary-name.sh --fix --json /tmp/sum.json`   | Writes a structured summary (`files_changed`, `total_replacements`, per-file `before`/`after`/`replaced` + `by_pattern` breakdown). |
+
+The repo-wide CI guard (`scripts/guard-forbidden-terms.sh`) is invoked
+automatically by `.github/workflows/ci.yml` → job **Lint** → step
+**Forbidden term guard**.
+
+### CI Mapping
+
+| Local command                                  | CI job → step                                         | Log location                                        |
+|-----------------------------------------------|-------------------------------------------------------|-----------------------------------------------------|
+| `bash scripts/guard-forbidden-terms.sh`       | `ci.yml` → Lint → "Forbidden term guard"              | Actions → CI → Lint → "Forbidden term guard"        |
+| `bash scripts/check-binary-name.sh`           | `ci.yml` → Lint → "Binary name consistency check"     | Actions → CI → Lint → "Binary name consistency check" |
+
+---
+
 ## Acronym MixedCaps Rules
 
 Spec: [`spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md`](spec/01-coding-guidelines/03-coding-guidelines-spec/03-golang/09-acronym-naming.md)
