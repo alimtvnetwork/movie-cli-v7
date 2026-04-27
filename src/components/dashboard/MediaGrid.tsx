@@ -15,7 +15,7 @@ export function MediaGrid({ media }: MediaGridProps) {
       <section className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
         <p className="text-lg font-medium">No media found</p>
         <p className="text-sm mt-1">
-          Run <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">mahin movie scan</code> to get started.
+          Run <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">movie scan</code> to get started.
         </p>
       </section>
     );
