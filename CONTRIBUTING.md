@@ -407,7 +407,7 @@ CLI shows a preview of how many rows are in scope and asks to confirm:
 Undo will act on 0 moves, 3 actions under /current/dir. Continue? [y/N]:
 ```
 
-- Answering `n` (or hitting Enter) exits with code `30`
+- Answering `n` (or hitting Enter) exits with code `10`
   (`ExitScopeRejected`). Nothing is changed.
 - Pass `--yes` (or `--assume-yes`) for scripted runs to skip the prompt.
 
