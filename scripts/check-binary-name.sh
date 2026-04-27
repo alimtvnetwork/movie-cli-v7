@@ -44,11 +44,13 @@ EXPECTED="movie"
 MODE="check"
 VERBOSE=0
 JSON_PATH=""
+FUZZY=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --fix)        MODE="fix" ;;
         --dry-run)    MODE="dry-run" ;;
+        --fuzzy)      FUZZY=1 ;;
         --verbose|-v) VERBOSE=1 ;;
         --json)       JSON_PATH="${2:-}"; shift ;;
         --json=*)     JSON_PATH="${1#--json=}" ;;
