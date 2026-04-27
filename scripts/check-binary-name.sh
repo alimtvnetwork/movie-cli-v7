@@ -8,7 +8,6 @@
 #   --fix            — rewrite files in place, print summary, exit 0
 #   --verbose, -v    — extra detail in check mode
 #
-# Replacement rules (case-sensitive, applied in this order):
 # Replacement rules (case-sensitive, applied in this order). The legacy
 # token is referred to here as <LEGACY> so this file does not itself contain
 # the banned literal and trip the broader CI guard:
