@@ -216,6 +216,70 @@ committing.
 
 ---
 
+## Undo / Redo Worked Examples
+
+`movie undo` reverts the **last** move/rename/popout action recorded in
+`ActionHistory`. `movie redo` re-applies the most recently undone action.
+Both operate on a single action at a time — re-run them to walk further
+back/forward through history.
+
+### Example 1 — Undo a rename
+
+```bash
+# Starting state
+$ movie ls --limit 1
+ID  Title                              File
+12  The.Matrix.1999.1080p.BluRay.mkv   /library/raw/The.Matrix.1999.1080p.BluRay.mkv
+
+# Clean up the filename
+$ movie rename 12
+✅ renamed: The.Matrix.1999.1080p.BluRay.mkv → The Matrix (1999).mkv
+   action_id=4711 recorded in ActionHistory
+
+# Oops — wanted to keep the original name
+$ movie undo
+↩️  reverting action_id=4711 (rename)
+✅ The Matrix (1999).mkv → The.Matrix.1999.1080p.BluRay.mkv
+   IsReverted=true
+```
+
+**Outcome:** the file is back at its original path; the row in
+`ActionHistory` is marked `IsReverted=true` but is **not** deleted, so
+`movie redo` can re-apply it.
+
+### Example 2 — Redo after an undo
+
+```bash
+$ movie redo
+↪️  re-applying action_id=4711 (rename)
+✅ The.Matrix.1999.1080p.BluRay.mkv → The Matrix (1999).mkv
+   IsReverted=false
+```
+
+**Outcome:** the rename is reinstated and `IsReverted` flips back to
+`false`. A fresh `movie undo` would now revert it again.
+
+### Example 3 — Undo a move, then a rename (LIFO)
+
+```bash
+$ movie move 12 /library/movies      # action_id=4712
+$ movie rename 12                    # action_id=4713
+
+$ movie undo                         # reverts 4713 (the rename) first
+$ movie undo                         # then reverts 4712 (the move)
+```
+
+**Outcome:** undo always targets the newest non-reverted action, so
+two `movie undo` calls walk the history in LIFO order back to the
+pre-move state. Two `movie redo` calls would replay them in the
+original order (`4712` then `4713`).
+
+> **Scope reminder:** undo/redo cover `move`, `rename`, and `popout`
+> only. They do **not** touch TMDb metadata, tags, watchlist entries,
+> or scan results — those have no `ActionHistory` row to revert.
+
+---
+
 ## Pre-push Checklist
 
 Run these locally before pushing — they are the same checks CI enforces, so
