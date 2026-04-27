@@ -16,6 +16,41 @@
 
 _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track your collection._
 
+<br>
+
+<img src="assets/screenshots/cmd-scan-library.gif" alt="Movie CLI scanning a library in real time" width="780">
+
+<sub>↑ One command, one binary — scan, match against TMDb, and organize your whole library.</sub>
+
+<br><br>
+
+**🚀 Install in 10 seconds — anyone, any OS:**
+
+<table>
+<tr>
+<td><b>🐧 Linux / macOS</b></td>
+<td>
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.sh | bash
+```
+
+</td>
+</tr>
+<tr>
+<td><b>🪟 Windows (PowerShell)</b></td>
+<td>
+
+```powershell
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v6/main/get.ps1 | iex
+```
+
+</td>
+</tr>
+</table>
+
+<sub>Auto-detects your OS &amp; architecture · Installs the latest pre-built binary · Falls back to a source build if no release is published · See <a href="#installation">Installation</a> for flags, pinned versions, and verification.</sub>
+
 </div>
 
 ---
@@ -794,119 +829,79 @@ Common errors and how to fix them — `tmdb_api_key not set`, `429`, `database i
 
 </div>
 
-### 📂 Scanning a Folder
+Six short, looping GIFs — one per command group. Each one mirrors a real terminal session, so you can see exactly what to expect before you type a single command.
 
-<!-- Replace with actual GIF: docs/screenshots/demo-scan.gif -->
-<!-- Record with: vhs docs/screenshots/scan.tape  or  asciinema rec -->
+### 📂 Scanning your library
+
+<p align="center">
+  <img src="assets/screenshots/cmd-scan-library.gif" alt="movie scan demo — recursive folder scan with TMDb match" width="760">
+</p>
 
 ```
 $ movie scan ~/Downloads
 
 🔍 Scanning: /home/user/Downloads
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
   Found 12 video files
-
   [1/12] Scream.2022.1080p.WEBRip.x264-RARBG.mkv
          → Title: Scream (2022)
          → TMDb: ★ 6.8 | Horror, Mystery, Thriller
-         → Poster saved: thumbnails/scream-2022/scream-2022.jpg
          ✅ Saved to database
-
-  [2/12] The.Batman.2022.2160p.BluRay.x265.mkv
-         → Title: The Batman (2022)
-         → TMDb: ★ 7.7 | Crime, Mystery, Thriller
-         → Poster saved: thumbnails/the-batman-2022/the-batman-2022.jpg
-         ✅ Saved to database
-
   ...
-
   ✅ Done — 12 items scanned, 11 new, 1 updated
 ```
 
-<p align="center">
-  <img src="docs/screenshots/demo-scan.gif" alt="movie scan demo" width="700">
-  <br><em>↑ Replace with actual recording</em>
-</p>
-
 ---
 
-### 📋 Browsing Your Library
-
-<!-- Replace with actual GIF: docs/screenshots/demo-ls.gif -->
-
-```
-$ movie ls
-
-🎬 Library — Page 1 of 3 (20 per page)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  #   Title                          Year   Type    Rating
-  ─── ────────────────────────────── ────── ─────── ──────
-  1   Scream                         2022   🎬      ★ 6.8
-  2   The Batman                     2022   🎬      ★ 7.7
-  3   Everything Everywhere All...   2022   🎬      ★ 7.8
-  4   Breaking Bad                   2008   📺      ★ 8.9
-  5   Severance                      2022   📺      ★ 8.4
-  ...
-
-  [N]ext  [P]rev  [1-9] Detail  [Q]uit
-```
+### 🎯 Discovery & suggestions
 
 <p align="center">
-  <img src="docs/screenshots/demo-ls.gif" alt="movie ls demo" width="700">
-  <br><em>↑ Replace with actual recording</em>
+  <img src="assets/screenshots/cmd-discovery.gif" alt="movie suggest demo — personalized recommendations" width="760">
 </p>
-
----
-
-### 🎯 Getting Suggestions
-
-<!-- Replace with actual GIF: docs/screenshots/demo-suggest.gif -->
 
 ```
 $ movie suggest 5
-
-🎯 Movie Suggest
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Select category:
-  1. 🎬 Movie
-  2. 📺 TV
-  3. 🎲 Random
-
-  Choose: 1
-
   📽️  Recommendations based on your library:
-
-  #   Title                          Year   Rating   Genre
-  ─── ────────────────────────────── ────── ──────── ────────────────
   1   Nope                           2022   ★ 6.8    Horror, Sci-Fi
   2   X                              2022   ★ 6.6    Horror, Mystery
   3   Pearl                          2022   ★ 7.0    Drama, Horror
-  4   Bodies Bodies Bodies            2022   ★ 6.5    Comedy, Horror
-  5   Barbarian                      2022   ★ 7.0    Horror, Thriller
-
-  🔥 Trending This Week:
-  1   Oppenheimer                    2023   ★ 8.1    Drama, History
-  2   Killers of the Flower Moon     2023   ★ 7.5    Crime, Drama
-  3   Poor Things                    2023   ★ 7.9    Comedy, Drama
+  ...
 ```
 
+---
+
+### 🗂️ File management — move, rename, organize
+
 <p align="center">
-  <img src="docs/screenshots/demo-suggest.gif" alt="movie suggest demo" width="700">
-  <br><em>↑ Replace with actual recording</em>
+  <img src="assets/screenshots/cmd-file-management.gif" alt="movie move and rename demo" width="760">
 </p>
 
-> **📹 Recording your own demos:**
-> Use [VHS](https://github.com/charmbracelet/vhs) or [asciinema](https://asciinema.org/) to record terminal sessions as GIFs.
+---
+
+### ↩️ History, undo &amp; redo
+
+<p align="center">
+  <img src="assets/screenshots/cmd-history-undo.gif" alt="movie undo demo — every action is reversible" width="760">
+</p>
+
+---
+
+### 🛠️ Maintenance &amp; debugging
+
+<p align="center">
+  <img src="assets/screenshots/cmd-maintenance.gif" alt="movie cleanup and doctor demo" width="760">
+</p>
+
+---
+
+### ⚙️ Configuration &amp; system
+
+<p align="center">
+  <img src="assets/screenshots/cmd-config-system.gif" alt="movie config demo — set TMDb key, source folder, player" width="760">
+</p>
+
+> **📹 Recording your own demos:** use [VHS](https://github.com/charmbracelet/vhs) (deterministic, scriptable) or [asciinema](https://asciinema.org/) + [agg](https://github.com/asciinema/agg).
 > ```bash
-> # VHS (recommended — deterministic, scriptable)
-> vhs docs/screenshots/scan.tape
->
-> # asciinema + agg (manual recording)
-> asciinema rec demo.cast
-> agg demo.cast docs/screenshots/demo-scan.gif
+> vhs assets/screenshots/cmd-scan-library.tape
 > ```
 
 ---
