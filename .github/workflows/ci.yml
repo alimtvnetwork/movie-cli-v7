@@ -117,6 +117,10 @@ jobs:
           echo "✅ No forbidden legacy-name references."
 
 
+      - name: Binary name consistency check
+        if: needs.sha-check.outputs.already-built != 'true'
+        run: bash scripts/check-binary-name.sh
+
       - name: Old module path regression guard
         if: needs.sha-check.outputs.already-built != 'true'
         run: |
