@@ -115,6 +115,7 @@ func redoActionByID(database *db.DB, scanner *bufio.Scanner, id int64) int {
 	if action.Detail != "" {
 		fmt.Printf("   %s\n", action.Detail)
 	}
+	LogRedoActionTarget(action)
 	if !confirmRedo(scanner) {
 		return ExitRowDeclined
 	}
@@ -151,6 +152,7 @@ func redoMoveByID(database *db.DB, scanner *bufio.Scanner, id int64) int {
 
 	fmt.Println("⏩ Redo move:")
 	fmt.Printf("   %s → %s\n", target.FromPath, target.ToPath)
+	LogRedoMoveTarget(target)
 	if !confirmRedo(scanner) {
 		return ExitRowDeclined
 	}
