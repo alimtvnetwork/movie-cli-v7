@@ -10,8 +10,8 @@ legacy token with the canonical name. Examples that get normalized:
     m.a.h.i.n          -> movie
     m_a_h_i_n          -> movie
     M A H I N _ DB     -> MOVIE_DB
-    Mahin              -> Movie
-    mahin              -> movie
+    Movie              -> Movie
+    movie              -> movie
 
 Casing is preserved per-letter:
   - all-upper  -> MOVIE
