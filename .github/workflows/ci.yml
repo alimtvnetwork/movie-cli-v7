@@ -187,6 +187,49 @@ jobs:
           # command blocks for Linux, macOS, and Windows.
           bash scripts/check-quickstart.sh .
 
+      - name: User-facing docs v6 reference guard
+        if: needs.sha-check.outputs.already-built != 'true'
+        run: |
+          # Ensure no user-facing doc or install script still points users at
+          # github.com/alimtvnetwork/movie-cli-v6. The broader v2-v6 guard
+          # excludes README.md, scripts, and root install/get/verify/bootstrap
+          # files via its include filters, so this targeted guard catches any
+          # regression in exactly the surfaces a new user copy-pastes from.
+          set -e
+          TARGETS=(
+            README.md
+            QUICKSTART.md
+            install.sh install.ps1
+            get.sh    get.ps1
+            verify.sh verify.ps1
+            bootstrap.sh bootstrap.ps1
+          )
+          existing=()
+          for f in "${TARGETS[@]}"; do
+            [ -f "$f" ] && existing+=("$f")
+          done
+          # Add scripts/ directory if it exists.
+          [ -d scripts ] && existing+=(scripts)
+
+          PATTERN='github\.com/alimtvnetwork/movie-cli-v6\b'
+          violations=$(grep -rnE "$PATTERN" "${existing[@]}" 2>/dev/null || true)
+          if [ -n "$violations" ]; then
+            echo "User-facing v6 references found (must be movie-cli-v7):"
+            echo "$violations"
+            echo ""
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              file=$(printf '%s' "$line" | cut -d: -f1)
+              lineno=$(printf '%s' "$line" | cut -d: -f2)
+              content=$(printf '%s' "$line" | cut -d: -f3-)
+              echo "::error file=${file},line=${lineno}::User-facing doc still points to movie-cli-v6: ${content}"
+            done <<< "$violations"
+            echo ""
+            echo "Fix: replace github.com/alimtvnetwork/movie-cli-v6 with github.com/alimtvnetwork/movie-cli-v7."
+            exit 1
+          fi
+          echo "✅ No user-facing references to movie-cli-v6 in README, QUICKSTART, or install scripts."
+
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
     name: Vulnerability Scan
