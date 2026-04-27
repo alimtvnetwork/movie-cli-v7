@@ -6,21 +6,7 @@
 #   (default) check  — report violations, exit 1 if any
 #   --dry-run        — show what --fix would change, exit 0
 #   --fix            — rewrite files in place, print summary, exit 0
-#   --json PATH      — also write JSON summary to PATH (default with --fix:
-#                      /mnt/documents/binary-name-fix-summary.json if writable,
-#                      else .lovable/reports/binary-name-fix-summary.json)
 #   --verbose, -v    — extra detail in check mode
-#
-# JSON schema (fix mode):
-#   {
-#     "expected": "movie",
-#     "timestamp": "2026-04-27T12:34:56+08:00",
-#     "files_changed": N, "total_replacements": N, "remaining": N,
-#     "files": [
-#       { "path": "...", "before": N, "after": N, "replaced": N,
-#         "by_pattern": { "UPPER_PREFIX": N, "UPPER": N, "TITLE": N, "LOWER": N } }
-#     ]
-#   }
 #
 # Replacement rules (case-sensitive, applied in this order). The legacy
 # token is referred to here as <LEGACY> so this file does not itself contain
@@ -35,7 +21,6 @@
 #   bash scripts/check-binary-name.sh
 #   bash scripts/check-binary-name.sh --dry-run
 #   bash scripts/check-binary-name.sh --fix
-#   bash scripts/check-binary-name.sh --fix --json /tmp/summary.json
 
 set -uo pipefail
 
@@ -43,21 +28,15 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EXPECTED="movie"
 MODE="check"
 VERBOSE=0
-JSON_PATH=""
-FUZZY=0
 
-while [ $# -gt 0 ]; do
-    case "$1" in
+for arg in "$@"; do
+    case "$arg" in
         --fix)        MODE="fix" ;;
         --dry-run)    MODE="dry-run" ;;
-        --fuzzy)      FUZZY=1 ;;
         --verbose|-v) VERBOSE=1 ;;
-        --json)       JSON_PATH="${2:-}"; shift ;;
-        --json=*)     JSON_PATH="${1#--json=}" ;;
-        -h|--help)    sed -n '2,36p' "$0"; exit 0 ;;
-        *) echo "Unknown arg: $1" >&2; exit 2 ;;
+        -h|--help)    sed -n '2,22p' "$0"; exit 0 ;;
+        *) echo "Unknown arg: $arg" >&2; exit 2 ;;
     esac
-    shift
 done
 
 cd "$ROOT"
@@ -76,8 +55,6 @@ EXCLUDES=(
     --exclude-dir=build
     --exclude=CHANGELOG.md
     --exclude=check-binary-name.sh
-    --exclude=_fuzzy_rewrite.py
-    --exclude=guard-forbidden-terms.sh
 )
 
 # Find every file containing any casing of the legacy token.
@@ -90,23 +67,13 @@ list_violations() {
     grep -rn -E "${EXCLUDES[@]}" -e "${LEGACY_LC}" -e "${LEGACY_TC}" -e "${LEGACY_UC}" . 2>/dev/null || true
 }
 
-# Apply substitutions to a single file. Echoes 6 space-separated integers:
-#   replaced before after upper_prefix upper title lower
-# (per-pattern counts measured *before* the in-place rewrite).
+# Apply substitutions to a single file. Returns count of replaced occurrences.
 fix_file() {
     local f="$1"
-    local before after up_prefix up tl lo
+    local before after
     before=$(grep -cE "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null | tr -d '[:space:]')
     : "${before:=0}"
-    if [ "$before" -eq 0 ]; then
-        echo "0 0 0 0 0 0 0"; return
-    fi
-    # Per-pattern occurrence counts (sum of occurrences, not matched lines).
-    up_prefix=$(grep -oE "${LEGACY_UC}_" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
-    up=$(grep -oE "${LEGACY_UC}[^_]|${LEGACY_UC}\$" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
-    tl=$(grep -oE "${LEGACY_TC}" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
-    lo=$(grep -oE "${LEGACY_LC}" "$f" 2>/dev/null | wc -l | tr -d '[:space:]')
-    : "${up_prefix:=0}"; : "${up:=0}"; : "${tl:=0}"; : "${lo:=0}"
+    [ "$before" -eq 0 ] && { echo 0; return; }
     sed -i \
         -e "s/${LEGACY_UC}_/MOVIE_/g" \
         -e "s/${LEGACY_UC}/MOVIE/g" \
@@ -115,7 +82,7 @@ fix_file() {
         "$f"
     after=$(grep -cE "${LEGACY_LC}|${LEGACY_TC}|${LEGACY_UC}" "$f" 2>/dev/null | tr -d '[:space:]')
     : "${after:=0}"
-    echo "$((before - after)) ${before} ${after} ${up_prefix} ${up} ${tl} ${lo}"
+    echo "$((before - after))"
 }
 
 # ─── Check mode ───────────────────────────────────────────────
@@ -168,158 +135,39 @@ if [ "$MODE" = "dry-run" ]; then
 fi
 
 # ─── Fix mode ─────────────────────────────────────────────────
-
-# Optional fuzzy pre-pass: handle whitespace/formatting variants
-# (m a h i n, m-a-h-i-n, m_a_h_i_n, m.a.h.i.n, zero-width-joined, etc.)
-# before the strict sed pass mops up any remaining canonical occurrences.
-fuzzy_replaced=0
-fuzzy_files=0
-if [ "$FUZZY" -eq 1 ]; then
-    echo "── Fuzzy pre-pass: normalizing whitespace/formatting variants ──"
-    # Build a candidate file list: anything text-like, minus excluded dirs
-    # and the self-exclude list. Use git ls-files when available for speed
-    # and accuracy; fall back to find.
-    if command -v git >/dev/null 2>&1 && [ -d .git ]; then
-        candidates=$(git ls-files 2>/dev/null)
-    else
-        candidates=$(find . -type f \
-            -not -path '*/.git/*' -not -path '*/.release/*' \
-            -not -path '*/node_modules/*' -not -path '*/dist/*' \
-            -not -path '*/build/*' -not -path '*/.gitmap/*' \
-            2>/dev/null | sed 's|^\./||')
-    fi
-    # Exclude self files by basename.
-    self_basenames=( "ci.yml" "check-binary-name.sh" "_fuzzy_rewrite.py"
-                     "guard-forbidden-terms.sh" "audit-legacy-paths.sh"
-                     "rename-acronyms.py" "check-acronym-naming.py"
-                     "CHANGELOG.md" "banned-legacy-name.md" )
-    filtered=$(printf '%s\n' "$candidates" | while IFS= read -r p; do
-        [ -z "$p" ] && continue
-        skip=0
-        bn=$(basename "$p")
-        for sb in "${self_basenames[@]}"; do
-            [ "$bn" = "$sb" ] && { skip=1; break; }
-        done
-        [ "$skip" -eq 0 ] && printf '%s\n' "$p"
-    done)
-    # Run the Python rewriter; it only touches files that actually match.
-    if [ -n "$filtered" ]; then
-        # Run once, capture stdout (per-file JSON lines) and stderr
-        # (totals JSON line) into separate temp files.
-        fuzzy_stdout=$(mktemp); fuzzy_stderr=$(mktemp)
-        printf '%s\n' "$filtered" | python3 scripts/_fuzzy_rewrite.py - \
-            > "$fuzzy_stdout" 2> "$fuzzy_stderr" || true
-        if [ -s "$fuzzy_stdout" ]; then
-            while IFS= read -r jl; do
-                [ -z "$jl" ] && continue
-                fp=$(printf '%s' "$jl" | python3 -c "import sys,json;d=json.loads(sys.stdin.read());print(d['path'],d['replaced'])")
-                printf "  ~ fuzzy  %s\n" "$fp"
-                fuzzy_files=$((fuzzy_files + 1))
-            done < "$fuzzy_stdout"
-        fi
-        if [ -s "$fuzzy_stderr" ]; then
-            fuzzy_replaced=$(tail -n1 "$fuzzy_stderr" | python3 -c "import sys,json;
-try: print(json.loads(sys.stdin.read()).get('total_replaced',0))
-except Exception: print(0)" 2>/dev/null || echo 0)
-        fi
-        rm -f "$fuzzy_stdout" "$fuzzy_stderr"
-        : "${fuzzy_replaced:=0}"
-        echo "  Fuzzy files   : ${fuzzy_files}"
-        echo "  Fuzzy replaced: ${fuzzy_replaced}"
-    fi
-    echo ""
-fi
-
 files=$(find_offending_files)
 if [ -z "$files" ]; then
     echo "✅ Nothing to fix — repo already uses '${EXPECTED}' everywhere."
-    # Still emit an empty JSON summary if requested.
-    if [ -n "$JSON_PATH" ] || [ "$MODE" = "fix" ]; then
-        : # fall through to JSON write below with zero entries
-    else
-        exit 0
-    fi
+    exit 0
 fi
 
 echo "── Auto-fix: rewriting banned tokens to '${EXPECTED}' ────────"
 total_changes=0
 files_changed=0
-# Accumulate per-file JSON entries in a temp file (avoid quoting hell).
-entries_tmp=$(mktemp)
-trap 'rm -f "$entries_tmp"' EXIT
-
 while IFS= read -r f; do
     [ -z "$f" ] && continue
-    read -r changed before after up_prefix up tl lo <<< "$(fix_file "$f")"
-    if [ "${changed:-0}" -gt 0 ]; then
-        printf "  ✓ %4d replaced  %s  (UPPER_=%d UPPER=%d Title=%d lower=%d)\n" \
-            "$changed" "$f" "$up_prefix" "$up" "$tl" "$lo"
+    changed=$(fix_file "$f")
+    if [ "$changed" -gt 0 ]; then
+        printf "  ✓ %4d replaced  %s\n" "$changed" "$f"
         total_changes=$((total_changes + changed))
         files_changed=$((files_changed + 1))
-        # Escape backslash and double-quote for JSON.
-        esc_path=$(printf '%s' "$f" | sed 's/\\/\\\\/g; s/"/\\"/g')
-        printf '    {"path":"%s","before":%d,"after":%d,"replaced":%d,"by_pattern":{"UPPER_PREFIX":%d,"UPPER":%d,"TITLE":%d,"LOWER":%d}}\n' \
-            "$esc_path" "$before" "$after" "$changed" "$up_prefix" "$up" "$tl" "$lo" \
-            >> "$entries_tmp"
     fi
 done <<< "$files"
 
 echo ""
 echo "── Summary ───────────────────────────────────────────────────"
-echo "  Files updated : ${files_changed}  (strict)  +  ${fuzzy_files:-0}  (fuzzy)"
-echo "  Replacements  : ${total_changes}  (strict)  +  ${fuzzy_replaced:-0}  (fuzzy)"
+echo "  Files updated : ${files_changed}"
+echo "  Replacements  : ${total_changes}"
 
 # Verify nothing slipped through.
 remaining=$(list_violations)
-remaining_count=0
 if [ -n "$remaining" ]; then
-    remaining_count=$(printf '%s\n' "$remaining" | wc -l | tr -d ' ')
-    echo "  Remaining     : ${remaining_count} (manual review needed)"
+    rcount=$(printf '%s\n' "$remaining" | wc -l | tr -d ' ')
+    echo "  Remaining     : ${rcount} (manual review needed)"
     echo ""
     echo "$remaining" | head -20
-else
-    echo "  Remaining     : 0"
+    exit 1
 fi
-
-# ─── Write JSON summary ───────────────────────────────────────
-# Default JSON path when --fix is used without explicit --json.
-if [ -z "$JSON_PATH" ]; then
-    if [ -d /mnt/documents ] && [ -w /mnt/documents ]; then
-        JSON_PATH="/mnt/documents/binary-name-fix-summary.json"
-    else
-        mkdir -p .lovable/reports 2>/dev/null || true
-        JSON_PATH=".lovable/reports/binary-name-fix-summary.json"
-    fi
-fi
-
-ts=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "unknown")
-{
-    printf '{\n'
-    printf '  "expected": "%s",\n' "$EXPECTED"
-    printf '  "timestamp": "%s",\n' "$ts"
-    printf '  "files_changed": %d,\n' "$files_changed"
-    printf '  "total_replacements": %d,\n' "$total_changes"
-    printf '  "fuzzy_files": %d,\n' "${fuzzy_files:-0}"
-    printf '  "fuzzy_replacements": %d,\n' "${fuzzy_replaced:-0}"
-    printf '  "remaining": %d,\n' "$remaining_count"
-    printf '  "patterns": {\n'
-    printf '    "UPPER_PREFIX": "<LEGACY>_ -> MOVIE_",\n'
-    printf '    "UPPER":        "<LEGACY> -> MOVIE",\n'
-    printf '    "TITLE":        "<Legacy> -> Movie",\n'
-    printf '    "LOWER":        "<legacy> -> %s"\n' "$EXPECTED"
-    printf '  },\n'
-    printf '  "files": [\n'
-    if [ -s "$entries_tmp" ]; then
-        # Join entries with commas.
-        sed '$!s/$/,/' "$entries_tmp"
-    fi
-    printf '  ]\n'
-    printf '}\n'
-} > "$JSON_PATH"
-
-echo "  JSON summary  : ${JSON_PATH}"
-
-[ "$remaining_count" -gt 0 ] && exit 1
+echo "  Remaining     : 0"
 echo "✅ Repo is clean. Don't forget to bump version/info.go."
 exit 0
-
