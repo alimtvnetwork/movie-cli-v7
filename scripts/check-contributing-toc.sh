@@ -74,9 +74,18 @@ toc_anchors=$(echo "$toc_block" \
     | sort -u)
 
 # 2. Compute the expected anchor for every "## " heading in the file
-#    (skip the TOC heading itself — it is not self-referenced).
-heading_anchors=$(grep -E '^## ' "$FILE" \
-    | sed -E 's/^## //' \
+#    that is NOT inside a fenced code block (``` … ```). The PR Description
+#    Template embeds an example markdown block with its own '## What/Why/
+#    How/Testing' headings — those are documentation samples, not real
+#    sections, so we filter them out before slugging.
+#    Also skip the TOC heading itself — it is not self-referenced.
+real_headings=$(awk '
+    /^```/   { in_fence = 1 - in_fence; next }
+    in_fence { next }
+    /^## /   { sub(/^## /, ""); print }
+' "$FILE")
+
+heading_anchors=$(printf '%s\n' "$real_headings" \
     | grep -v '^Table of Contents$' \
     | while IFS= read -r h; do
         printf '%s\n' "$h" | slugify
