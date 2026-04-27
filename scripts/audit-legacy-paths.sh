@@ -60,7 +60,8 @@ fi
 #   ./spec/...
 #   ./.lovable/...
 #   ./scripts/audit-legacy-paths.sh   (this file mentions the pattern itself)
-HISTORICAL_FILTER='^\./(CHANGELOG\.md|spec/|\.lovable/|scripts/audit-legacy-paths\.sh)'
+#   ./.github/workflows/ci.yml         (lint guards must name legacy paths to ban them)
+HISTORICAL_FILTER='^\./(CHANGELOG\.md|spec/|\.lovable/|scripts/audit-legacy-paths\.sh|\.github/workflows/ci\.yml)'
 
 historical=""
 active=""
