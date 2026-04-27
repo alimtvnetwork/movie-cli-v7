@@ -167,19 +167,34 @@ fi
 files=$(find_offending_files)
 if [ -z "$files" ]; then
     echo "✅ Nothing to fix — repo already uses '${EXPECTED}' everywhere."
-    exit 0
+    # Still emit an empty JSON summary if requested.
+    if [ -n "$JSON_PATH" ] || [ "$MODE" = "fix" ]; then
+        : # fall through to JSON write below with zero entries
+    else
+        exit 0
+    fi
 fi
 
 echo "── Auto-fix: rewriting banned tokens to '${EXPECTED}' ────────"
 total_changes=0
 files_changed=0
+# Accumulate per-file JSON entries in a temp file (avoid quoting hell).
+entries_tmp=$(mktemp)
+trap 'rm -f "$entries_tmp"' EXIT
+
 while IFS= read -r f; do
     [ -z "$f" ] && continue
-    changed=$(fix_file "$f")
-    if [ "$changed" -gt 0 ]; then
-        printf "  ✓ %4d replaced  %s\n" "$changed" "$f"
+    read -r changed before after up_prefix up tl lo <<< "$(fix_file "$f")"
+    if [ "${changed:-0}" -gt 0 ]; then
+        printf "  ✓ %4d replaced  %s  (UPPER_=%d UPPER=%d Title=%d lower=%d)\n" \
+            "$changed" "$f" "$up_prefix" "$up" "$tl" "$lo"
         total_changes=$((total_changes + changed))
         files_changed=$((files_changed + 1))
+        # Escape backslash and double-quote for JSON.
+        esc_path=$(printf '%s' "$f" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        printf '    {"path":"%s","before":%d,"after":%d,"replaced":%d,"by_pattern":{"UPPER_PREFIX":%d,"UPPER":%d,"TITLE":%d,"LOWER":%d}}\n' \
+            "$esc_path" "$before" "$after" "$changed" "$up_prefix" "$up" "$tl" "$lo" \
+            >> "$entries_tmp"
     fi
 done <<< "$files"
 
@@ -190,13 +205,53 @@ echo "  Replacements  : ${total_changes}"
 
 # Verify nothing slipped through.
 remaining=$(list_violations)
+remaining_count=0
 if [ -n "$remaining" ]; then
-    rcount=$(printf '%s\n' "$remaining" | wc -l | tr -d ' ')
-    echo "  Remaining     : ${rcount} (manual review needed)"
+    remaining_count=$(printf '%s\n' "$remaining" | wc -l | tr -d ' ')
+    echo "  Remaining     : ${remaining_count} (manual review needed)"
     echo ""
     echo "$remaining" | head -20
-    exit 1
+else
+    echo "  Remaining     : 0"
 fi
-echo "  Remaining     : 0"
+
+# ─── Write JSON summary ───────────────────────────────────────
+# Default JSON path when --fix is used without explicit --json.
+if [ -z "$JSON_PATH" ]; then
+    if [ -d /mnt/documents ] && [ -w /mnt/documents ]; then
+        JSON_PATH="/mnt/documents/binary-name-fix-summary.json"
+    else
+        mkdir -p .lovable/reports 2>/dev/null || true
+        JSON_PATH=".lovable/reports/binary-name-fix-summary.json"
+    fi
+fi
+
+ts=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "unknown")
+{
+    printf '{\n'
+    printf '  "expected": "%s",\n' "$EXPECTED"
+    printf '  "timestamp": "%s",\n' "$ts"
+    printf '  "files_changed": %d,\n' "$files_changed"
+    printf '  "total_replacements": %d,\n' "$total_changes"
+    printf '  "remaining": %d,\n' "$remaining_count"
+    printf '  "patterns": {\n'
+    printf '    "UPPER_PREFIX": "<LEGACY>_ -> MOVIE_",\n'
+    printf '    "UPPER":        "<LEGACY> -> MOVIE",\n'
+    printf '    "TITLE":        "<Legacy> -> Movie",\n'
+    printf '    "LOWER":        "<legacy> -> %s"\n' "$EXPECTED"
+    printf '  },\n'
+    printf '  "files": [\n'
+    if [ -s "$entries_tmp" ]; then
+        # Join entries with commas.
+        sed '$!s/$/,/' "$entries_tmp"
+    fi
+    printf '  ]\n'
+    printf '}\n'
+} > "$JSON_PATH"
+
+echo "  JSON summary  : ${JSON_PATH}"
+
+[ "$remaining_count" -gt 0 ] && exit 1
 echo "✅ Repo is clean. Don't forget to bump version/info.go."
 exit 0
+
