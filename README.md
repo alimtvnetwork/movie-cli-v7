@@ -7,12 +7,19 @@
 **Personal movie & TV show library manager — from the terminal**
 
 [![CI](https://github.com/alimtvnetwork/movie-cli-v6/actions/workflows/ci.yml/badge.svg)](https://github.com/alimtvnetwork/movie-cli-v6/actions/workflows/ci.yml)
+[![Release](https://github.com/alimtvnetwork/movie-cli-v6/actions/workflows/release.yml/badge.svg)](https://github.com/alimtvnetwork/movie-cli-v6/actions/workflows/release.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/alimtvnetwork/movie-cli-v6?style=flat-square&label=version)](https://github.com/alimtvnetwork/movie-cli-v6/releases)
+[![Downloads](https://img.shields.io/github/downloads/alimtvnetwork/movie-cli-v6/total?style=flat-square&label=downloads&color=success)](https://github.com/alimtvnetwork/movie-cli-v6/releases)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v6)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/alimtvnetwork/movie-cli-v6?style=flat-square)](https://goreportcard.com/report/github.com/alimtvnetwork/movie-cli-v6)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v6/blob/main/LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/alimtvnetwork/movie-cli-v6?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v6/commits/main)
+[![Code size](https://img.shields.io/github/languages/code-size/alimtvnetwork/movie-cli-v6?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v6)
+[![Open issues](https://img.shields.io/github/issues/alimtvnetwork/movie-cli-v6?style=flat-square)](https://github.com/alimtvnetwork/movie-cli-v6/issues)
+[![Stars](https://img.shields.io/github/stars/alimtvnetwork/movie-cli-v6?style=flat-square&logo=github)](https://github.com/alimtvnetwork/movie-cli-v6/stargazers)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track your collection._
 
