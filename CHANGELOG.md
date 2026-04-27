@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.230.0
+
+### Changed
+- **Module path renamed** — `github.com/alimtvnetwork/movie-cli-v6` → `github.com/alimtvnetwork/movie-cli-v7` across the entire project (147 files: Go imports, `go.mod`, README, CI workflows, install scripts, specs, memory).
+- All GitHub URLs (`github.com/alimtvnetwork/movie-cli-v6` → `…/movie-cli-v7`) updated in README badges, install one-liners, release-asset URLs, and bootstrap scripts.
+- CI old-module-path guard widened to ban `movie-cli-v[23456]` (was `v[2345]`).
+
+### Migration
+- Run `go mod tidy` after pulling to refresh the module cache.
+- Local clones tracking the old remote should update their `origin` URL: `git remote set-url origin https://github.com/alimtvnetwork/movie-cli-v7.git`.
+
+### Documentation
+- Restored historical accuracy in earlier CHANGELOG entries (v2.93.0, v2.96.0, v2.117.0, v2.128.4, v2.106.0, v2.0.0) and `spec/12-ci-cd-pipeline/05-ci-cd-issues/06-release-missing-asset-404.md`: prior renames now correctly read v1→…→v5→v6 instead of being collapsed into "v7→v7".
+
 ## v2.135.0
 
 ### Removed
