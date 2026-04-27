@@ -231,6 +231,7 @@ jobs:
           echo "✅ No user-facing references to movie-cli-v6 in README, QUICKSTART, or install scripts."
 
       - name: Legacy module-path auditor (strict)
+        id: legacy-audit
         if: needs.sha-check.outputs.already-built != 'true'
         run: |
           # Repo-wide audit covering 4 variants:
@@ -239,17 +240,34 @@ jobs:
           #   TAGGED      — movie-cli[-vN]@vX.Y.Z pinned tags
           #   REPLACE     — go.mod `replace` directives pointing at movie-cli
           #
-          # HISTORICAL matches in CHANGELOG.md, spec/, .lovable/, this
-          # workflow, and the auditor itself are allowed. Anything else
-          # fails the build.
+          # Reports are always generated (pass or fail) and uploaded as a
+          # build artifact for easy review.
+          set +e
+          mkdir -p audit-reports
+          bash scripts/audit-legacy-paths.sh        > audit-reports/legacy-audit.txt  2>&1
+          bash scripts/audit-legacy-paths.sh --json > audit-reports/legacy-audit.json 2>/dev/null
+          bash scripts/audit-legacy-paths.sh --strict
+          rc=$?
           set -e
-          if ! bash scripts/audit-legacy-paths.sh --strict; then
+          # Surface the human-readable report in the job log.
+          echo "── Legacy module-path audit report ──"
+          cat audit-reports/legacy-audit.txt
+          if [ "$rc" -ne 0 ]; then
             echo ""
             echo "::error::Legacy module-path auditor found ACTIVE references."
-            echo "Run 'bash scripts/audit-legacy-paths.sh' locally for the full report."
+            echo "Download the 'legacy-audit-report' artifact for full details."
             exit 1
           fi
           echo "✅ Legacy module-path auditor: 0 active references."
+
+      - name: Upload legacy audit report
+        if: always() && needs.sha-check.outputs.already-built != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-audit-report
+          path: audit-reports/
+          retention-days: 14
+          if-no-files-found: ignore
 
   # ─── Vulnerability scan ────────────────────────────────────
   vulncheck:
