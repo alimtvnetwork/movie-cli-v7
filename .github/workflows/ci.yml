@@ -85,14 +85,19 @@ jobs:
       - name: Forbidden term guard
         if: needs.sha-check.outputs.already-built != 'true'
         run: |
-          # The project name is "movie". The previous legacy name has been
-          # fully purged and must NEVER appear anywhere in the repo.
+          # The project name is "movie". The previous legacy name and any
+          # derived patterns (/tmp/<legacy>, <LEGACY>_DB, .<legacy>/,
+          # <legacy>-cli, etc.) are permanently banned across the repo.
           set -e
-          violations=$(grep -rn -i --include='*.go' --include='*.md' --include='*.mmd' \
-              --include='*.json' --include='*.yml' --include='*.yaml' \
-              --include='*.sh' --include='*.ps1' --include='Makefile' \
+          # Patterns that must never appear. Case-insensitive.
+          # NOTE: split string literals so this file itself doesn't trip the guard.
+          patterns=( 'm''ahin' 'M''AHIN' )
+          violations=$(grep -rn -E -i \
               --exclude-dir=.git --exclude-dir=.release --exclude-dir=node_modules \
-              -e 'm''ahin' . 2>/dev/null || true)
+              --exclude-dir=dist --exclude-dir=build \
+              --exclude=CHANGELOG.md \
+              --exclude=ci.yml \
+              -e "$(IFS='|'; echo "${patterns[*]}")" . 2>/dev/null || true)
           if [ -n "$violations" ]; then
             echo "Forbidden legacy-name references found:"
             echo "$violations"
@@ -106,9 +111,11 @@ jobs:
             done <<< "$violations"
             echo ""
             echo "The legacy project name is permanently banned. Use 'movie' instead."
+            echo "Also banned: /tmp/<legacy>, <LEGACY>_DB, .<legacy>/, <legacy>-cli."
             exit 1
           fi
           echo "✅ No forbidden legacy-name references."
+
 
       - name: Old module path regression guard
         if: needs.sha-check.outputs.already-built != 'true'
