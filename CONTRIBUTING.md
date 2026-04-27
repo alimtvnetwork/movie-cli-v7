@@ -9,6 +9,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
 - [Code Guidelines](#code-guidelines)
+- [Project Naming Rules](#project-naming-rules)
 - [Acronym MixedCaps Rules](#acronym-mixedcaps-rules)
 - [Pre-push Checklist](#pre-push-checklist)
 - [Commit Messages](#commit-messages)
