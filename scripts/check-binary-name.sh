@@ -202,19 +202,25 @@ if [ "$FUZZY" -eq 1 ]; then
     done)
     # Run the Python rewriter; it only touches files that actually match.
     if [ -n "$filtered" ]; then
-        fuzzy_out=$(printf '%s\n' "$filtered" | python3 scripts/_fuzzy_rewrite.py - 2>/dev/null || true)
-        fuzzy_err=$(printf '%s\n' "$filtered" | python3 scripts/_fuzzy_rewrite.py - 2>&1 >/dev/null || true)
-        if [ -n "$fuzzy_out" ]; then
+        # Run once, capture stdout (per-file JSON lines) and stderr
+        # (totals JSON line) into separate temp files.
+        fuzzy_stdout=$(mktemp); fuzzy_stderr=$(mktemp)
+        printf '%s\n' "$filtered" | python3 scripts/_fuzzy_rewrite.py - \
+            > "$fuzzy_stdout" 2> "$fuzzy_stderr" || true
+        if [ -s "$fuzzy_stdout" ]; then
             while IFS= read -r jl; do
                 [ -z "$jl" ] && continue
                 fp=$(printf '%s' "$jl" | python3 -c "import sys,json;d=json.loads(sys.stdin.read());print(d['path'],d['replaced'])")
                 printf "  ~ fuzzy  %s\n" "$fp"
                 fuzzy_files=$((fuzzy_files + 1))
-            done <<< "$fuzzy_out"
-            fuzzy_replaced=$(printf '%s' "$fuzzy_err" | python3 -c "import sys,json;
-data=sys.stdin.read().strip().splitlines()
-print(json.loads(data[-1]).get('total_replaced',0) if data else 0)" 2>/dev/null || echo 0)
+            done < "$fuzzy_stdout"
         fi
+        if [ -s "$fuzzy_stderr" ]; then
+            fuzzy_replaced=$(tail -n1 "$fuzzy_stderr" | python3 -c "import sys,json;
+try: print(json.loads(sys.stdin.read()).get('total_replaced',0))
+except Exception: print(0)" 2>/dev/null || echo 0)
+        fi
+        rm -f "$fuzzy_stdout" "$fuzzy_stderr"
         : "${fuzzy_replaced:=0}"
         echo "  Fuzzy files   : ${fuzzy_files}"
         echo "  Fuzzy replaced: ${fuzzy_replaced}"
