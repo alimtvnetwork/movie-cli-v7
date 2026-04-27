@@ -6,7 +6,7 @@
 // Callers: movie info, movie play, movie ls (detail view), movie move,
 // movie rename, movie undo, movie suggest, movie cache, movie cache-forget.
 // Do NOT re-implement ID-vs-title disambiguation in command files — always
-// route through this resolver so behaviour stays consistent.
+// route through this resolver so behavior stays consistent.
 //
 // All commands that accept an <id-or-title> argument should use this
 // helper to keep resolution logic consistent.  Do NOT duplicate the
