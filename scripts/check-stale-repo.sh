@@ -218,6 +218,14 @@ cat <<EOF
 
 EOF
 
+if [ "$NONINTERACTIVE" -eq 1 ]; then
+    NONINTERACTIVE_PAUSE_SECS="${NONINTERACTIVE_PAUSE_SECS:-5}"
+    warn "NON-INTERACTIVE MODE (--apply --yes): all confirms auto-accepted."
+    warn "Destructive commands above will execute in ${NONINTERACTIVE_PAUSE_SECS}s."
+    warn "Press Ctrl-C now to abort."
+    sleep "$NONINTERACTIVE_PAUSE_SECS" 2>/dev/null || true
+fi
+
 confirm "Proceed with the above remediation?" \
     || { err "Aborted by user. No changes made."; exit 3; }
 
