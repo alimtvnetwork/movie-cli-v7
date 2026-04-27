@@ -87,7 +87,7 @@ See lines 171-198 of `.github/workflows/release.yml` for the implementation.
 
 ### 3. Repo-root `install.ps1` — keep repo URL in sync
 
-The legacy `install.ps1` at the repo root (used for `git clone + build` flow) had a stale `RepoUrl` pointing to `movie-cli-v7.git`, which no longer exists. The build-from-source workaround printed by the 404 handler dies immediately. Fixed to `movie-cli-v7.git`.
+The legacy `install.ps1` at the repo root (used for `git clone + build` flow) had a stale `RepoUrl` pointing to `movie-cli-v5.git`, which no longer exists. The build-from-source workaround printed by the 404 handler dies immediately. Fixed to `movie-cli-v6.git`.
 
 **Prevention rule**: any time the repo is renamed/forked to a new `-v<N>` suffix, search for the old name with:
 
