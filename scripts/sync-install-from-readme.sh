@@ -236,6 +236,66 @@ if [[ "$PRINT_ONLY" -eq 1 ]]; then
   exit 0
 fi
 
+# --- 1c. --json: emit metadata + block as a JSON object on stdout -----------
+# Schema (stable, additive):
+#   {
+#     "source":     "README.md",
+#     "extracted":  "sentinels" | "heuristic",
+#     "lines":      <int>,
+#     "bytes":      <int>,
+#     "sha256":     "<hex>",
+#     "targets":    ["QUICKSTART.md", ...],   // resolved, relative to repo root
+#     "block":      "<full install block as a string>"
+#   }
+# Stdout is pure JSON (no logs) so it can be piped into jq, GitHub Actions
+# `$GITHUB_OUTPUT`, etc. Diagnostics still go to stderr.
+
+if [[ "$JSON_ONLY" -eq 1 ]]; then
+  json_lines="$(printf '%s' "$BLOCK" | wc -l | tr -d ' ')"
+  json_bytes="$(printf '%s' "$BLOCK" | wc -c | tr -d ' ')"
+  json_sha="$(printf '%s' "$BLOCK" | sha256sum | awk '{print $1}')"
+  json_method="sentinels"
+  if ! grep -qF '<!-- README-INSTALL:BEGIN -->' "$README"; then
+    json_method="heuristic"
+  fi
+
+  # Build "targets" array as repo-root-relative paths.
+  rel_targets=()
+  for t in "${TARGETS[@]}"; do
+    rel_targets+=("${t#"$ROOT/"}")
+  done
+
+  # JSON-escape the block via python (handles quotes, backslashes, newlines,
+  # unicode emojis safely). Falls back to python3 / python.
+  py=""
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1; then py="$cand"; break; fi
+  done
+  if [[ -z "$py" ]]; then
+    echo "ERROR: --json requires python3 or python on PATH" >&2
+    exit 2
+  fi
+
+  BLOCK_VAL="$BLOCK" \
+  TARGETS_VAL="$(printf '%s\n' "${rel_targets[@]}")" \
+  METHOD="$json_method" LINES="$json_lines" BYTES="$json_bytes" SHA="$json_sha" \
+  "$py" - <<'PY'
+import json, os
+targets = [t for t in os.environ["TARGETS_VAL"].splitlines() if t]
+out = {
+    "source":    "README.md",
+    "extracted": os.environ["METHOD"],
+    "lines":     int(os.environ["LINES"]),
+    "bytes":     int(os.environ["BYTES"]),
+    "sha256":    os.environ["SHA"],
+    "targets":   targets,
+    "block":     os.environ["BLOCK_VAL"],
+}
+print(json.dumps(out, indent=2, ensure_ascii=False))
+PY
+  exit 0
+fi
+
 # --- 2. Replace block in each target between sentinels ----------------------
 
 sync_file() {
