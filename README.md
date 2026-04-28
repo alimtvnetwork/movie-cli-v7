@@ -121,6 +121,7 @@ know what you have.
 - [Release Workflow](#release-workflow)
 - [Project Structure](#project-structure)
 - [Data Storage](#data-storage)
+- [Documentation sync](#documentation-sync)
 - [Milestones](#milestones)
 - [Dependencies](#dependencies)
 - [Contributing](#-contributing)
@@ -1991,6 +1992,72 @@ All data lives in `./data/`:
 ```
 
 ---
+
+<div align="center">
+
+## Documentation sync
+
+</div>
+
+The install snippet shown at the top of this README is the **canonical source of truth**. `QUICKSTART.md` and `spec/03-general/01-install-guide.md` are regenerated from it (between `<!-- INSTALL:BEGIN -->` / `<!-- INSTALL:END -->` sentinels) by `scripts/sync-install-from-readme.sh`. CI runs `--check` on every push.
+
+```bash
+npm run sync:install              # rewrite mirrored docs from README
+npm run sync:install:check        # exit 1 if any mirror has drifted
+npm run sync:install:print        # preview the extracted block
+npm run sync:install:json         # machine-readable output (see schema below)
+npm run sync:install:list         # show resolved target list
+npm run sync:install:discover     # auto-find every *.md with the sentinels
+```
+
+### `--json` output schema (stable contract)
+
+`bash scripts/sync-install-from-readme.sh --json` writes a single JSON object
+to **stdout** (diagnostics go to stderr, so the stream is safe to pipe into
+`jq`, `$GITHUB_OUTPUT`, or any tool). The schema is **additive** — new keys
+may be added in future versions, but existing keys, types, and meanings will
+not change without a major version bump.
+
+| Field       | Type            | Required | Description |
+|-------------|-----------------|----------|-------------|
+| `source`    | `string`        | yes      | Always the literal `"README.md"` (the canonical source file). |
+| `extracted` | `string` (enum) | yes      | How the block was located. One of: `"sentinels"` (preferred — found via `<!-- README-INSTALL:BEGIN/END -->`) or `"heuristic"` (fallback — matched the install heading + table). |
+| `lines`    | `integer`        | yes      | Number of newline-terminated lines in `block`. Always ≥ 1. |
+| `bytes`    | `integer`        | yes      | UTF-8 byte length of `block`. Always ≥ 1. |
+| `sha256`   | `string` (hex)   | yes      | Lowercase hex SHA-256 of `block`. 64 chars. Use this for drift detection in CI without diffing. |
+| `targets`  | `array<string>`  | yes      | Resolved sync targets, as repo-root-relative POSIX paths. May be empty if the user passed `--targets ""`. Order is significant (matches resolution order). |
+| `block`    | `string`         | yes      | The verbatim install block extracted from the README, with leading/trailing blank lines trimmed. May contain newlines, Markdown, HTML, and emoji. |
+
+**Exit codes:** `0` on success, `2` if the install block could not be extracted or `python3`/`python` is not on `PATH` (required to safely JSON-encode the block).
+
+**Example consumer (`jq`):**
+
+```bash
+# Fail CI if the README install block has changed since the last release.
+EXPECTED=abc123...   # sha256 from previous run
+ACTUAL=$(bash scripts/sync-install-from-readme.sh --json | jq -r .sha256)
+[[ "$EXPECTED" == "$ACTUAL" ]] || { echo "install block drifted"; exit 1; }
+```
+
+**Example output (truncated):**
+
+```json
+{
+  "source": "README.md",
+  "extracted": "sentinels",
+  "lines": 25,
+  "bytes": 653,
+  "sha256": "47a8bdd9900a…",
+  "targets": [
+    "QUICKSTART.md",
+    "spec/03-general/01-install-guide.md"
+  ],
+  "block": "**🚀 Install in 10 seconds — anyone, any OS:**\n\n<table>\n…"
+}
+```
+
+---
+
 
 <div align="center">
 
