@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Smart installer for movie-cli — tries GitHub Release first, then falls back to
   source-build from main, with a clear message either way.

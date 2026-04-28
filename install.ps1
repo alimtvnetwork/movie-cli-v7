@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
  One-step bootstrap: clone (if needed), build, and deploy movie CLI.
 .DESCRIPTION

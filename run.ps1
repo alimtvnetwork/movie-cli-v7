@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
  Build, deploy, and run movie CLI from the repo root.
 .DESCRIPTION
