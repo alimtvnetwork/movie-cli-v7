@@ -137,6 +137,22 @@ fi
 
 GENERATED=$'<!-- Generated from README.md by scripts/sync-install-from-readme.sh — do not edit by hand -->\n\n'"$BLOCK"
 
+# --- 1b. --print: emit the extracted block to stdout and exit ---------------
+# Useful for previewing exactly what would be written before touching any
+# target file. Header/footer go to stderr so the body on stdout stays
+# pipe-friendly (e.g. `... --print | less`, `... --print > preview.md`,
+# `diff <(... --print) <(sed -n '/INSTALL:BEGIN/,/INSTALL:END/p' QUICKSTART.md)`).
+
+if [[ "$PRINT_ONLY" -eq 1 ]]; then
+  {
+    echo "----- README install block (extracted from README.md) -----"
+    echo "----- $(printf '%s' "$BLOCK" | wc -l | tr -d ' ') lines, $(printf '%s' "$BLOCK" | wc -c | tr -d ' ') bytes -----"
+  } >&2
+  printf '%s\n' "$BLOCK"
+  echo "----- end of block -----" >&2
+  exit 0
+fi
+
 # --- 2. Replace block in each target between sentinels ----------------------
 
 sync_file() {
