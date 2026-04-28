@@ -35,21 +35,21 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 
 <table>
 <tr>
-<td><b>🐧 Linux / macOS</b></td>
+<td><b>🪟 Windows · PowerShell</b></td>
 <td>
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.sh | bash
+```powershell
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.ps1 | iex
 ```
 
 </td>
 </tr>
 <tr>
-<td><b>🪟 Windows (PowerShell)</b></td>
+<td><b>🐧 macOS · Linux · Bash</b></td>
 <td>
 
-```powershell
-irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.ps1 | iex
+```bash
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.sh | bash
 ```
 
 </td>
@@ -59,6 +59,26 @@ irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.ps1 | 
 <sub>Auto-detects your OS &amp; architecture · Installs the latest pre-built binary · Falls back to a source build if no release is published · See <a href="#installation">Installation</a> for flags, pinned versions, and verification.</sub>
 
 </div>
+
+---
+
+<div align="center">
+
+## 💡 Why this exists
+
+</div>
+
+If you've ever ripped years of **old DVDs** to a hard drive — or just collected
+movies the slow way — you know the pain: a folder full of cryptic filenames
+like `MV_0432.avi` or `the.matrix.1999.1080p.x264.mkv`, no posters, no
+ratings, no idea what's actually worth watching tonight.
+
+**Movie CLI was built out of that frustration.** It scans your existing
+folders, cleans up the messy release names, matches each file against TMDb,
+and gives you a real library on your own disk — with **titles, posters,
+ratings, genres, cast, runtime, and watch history** — without uploading
+anything to a cloud service. Your files stay where they are; you just finally
+know what you have.
 
 ---
 

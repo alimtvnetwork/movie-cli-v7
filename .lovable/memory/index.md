@@ -20,6 +20,7 @@ Questions: never bare. Always full context, layman language, recommended option 
 
 ## Memories
 - [Question asking style](mem://preferences/question-asking-style) — Full context, layman phrasing, recommendation with pros/cons on every question
+- [README structure](mem://preferences/readme-structure) — Root README order: title → badges → image → install (Windows first, then macOS/Linux) → why this exists; write README first then update sub-docs
 - [Banned legacy name](mem://constraints/banned-legacy-name) — Legacy codename forbidden everywhere; CI guard enforces it
 - [Project overview](mem://01-project-overview) — Go CLI, command tree, architecture, file structure
 - [Conventions](mem://02-conventions) — Code style, naming, build, deploy, config keys
