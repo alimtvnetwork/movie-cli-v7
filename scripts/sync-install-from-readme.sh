@@ -54,6 +54,7 @@ END_MARK="<!-- INSTALL:END -->"
 CHECK_ONLY=0
 INIT_MARKERS=0
 PRINT_ONLY=0
+JSON_ONLY=0
 DISCOVER=0
 TARGETS_FLAG=""
 
@@ -62,6 +63,7 @@ while [[ $# -gt 0 ]]; do
     --check)         CHECK_ONLY=1 ;;
     --init-markers)  INIT_MARKERS=1 ;;
     --print)         PRINT_ONLY=1 ;;
+    --json)          JSON_ONLY=1 ;;
     --discover)      DISCOVER=1 ;;
     --targets)       TARGETS_FLAG="${2:-}"; shift ;;
     --targets=*)     TARGETS_FLAG="${1#--targets=}" ;;
