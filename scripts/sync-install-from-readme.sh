@@ -36,8 +36,43 @@ BEGIN_MARK="<!-- INSTALL:BEGIN -->"
 END_MARK="<!-- INSTALL:END -->"
 
 CHECK_ONLY=0
-if [[ "${1:-}" == "--check" ]]; then
-  CHECK_ONLY=1
+INIT_MARKERS=0
+case "${1:-}" in
+  --check)         CHECK_ONLY=1 ;;
+  --init-markers)  INIT_MARKERS=1 ;;
+  "")              ;;
+  *) echo "Unknown option: $1" >&2; exit 2 ;;
+esac
+
+# --- 0. Optionally insert sentinels into targets that lack them -------------
+# Appends a fresh install section (with INSTALL:BEGIN / INSTALL:END markers)
+# to the end of any target file that is missing the sentinels. Existing
+# install content is left untouched — the sync step below will fill the new
+# block on the next run.
+
+init_markers() {
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    echo "SKIP: $file not found" >&2
+    return 0
+  fi
+  if grep -qF "$BEGIN_MARK" "$file" && grep -qF "$END_MARK" "$file"; then
+    echo "OK:    $file already has sentinels"
+    return 0
+  fi
+  {
+    printf '\n\n## Install\n\n'
+    printf '%s\n\n%s\n' "$BEGIN_MARK" "$END_MARK"
+  } >> "$file"
+  echo "INIT:  $file sentinels appended"
+}
+
+if [[ "$INIT_MARKERS" -eq 1 ]]; then
+  rc=0
+  for f in "${TARGETS[@]}"; do
+    init_markers "$f" || rc=1
+  done
+  exit $rc
 fi
 
 # --- 1. Extract install block from README -----------------------------------
