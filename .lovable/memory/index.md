@@ -17,6 +17,7 @@ Boolean names: never use negative words (un/not/no). Use positive semantic synon
 Zero nested if. Max 2 conditions per if. No else after return. Functions ≤15 lines. Files ≤300 lines. Max 3 params.
 No magic strings — use constants/enums. No fmt.Errorf — use apperror.Wrap().
 Questions: never bare. Always full context, layman language, recommended option + why + pros + cons.
+Docs: edit root README.md FIRST, then propagate to QUICKSTART/spec/CONTRIBUTING. Sub-docs never lead.
 
 ## Memories
 - [Question asking style](mem://preferences/question-asking-style) — Full context, layman phrasing, recommendation with pros/cons on every question
