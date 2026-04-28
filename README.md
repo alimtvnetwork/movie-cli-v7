@@ -121,6 +121,7 @@ know what you have.
 - [Release Workflow](#release-workflow)
 - [Project Structure](#project-structure)
 - [Data Storage](#data-storage)
+- [Documentation sync](#documentation-sync)
 - [Milestones](#milestones)
 - [Dependencies](#dependencies)
 - [Contributing](#-contributing)
