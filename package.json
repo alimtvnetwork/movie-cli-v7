@@ -14,7 +14,9 @@
     "sync:install": "bash scripts/sync-install-from-readme.sh",
     "sync:install:check": "bash scripts/sync-install-from-readme.sh --check",
     "sync:install:init": "bash scripts/sync-install-from-readme.sh --init-markers",
-    "sync:install:print": "bash scripts/sync-install-from-readme.sh --print"
+    "sync:install:print": "bash scripts/sync-install-from-readme.sh --print",
+    "sync:install:list": "bash scripts/sync-install-from-readme.sh --list-targets",
+    "sync:install:discover": "bash scripts/sync-install-from-readme.sh --discover"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
