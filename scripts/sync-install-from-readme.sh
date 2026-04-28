@@ -19,6 +19,7 @@
 #   scripts/sync-install-from-readme.sh --check               # exit 1 if drift
 #   scripts/sync-install-from-readme.sh --init-markers        # add sentinels if missing
 #   scripts/sync-install-from-readme.sh --print               # print extracted block
+#   scripts/sync-install-from-readme.sh --json                # print block + metadata as JSON
 #   scripts/sync-install-from-readme.sh --list-targets        # show resolved target list
 #   scripts/sync-install-from-readme.sh --targets a.md,b.md   # one-shot custom targets
 #   scripts/sync-install-from-readme.sh --discover            # also auto-find any *.md
@@ -54,6 +55,7 @@ END_MARK="<!-- INSTALL:END -->"
 CHECK_ONLY=0
 INIT_MARKERS=0
 PRINT_ONLY=0
+JSON_ONLY=0
 DISCOVER=0
 TARGETS_FLAG=""
 
@@ -62,6 +64,7 @@ while [[ $# -gt 0 ]]; do
     --check)         CHECK_ONLY=1 ;;
     --init-markers)  INIT_MARKERS=1 ;;
     --print)         PRINT_ONLY=1 ;;
+    --json)          JSON_ONLY=1 ;;
     --discover)      DISCOVER=1 ;;
     --targets)       TARGETS_FLAG="${2:-}"; shift ;;
     --targets=*)     TARGETS_FLAG="${1#--targets=}" ;;
@@ -231,6 +234,66 @@ if [[ "$PRINT_ONLY" -eq 1 ]]; then
   } >&2
   printf '%s\n' "$BLOCK"
   echo "----- end of block -----" >&2
+  exit 0
+fi
+
+# --- 1c. --json: emit metadata + block as a JSON object on stdout -----------
+# Schema (stable, additive):
+#   {
+#     "source":     "README.md",
+#     "extracted":  "sentinels" | "heuristic",
+#     "lines":      <int>,
+#     "bytes":      <int>,
+#     "sha256":     "<hex>",
+#     "targets":    ["QUICKSTART.md", ...],   // resolved, relative to repo root
+#     "block":      "<full install block as a string>"
+#   }
+# Stdout is pure JSON (no logs) so it can be piped into jq, GitHub Actions
+# `$GITHUB_OUTPUT`, etc. Diagnostics still go to stderr.
+
+if [[ "$JSON_ONLY" -eq 1 ]]; then
+  json_lines="$(printf '%s' "$BLOCK" | wc -l | tr -d ' ')"
+  json_bytes="$(printf '%s' "$BLOCK" | wc -c | tr -d ' ')"
+  json_sha="$(printf '%s' "$BLOCK" | sha256sum | awk '{print $1}')"
+  json_method="sentinels"
+  if ! grep -qF '<!-- README-INSTALL:BEGIN -->' "$README"; then
+    json_method="heuristic"
+  fi
+
+  # Build "targets" array as repo-root-relative paths.
+  rel_targets=()
+  for t in "${TARGETS[@]}"; do
+    rel_targets+=("${t#"$ROOT/"}")
+  done
+
+  # JSON-escape the block via python (handles quotes, backslashes, newlines,
+  # unicode emojis safely). Falls back to python3 / python.
+  py=""
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1; then py="$cand"; break; fi
+  done
+  if [[ -z "$py" ]]; then
+    echo "ERROR: --json requires python3 or python on PATH" >&2
+    exit 2
+  fi
+
+  BLOCK_VAL="$BLOCK" \
+  TARGETS_VAL="$(printf '%s\n' "${rel_targets[@]}")" \
+  METHOD="$json_method" LINES="$json_lines" BYTES="$json_bytes" SHA="$json_sha" \
+  "$py" - <<'PY'
+import json, os
+targets = [t for t in os.environ["TARGETS_VAL"].splitlines() if t]
+out = {
+    "source":    "README.md",
+    "extracted": os.environ["METHOD"],
+    "lines":     int(os.environ["LINES"]),
+    "bytes":     int(os.environ["BYTES"]),
+    "sha256":    os.environ["SHA"],
+    "targets":   targets,
+    "block":     os.environ["BLOCK_VAL"],
+}
+print(json.dumps(out, indent=2, ensure_ascii=False))
+PY
   exit 0
 fi
 
