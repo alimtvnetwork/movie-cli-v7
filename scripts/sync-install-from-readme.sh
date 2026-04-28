@@ -94,19 +94,19 @@ resolve_targets() {
     line="${line#"${line%%[![:space:]]*}"}"   # ltrim
     line="${line%"${line##*[![:space:]]}"}"   # rtrim
     [[ -z "$line" ]] && continue
-    [[ "$line" = /* ]] && TARGETS+=("$line") || TARGETS+=("$ROOT/$line")
+    if [[ "$line" = /* ]]; then TARGETS+=("$line"); else TARGETS+=("$ROOT/$line"); fi
   done <<< "$raw"
 
   # --discover: also append any *.md under ROOT that contains the sentinels
   # but isn't already in the list. Skips node_modules, .git, .release, dist.
   if [[ "$DISCOVER" -eq 1 ]]; then
-    local found
+    local found already t
     while IFS= read -r found; do
-      local already=0
+      already=0
       for t in "${TARGETS[@]}"; do
-        [[ "$t" == "$found" ]] && already=1 && break
+        if [[ "$t" == "$found" ]]; then already=1; break; fi
       done
-      [[ "$already" -eq 0 ]] && TARGETS+=("$found")
+      if [[ "$already" -eq 0 ]]; then TARGETS+=("$found"); fi
     done < <(
       grep -RlF --include='*.md' \
         --exclude-dir=node_modules \
