@@ -19,6 +19,7 @@
 #   scripts/sync-install-from-readme.sh --check               # exit 1 if drift
 #   scripts/sync-install-from-readme.sh --init-markers        # add sentinels if missing
 #   scripts/sync-install-from-readme.sh --print               # print extracted block
+#   scripts/sync-install-from-readme.sh --json                # print block + metadata as JSON
 #   scripts/sync-install-from-readme.sh --list-targets        # show resolved target list
 #   scripts/sync-install-from-readme.sh --targets a.md,b.md   # one-shot custom targets
 #   scripts/sync-install-from-readme.sh --discover            # also auto-find any *.md
