@@ -77,21 +77,59 @@ if [[ "$INIT_MARKERS" -eq 1 ]]; then
 fi
 
 # --- 1. Extract install block from README -----------------------------------
-# Bounded by the "🚀 Install in 10 seconds" line and the closing </table>
-# plus the "Auto-detects" caption that follows it.
+# Strategy (most → least reliable):
+#   1. Explicit sentinels in README:
+#        <!-- README-INSTALL:BEGIN -->  ...  <!-- README-INSTALL:END -->
+#      This is the canonical source — surrounding headings and tables can
+#      change freely without breaking the sync.
+#   2. Heuristic fallback for older READMEs: capture from the
+#      "🚀 Install in 10 seconds" line through the first <sub>…</sub>
+#      caption that follows the closing </table>.
+# Both strategies trim trailing blank lines so the generated block is stable.
 
-extract_block() {
+extract_by_sentinels() {
+  awk '
+    /<!-- README-INSTALL:BEGIN -->/ { capture=1; next }
+    /<!-- README-INSTALL:END -->/   { exit }
+    capture { print }
+  ' "$README"
+}
+
+extract_by_heuristic() {
   awk '
     /\*\*🚀 Install in 10 seconds/ { capture=1 }
     capture { print }
-    capture && /<\/sub>$/ && seen_table { exit }
     /<\/table>/ { seen_table=1 }
+    capture && seen_table && /<\/sub>[[:space:]]*$/ { exit }
   ' "$README"
+}
+
+trim_blank_edges() {
+  awk '
+    { lines[NR]=$0 }
+    END {
+      first=1; last=NR
+      while (first<=last && lines[first] ~ /^[[:space:]]*$/) first++
+      while (last>=first && lines[last]  ~ /^[[:space:]]*$/) last--
+      for (i=first; i<=last; i++) print lines[i]
+    }
+  '
+}
+
+extract_block() {
+  local out
+  out="$(extract_by_sentinels | trim_blank_edges)"
+  if [[ -n "$out" ]]; then
+    echo "$out"
+    return 0
+  fi
+  echo "INFO: README sentinels not found — falling back to heuristic" >&2
+  extract_by_heuristic | trim_blank_edges
 }
 
 BLOCK="$(extract_block)"
 if [[ -z "$BLOCK" ]]; then
-  echo "ERROR: install block not found in README.md" >&2
+  echo "ERROR: install block not found in README.md (no sentinels, no heuristic match)" >&2
   exit 2
 fi
 
