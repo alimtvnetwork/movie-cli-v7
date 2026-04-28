@@ -18,6 +18,7 @@
 #   scripts/sync-install-from-readme.sh                  # rewrite files
 #   scripts/sync-install-from-readme.sh --check          # exit 1 if drift
 #   scripts/sync-install-from-readme.sh --init-markers   # add sentinels if missing
+#   scripts/sync-install-from-readme.sh --print          # print extracted block to stdout
 #
 # Exit codes:
 #   0  success / no drift
