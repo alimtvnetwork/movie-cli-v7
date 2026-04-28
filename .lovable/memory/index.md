@@ -16,8 +16,10 @@ HTML JS: single API_BASE variable for all REST calls. Never repeat URL.
 Boolean names: never use negative words (un/not/no). Use positive semantic synonyms with Is/Has prefix.
 Zero nested if. Max 2 conditions per if. No else after return. Functions ≤15 lines. Files ≤300 lines. Max 3 params.
 No magic strings — use constants/enums. No fmt.Errorf — use apperror.Wrap().
+Questions: never bare. Always full context, layman language, recommended option + why + pros + cons.
 
 ## Memories
+- [Question asking style](mem://preferences/question-asking-style) — Full context, layman phrasing, recommendation with pros/cons on every question
 - [Banned legacy name](mem://constraints/banned-legacy-name) — Legacy codename forbidden everywhere; CI guard enforces it
 - [Project overview](mem://01-project-overview) — Go CLI, command tree, architecture, file structure
 - [Conventions](mem://02-conventions) — Code style, naming, build, deploy, config keys
