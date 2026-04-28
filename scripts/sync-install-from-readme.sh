@@ -18,6 +18,7 @@
 #   scripts/sync-install-from-readme.sh                  # rewrite files
 #   scripts/sync-install-from-readme.sh --check          # exit 1 if drift
 #   scripts/sync-install-from-readme.sh --init-markers   # add sentinels if missing
+#   scripts/sync-install-from-readme.sh --print          # print extracted block to stdout
 #
 # Exit codes:
 #   0  success / no drift
@@ -38,9 +39,11 @@ END_MARK="<!-- INSTALL:END -->"
 
 CHECK_ONLY=0
 INIT_MARKERS=0
+PRINT_ONLY=0
 case "${1:-}" in
   --check)         CHECK_ONLY=1 ;;
   --init-markers)  INIT_MARKERS=1 ;;
+  --print)         PRINT_ONLY=1 ;;
   "")              ;;
   *) echo "Unknown option: $1" >&2; exit 2 ;;
 esac
@@ -134,6 +137,22 @@ if [[ -z "$BLOCK" ]]; then
 fi
 
 GENERATED=$'<!-- Generated from README.md by scripts/sync-install-from-readme.sh — do not edit by hand -->\n\n'"$BLOCK"
+
+# --- 1b. --print: emit the extracted block to stdout and exit ---------------
+# Useful for previewing exactly what would be written before touching any
+# target file. Header/footer go to stderr so the body on stdout stays
+# pipe-friendly (e.g. `... --print | less`, `... --print > preview.md`,
+# `diff <(... --print) <(sed -n '/INSTALL:BEGIN/,/INSTALL:END/p' QUICKSTART.md)`).
+
+if [[ "$PRINT_ONLY" -eq 1 ]]; then
+  {
+    echo "----- README install block (extracted from README.md) -----"
+    echo "----- $(printf '%s' "$BLOCK" | wc -l | tr -d ' ') lines, $(printf '%s' "$BLOCK" | wc -c | tr -d ' ') bytes -----"
+  } >&2
+  printf '%s\n' "$BLOCK"
+  echo "----- end of block -----" >&2
+  exit 0
+fi
 
 # --- 2. Replace block in each target between sentinels ----------------------
 

@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "sync:install": "bash scripts/sync-install-from-readme.sh",
     "sync:install:check": "bash scripts/sync-install-from-readme.sh --check",
-    "sync:install:init": "bash scripts/sync-install-from-readme.sh --init-markers"
+    "sync:install:init": "bash scripts/sync-install-from-readme.sh --init-markers",
+    "sync:install:print": "bash scripts/sync-install-from-readme.sh --print"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
