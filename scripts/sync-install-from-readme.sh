@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# sync-install-from-readme.sh
+#
+# Extracts the canonical install block from README.md and rewrites the
+# install snippets in QUICKSTART.md and spec/03-general/01-install-guide.md
+# so wording and headers stay identical to the root README.
+#
+# Source of truth: README.md (per mem://preferences/readme-structure).
+# Sub-docs MUST contain sentinel markers around the install block:
+#
+#   <!-- INSTALL:BEGIN -->
+#   ...generated content...
+#   <!-- INSTALL:END -->
+#
+# Anything outside the markers is preserved verbatim.
+#
+# Usage:
+#   scripts/sync-install-from-readme.sh           # rewrite files
+#   scripts/sync-install-from-readme.sh --check   # exit 1 if drift detected
+#
+# Exit codes:
+#   0  success / no drift
+#   1  drift detected (--check) or missing markers
+#   2  README install block not found
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+README="$ROOT/README.md"
+TARGETS=(
+  "$ROOT/QUICKSTART.md"
+  "$ROOT/spec/03-general/01-install-guide.md"
+)
+
+BEGIN_MARK="<!-- INSTALL:BEGIN -->"
+END_MARK="<!-- INSTALL:END -->"
+
+CHECK_ONLY=0
+if [[ "${1:-}" == "--check" ]]; then
+  CHECK_ONLY=1
+fi
+
+# --- 1. Extract install block from README -----------------------------------
+# Bounded by the "🚀 Install in 10 seconds" line and the closing </table>
+# plus the "Auto-detects" caption that follows it.
+
+extract_block() {
+  awk '
+    /\*\*🚀 Install in 10 seconds/ { capture=1 }
+    capture { print }
+    capture && /<\/sub>$/ && seen_table { exit }
+    /<\/table>/ { seen_table=1 }
+  ' "$README"
+}
+
+BLOCK="$(extract_block)"
+if [[ -z "$BLOCK" ]]; then
+  echo "ERROR: install block not found in README.md" >&2
+  exit 2
+fi
+
+GENERATED=$'<!-- Generated from README.md by scripts/sync-install-from-readme.sh — do not edit by hand -->\n\n'"$BLOCK"
+
+# --- 2. Replace block in each target between sentinels ----------------------
+
+sync_file() {
+  local file="$1"
+
+  if [[ ! -f "$file" ]]; then
+    echo "SKIP: $file not found" >&2
+    return 0
+  fi
+
+  if ! grep -qF "$BEGIN_MARK" "$file" || ! grep -qF "$END_MARK" "$file"; then
+    echo "ERROR: $file missing $BEGIN_MARK / $END_MARK sentinels" >&2
+    return 1
+  fi
+
+  local tmp
+  tmp="$(mktemp)"
+
+  awk -v begin="$BEGIN_MARK" -v end="$END_MARK" -v block="$GENERATED" '
+    BEGIN { inside=0 }
+    {
+      if (index($0, begin)) {
+        print begin
+        print ""
+        print block
+        print ""
+        print end
+        inside=1
+        next
+      }
+      if (inside && index($0, end)) { inside=0; next }
+      if (!inside) print
+    }
+  ' "$file" > "$tmp"
+
+  if [[ "$CHECK_ONLY" -eq 1 ]]; then
+    if ! diff -q "$file" "$tmp" >/dev/null; then
+      echo "DRIFT: $file is out of sync with README.md" >&2
+      diff -u "$file" "$tmp" >&2 || true
+      rm -f "$tmp"
+      return 1
+    fi
+    rm -f "$tmp"
+    echo "OK:    $file in sync"
+  else
+    mv "$tmp" "$file"
+    echo "WROTE: $file"
+  fi
+}
+
+rc=0
+for f in "${TARGETS[@]}"; do
+  sync_file "$f" || rc=1
+done
+
+exit $rc
