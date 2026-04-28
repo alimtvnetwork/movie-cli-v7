@@ -9,6 +9,7 @@ import { SortSelect } from "@/components/dashboard/SortSelect";
 import { StatsPanel } from "@/components/dashboard/StatsPanel";
 import { ReadmePreview } from "@/components/dashboard/ReadmePreview";
 import { JumpToCommandTable } from "@/components/dashboard/JumpToCommandTable";
+import { StaleRepoPlanDialog } from "@/components/dashboard/StaleRepoPlanDialog";
 import { useMediaFilters } from "@/components/dashboard/useMediaFilters";
 import { mockMedia } from "@/data/mock-media";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -46,7 +47,7 @@ const Index = () => {
       <DashboardHeader media={mockMedia} />
 
       <Collapsible open={statsOpen} onOpenChange={handleStatsToggle}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
               <BarChart3 className="h-4 w-4" />
@@ -54,6 +55,7 @@ const Index = () => {
               {statsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
+          <StaleRepoPlanDialog />
         </div>
         <CollapsibleContent className="mt-2">
           <StatsPanel media={mockMedia} />
