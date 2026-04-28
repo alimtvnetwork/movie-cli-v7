@@ -11,14 +11,17 @@ type: preference
 Whenever project messaging, install steps, features, or positioning change:
 
 1. **Edit `README.md` FIRST.** Land the change there before touching anything else.
-2. **THEN propagate** the same change to sub-docs that mirror it:
+2. **THEN propagate** by running:
+   ```bash
+   scripts/sync-install-from-readme.sh
+   ```
+   This regenerates the install block (between `<!-- INSTALL:BEGIN -->` /
+   `<!-- INSTALL:END -->` sentinels) in:
    - `QUICKSTART.md`
    - `spec/03-general/01-install-guide.md`
-   - `CONTRIBUTING.md`
-   - any other doc that repeats README content
-3. **Never** let a sub-doc ship an instruction, command, or claim that the
-   root README does not already state. Sub-docs may expand on README, never
-   contradict or precede it.
+   Use `--check` in CI to fail the build if a sub-doc drifts.
+3. For sub-doc content **outside** the install block (e.g. CONTRIBUTING,
+   troubleshooting, dev setup), still hand-edit after README lands.
 
 If you catch yourself opening a sub-doc first, **stop and open README.md instead.**
 
