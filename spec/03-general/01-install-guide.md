@@ -77,17 +77,8 @@ $env:PATH += ";E:\bin-run"
 
 ## Quick Install (One-Liner)
 
-### Windows (PowerShell)
-
-```powershell
-git clone https://https://github.com/alimtvnetwork/movie-cli-v7.git; cd movie-cli-v7; .\run.ps1
-```
-
-### macOS / Linux
-
-```bash
-git clone https://https://github.com/alimtvnetwork/movie-cli-v7.git && cd movie-cli-v7 && pwsh run.ps1
-```
+<!-- INSTALL:BEGIN -->
+<!-- INSTALL:END -->
 
 ## Configuration
 

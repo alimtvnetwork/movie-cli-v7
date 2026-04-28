@@ -6,6 +6,13 @@ troubleshooting, see [README.md](README.md) and
 
 ---
 
+## 🚀 One-liner install
+
+<!-- INSTALL:BEGIN -->
+<!-- INSTALL:END -->
+
+---
+
 ## 🐧 Linux
 
 ```bash
