@@ -1,0 +1,15 @@
+# Targets for scripts/sync-install-from-readme.sh
+# One path per line (relative to repo root or absolute).
+# Lines starting with # and blank lines are ignored.
+# Each listed file MUST contain the sentinels:
+#   <!-- INSTALL:BEGIN -->
+#   <!-- INSTALL:END -->
+# (Run `scripts/sync-install-from-readme.sh --init-markers` to add them.)
+#
+# To override at runtime without editing this file:
+#   --targets a.md,b.md           one-shot CLI flag
+#   SYNC_INSTALL_TARGETS=a.md,b.md  environment variable
+# Or pass --discover to auto-include every *.md with INSTALL:BEGIN.
+
+QUICKSTART.md
+spec/03-general/01-install-guide.md

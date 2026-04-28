@@ -15,9 +15,21 @@
 # Anything outside the markers is preserved verbatim.
 #
 # Usage:
-#   scripts/sync-install-from-readme.sh                  # rewrite files
-#   scripts/sync-install-from-readme.sh --check          # exit 1 if drift
-#   scripts/sync-install-from-readme.sh --init-markers   # add sentinels if missing
+#   scripts/sync-install-from-readme.sh                       # rewrite files
+#   scripts/sync-install-from-readme.sh --check               # exit 1 if drift
+#   scripts/sync-install-from-readme.sh --init-markers        # add sentinels if missing
+#   scripts/sync-install-from-readme.sh --print               # print extracted block
+#   scripts/sync-install-from-readme.sh --list-targets        # show resolved target list
+#   scripts/sync-install-from-readme.sh --targets a.md,b.md   # one-shot custom targets
+#   scripts/sync-install-from-readme.sh --discover            # also auto-find any *.md
+#                                                             # with INSTALL:BEGIN sentinels
+#
+# Targets are resolved in this order (first wins):
+#   1. --targets flag (comma-separated)
+#   2. SYNC_INSTALL_TARGETS env var (comma- or newline-separated)
+#   3. scripts/sync-install-targets.txt (one path per line, # for comments)
+#   4. Built-in defaults: QUICKSTART.md, spec/03-general/01-install-guide.md
+# Paths may be absolute or relative to the repo root.
 #
 # Exit codes:
 #   0  success / no drift
@@ -28,9 +40,12 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 README="$ROOT/README.md"
-TARGETS=(
-  "$ROOT/QUICKSTART.md"
-  "$ROOT/spec/03-general/01-install-guide.md"
+CONFIG_FILE="$ROOT/scripts/sync-install-targets.txt"
+
+# Default targets — used when no config file, env var, or flag is provided.
+DEFAULT_TARGETS=(
+  "QUICKSTART.md"
+  "spec/03-general/01-install-guide.md"
 )
 
 BEGIN_MARK="<!-- INSTALL:BEGIN -->"
@@ -38,12 +53,80 @@ END_MARK="<!-- INSTALL:END -->"
 
 CHECK_ONLY=0
 INIT_MARKERS=0
-case "${1:-}" in
-  --check)         CHECK_ONLY=1 ;;
-  --init-markers)  INIT_MARKERS=1 ;;
-  "")              ;;
-  *) echo "Unknown option: $1" >&2; exit 2 ;;
-esac
+PRINT_ONLY=0
+DISCOVER=0
+TARGETS_FLAG=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --check)         CHECK_ONLY=1 ;;
+    --init-markers)  INIT_MARKERS=1 ;;
+    --print)         PRINT_ONLY=1 ;;
+    --discover)      DISCOVER=1 ;;
+    --targets)       TARGETS_FLAG="${2:-}"; shift ;;
+    --targets=*)     TARGETS_FLAG="${1#--targets=}" ;;
+    --list-targets)  LIST_ONLY=1 ;;
+    "")              ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+LIST_ONLY="${LIST_ONLY:-0}"
+
+# --- Resolve target list (priority: flag > env > config file > defaults) ----
+# Each entry may be absolute or relative to repo root. Lines starting with #
+# and blank lines in the config file are ignored.
+
+resolve_targets() {
+  local raw=""
+  if [[ -n "$TARGETS_FLAG" ]]; then
+    raw="${TARGETS_FLAG//,/$'\n'}"
+  elif [[ -n "${SYNC_INSTALL_TARGETS:-}" ]]; then
+    raw="${SYNC_INSTALL_TARGETS//,/$'\n'}"
+  elif [[ -f "$CONFIG_FILE" ]]; then
+    raw="$(grep -vE '^[[:space:]]*(#|$)' "$CONFIG_FILE" || true)"
+  else
+    raw="$(printf '%s\n' "${DEFAULT_TARGETS[@]}")"
+  fi
+
+  TARGETS=()
+  while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"   # ltrim
+    line="${line%"${line##*[![:space:]]}"}"   # rtrim
+    [[ -z "$line" ]] && continue
+    if [[ "$line" = /* ]]; then TARGETS+=("$line"); else TARGETS+=("$ROOT/$line"); fi
+  done <<< "$raw"
+
+  # --discover: also append any *.md under ROOT that contains the sentinels
+  # but isn't already in the list. Skips node_modules, .git, .release, dist.
+  if [[ "$DISCOVER" -eq 1 ]]; then
+    local found already t
+    while IFS= read -r found; do
+      already=0
+      for t in "${TARGETS[@]}"; do
+        if [[ "$t" == "$found" ]]; then already=1; break; fi
+      done
+      if [[ "$already" -eq 0 ]]; then TARGETS+=("$found"); fi
+    done < <(
+      grep -RlF --include='*.md' \
+        --exclude-dir=node_modules \
+        --exclude-dir=.git \
+        --exclude-dir=.release \
+        --exclude-dir=dist \
+        "$BEGIN_MARK" "$ROOT" 2>/dev/null \
+        | grep -vF "$README" || true
+    )
+  fi
+}
+
+resolve_targets
+
+if [[ "$LIST_ONLY" -eq 1 ]]; then
+  printf 'Resolved %d target(s):\n' "${#TARGETS[@]}"
+  for t in "${TARGETS[@]}"; do printf '  %s\n' "$t"; done
+  exit 0
+fi
+
 
 # --- 0. Optionally insert sentinels into targets that lack them -------------
 # Appends a fresh install section (with INSTALL:BEGIN / INSTALL:END markers)
@@ -134,6 +217,22 @@ if [[ -z "$BLOCK" ]]; then
 fi
 
 GENERATED=$'<!-- Generated from README.md by scripts/sync-install-from-readme.sh — do not edit by hand -->\n\n'"$BLOCK"
+
+# --- 1b. --print: emit the extracted block to stdout and exit ---------------
+# Useful for previewing exactly what would be written before touching any
+# target file. Header/footer go to stderr so the body on stdout stays
+# pipe-friendly (e.g. `... --print | less`, `... --print > preview.md`,
+# `diff <(... --print) <(sed -n '/INSTALL:BEGIN/,/INSTALL:END/p' QUICKSTART.md)`).
+
+if [[ "$PRINT_ONLY" -eq 1 ]]; then
+  {
+    echo "----- README install block (extracted from README.md) -----"
+    echo "----- $(printf '%s' "$BLOCK" | wc -l | tr -d ' ') lines, $(printf '%s' "$BLOCK" | wc -c | tr -d ' ') bytes -----"
+  } >&2
+  printf '%s\n' "$BLOCK"
+  echo "----- end of block -----" >&2
+  exit 0
+fi
 
 # --- 2. Replace block in each target between sentinels ----------------------
 
