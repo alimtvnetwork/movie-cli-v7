@@ -97,9 +97,8 @@ sync_file() {
   ' "$file" > "$tmp"
 
   if [[ "$CHECK_ONLY" -eq 1 ]]; then
-    if ! diff -q "$file" "$tmp" >/dev/null; then
-      echo "DRIFT: $file is out of sync with README.md" >&2
-      diff -u "$file" "$tmp" >&2 || true
+    if ! cmp -s "$file" "$tmp"; then
+      echo "DRIFT: $file is out of sync with README.md — run scripts/sync-install-from-readme.sh" >&2
       rm -f "$tmp"
       return 1
     fi
