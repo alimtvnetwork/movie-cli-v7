@@ -1,4 +1,4 @@
-﻿# build.ps1 -- Pull, build, and deploy movie CLI
+# build.ps1 -- Pull, build, and deploy movie CLI
 # Usage: pwsh build.ps1
 
 param(
