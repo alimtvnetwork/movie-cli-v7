@@ -15,13 +15,14 @@
 # Anything outside the markers is preserved verbatim.
 #
 # Usage:
-#   scripts/sync-install-from-readme.sh           # rewrite files
-#   scripts/sync-install-from-readme.sh --check   # exit 1 if drift detected
+#   scripts/sync-install-from-readme.sh                  # rewrite files
+#   scripts/sync-install-from-readme.sh --check          # exit 1 if drift
+#   scripts/sync-install-from-readme.sh --init-markers   # add sentinels if missing
 #
 # Exit codes:
 #   0  success / no drift
 #   1  drift detected (--check) or missing markers
-#   2  README install block not found
+#   2  README install block not found / unknown option
 
 set -euo pipefail
 
