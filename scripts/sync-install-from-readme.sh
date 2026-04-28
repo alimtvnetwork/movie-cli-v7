@@ -29,9 +29,12 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 README="$ROOT/README.md"
-TARGETS=(
-  "$ROOT/QUICKSTART.md"
-  "$ROOT/spec/03-general/01-install-guide.md"
+CONFIG_FILE="$ROOT/scripts/sync-install-targets.txt"
+
+# Default targets — used when no config file, env var, or flag is provided.
+DEFAULT_TARGETS=(
+  "QUICKSTART.md"
+  "spec/03-general/01-install-guide.md"
 )
 
 BEGIN_MARK="<!-- INSTALL:BEGIN -->"
@@ -40,13 +43,79 @@ END_MARK="<!-- INSTALL:END -->"
 CHECK_ONLY=0
 INIT_MARKERS=0
 PRINT_ONLY=0
-case "${1:-}" in
-  --check)         CHECK_ONLY=1 ;;
-  --init-markers)  INIT_MARKERS=1 ;;
-  --print)         PRINT_ONLY=1 ;;
-  "")              ;;
-  *) echo "Unknown option: $1" >&2; exit 2 ;;
-esac
+DISCOVER=0
+TARGETS_FLAG=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --check)         CHECK_ONLY=1 ;;
+    --init-markers)  INIT_MARKERS=1 ;;
+    --print)         PRINT_ONLY=1 ;;
+    --discover)      DISCOVER=1 ;;
+    --targets)       TARGETS_FLAG="${2:-}"; shift ;;
+    --targets=*)     TARGETS_FLAG="${1#--targets=}" ;;
+    --list-targets)  LIST_ONLY=1 ;;
+    "")              ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+LIST_ONLY="${LIST_ONLY:-0}"
+
+# --- Resolve target list (priority: flag > env > config file > defaults) ----
+# Each entry may be absolute or relative to repo root. Lines starting with #
+# and blank lines in the config file are ignored.
+
+resolve_targets() {
+  local raw=""
+  if [[ -n "$TARGETS_FLAG" ]]; then
+    raw="${TARGETS_FLAG//,/$'\n'}"
+  elif [[ -n "${SYNC_INSTALL_TARGETS:-}" ]]; then
+    raw="${SYNC_INSTALL_TARGETS//,/$'\n'}"
+  elif [[ -f "$CONFIG_FILE" ]]; then
+    raw="$(grep -vE '^[[:space:]]*(#|$)' "$CONFIG_FILE" || true)"
+  else
+    raw="$(printf '%s\n' "${DEFAULT_TARGETS[@]}")"
+  fi
+
+  TARGETS=()
+  while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"   # ltrim
+    line="${line%"${line##*[![:space:]]}"}"   # rtrim
+    [[ -z "$line" ]] && continue
+    [[ "$line" = /* ]] && TARGETS+=("$line") || TARGETS+=("$ROOT/$line")
+  done <<< "$raw"
+
+  # --discover: also append any *.md under ROOT that contains the sentinels
+  # but isn't already in the list. Skips node_modules, .git, .release, dist.
+  if [[ "$DISCOVER" -eq 1 ]]; then
+    local found
+    while IFS= read -r found; do
+      local already=0
+      for t in "${TARGETS[@]}"; do
+        [[ "$t" == "$found" ]] && already=1 && break
+      done
+      [[ "$already" -eq 0 ]] && TARGETS+=("$found")
+    done < <(
+      grep -RlF --include='*.md' \
+        --exclude-dir=node_modules \
+        --exclude-dir=.git \
+        --exclude-dir=.release \
+        --exclude-dir=dist \
+        "$BEGIN_MARK" "$ROOT" 2>/dev/null \
+        | grep -vF "$README" || true
+    )
+  fi
+}
+
+resolve_targets
+
+if [[ "$LIST_ONLY" -eq 1 ]]; then
+  printf 'Resolved %d target(s):\n' "${#TARGETS[@]}"
+  for t in "${TARGETS[@]}"; do printf '  %s\n' "$t"; done
+  exit 0
+fi
+
 
 # --- 0. Optionally insert sentinels into targets that lack them -------------
 # Appends a fresh install section (with INSTALL:BEGIN / INSTALL:END markers)
