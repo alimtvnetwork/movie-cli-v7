@@ -38,9 +38,11 @@ END_MARK="<!-- INSTALL:END -->"
 
 CHECK_ONLY=0
 INIT_MARKERS=0
+PRINT_ONLY=0
 case "${1:-}" in
   --check)         CHECK_ONLY=1 ;;
   --init-markers)  INIT_MARKERS=1 ;;
+  --print)         PRINT_ONLY=1 ;;
   "")              ;;
   *) echo "Unknown option: $1" >&2; exit 2 ;;
 esac
