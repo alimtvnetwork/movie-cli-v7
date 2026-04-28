@@ -97,7 +97,10 @@ sync_file() {
   ' "$file" > "$tmp"
 
   if [[ "$CHECK_ONLY" -eq 1 ]]; then
-    if ! cmp -s "$file" "$tmp"; then
+    local h1 h2
+    h1="$(sha256sum < "$file" | awk '{print $1}')"
+    h2="$(sha256sum < "$tmp"  | awk '{print $1}')"
+    if [[ "$h1" != "$h2" ]]; then
       echo "DRIFT: $file is out of sync with README.md — run scripts/sync-install-from-readme.sh" >&2
       rm -f "$tmp"
       return 1
