@@ -77,17 +77,38 @@ $env:PATH += ";E:\bin-run"
 
 ## Quick Install (One-Liner)
 
-### Windows (PowerShell)
+<!-- INSTALL:BEGIN -->
+
+<!-- Generated from README.md by scripts/sync-install-from-readme.sh — do not edit by hand -->
+
+**🚀 Install in 10 seconds — anyone, any OS:**
+
+<table>
+<tr>
+<td><b>🪟 Windows · PowerShell</b></td>
+<td>
 
 ```powershell
-git clone https://https://github.com/alimtvnetwork/movie-cli-v7.git; cd movie-cli-v7; .\run.ps1
+irm https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.ps1 | iex
 ```
 
-### macOS / Linux
+</td>
+</tr>
+<tr>
+<td><b>🐧 macOS · Linux · Bash</b></td>
+<td>
 
 ```bash
-git clone https://https://github.com/alimtvnetwork/movie-cli-v7.git && cd movie-cli-v7 && pwsh run.ps1
+curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get.sh | bash
 ```
+
+</td>
+</tr>
+</table>
+
+<sub>Auto-detects your OS &amp; architecture · Installs the latest pre-built binary · Falls back to a source build if no release is published · See <a href="#installation">Installation</a> for flags, pinned versions, and verification.</sub>
+
+<!-- INSTALL:END -->
 
 ## Configuration
 
