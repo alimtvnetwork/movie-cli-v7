@@ -31,6 +31,7 @@ _Scan folders, clean filenames, fetch TMDb metadata, organize files, and track y
 
 <br><br>
 
+<!-- README-INSTALL:BEGIN -->
 **🚀 Install in 10 seconds — anyone, any OS:**
 
 <table>
@@ -57,6 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/alimtvnetwork/movie-cli-v7/main/get
 </table>
 
 <sub>Auto-detects your OS &amp; architecture · Installs the latest pre-built binary · Falls back to a source build if no release is published · See <a href="#installation">Installation</a> for flags, pinned versions, and verification.</sub>
+<!-- README-INSTALL:END -->
 
 </div>
 
