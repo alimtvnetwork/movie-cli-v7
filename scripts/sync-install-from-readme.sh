@@ -15,10 +15,21 @@
 # Anything outside the markers is preserved verbatim.
 #
 # Usage:
-#   scripts/sync-install-from-readme.sh                  # rewrite files
-#   scripts/sync-install-from-readme.sh --check          # exit 1 if drift
-#   scripts/sync-install-from-readme.sh --init-markers   # add sentinels if missing
-#   scripts/sync-install-from-readme.sh --print          # print extracted block to stdout
+#   scripts/sync-install-from-readme.sh                       # rewrite files
+#   scripts/sync-install-from-readme.sh --check               # exit 1 if drift
+#   scripts/sync-install-from-readme.sh --init-markers        # add sentinels if missing
+#   scripts/sync-install-from-readme.sh --print               # print extracted block
+#   scripts/sync-install-from-readme.sh --list-targets        # show resolved target list
+#   scripts/sync-install-from-readme.sh --targets a.md,b.md   # one-shot custom targets
+#   scripts/sync-install-from-readme.sh --discover            # also auto-find any *.md
+#                                                             # with INSTALL:BEGIN sentinels
+#
+# Targets are resolved in this order (first wins):
+#   1. --targets flag (comma-separated)
+#   2. SYNC_INSTALL_TARGETS env var (comma- or newline-separated)
+#   3. scripts/sync-install-targets.txt (one path per line, # for comments)
+#   4. Built-in defaults: QUICKSTART.md, spec/03-general/01-install-guide.md
+# Paths may be absolute or relative to the repo root.
 #
 # Exit codes:
 #   0  success / no drift
