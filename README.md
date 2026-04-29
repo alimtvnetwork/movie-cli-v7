@@ -2028,6 +2028,31 @@ not change without a major version bump.
 | `targets`  | `array<string>`  | yes      | Resolved sync targets, as repo-root-relative POSIX paths. May be empty if the user passed `--targets ""`. Order is significant (matches resolution order). |
 | `block`    | `string`         | yes      | The verbatim install block extracted from the README, with leading/trailing blank lines trimmed. May contain newlines, Markdown, HTML, and emoji. |
 
+#### Required vs optional fields
+
+**Required (always present, never `null`, never omitted):**
+
+- `source` — always the literal string `"README.md"`.
+- `extracted` — always one of the enum values below.
+- `lines` — integer, `>= 1`.
+- `bytes` — integer, `>= 1`.
+- `sha256` — string, exactly 64 lowercase hex chars (`^[0-9a-f]{64}$`).
+- `targets` — array of strings (possibly empty `[]`, but the key is always present).
+- `block` — non-empty string.
+
+**Optional:** none. The current schema has no optional fields. Future additive fields (introduced without a major version bump) will be documented here and MUST be treated as optional by consumers — assume the key may be absent on older versions.
+
+**Nullability:** no field is ever `null`. Consumers that encounter `null` for any documented field should treat the output as malformed.
+
+**Allowed enum values:**
+
+- `extracted` — exactly one of:
+  - `"sentinels"` — block was located via the canonical `<!-- README-INSTALL:BEGIN -->` / `<!-- README-INSTALL:END -->` markers in `README.md`. This is the preferred path.
+  - `"heuristic"` — sentinels were not found; the block was located by matching the install heading + first `</table>` + trailing `<sub>` caption. Treat this as a soft warning that the README should be updated to add sentinels.
+- `source` — currently always `"README.md"`. Reserved as a string enum so future versions could extend it; consumers should still match exactly `"README.md"` today.
+
+**Unknown fields:** consumers MUST ignore any keys not listed in the table above so the schema can grow additively.
+
 **Exit codes:** `0` on success, `2` if the install block could not be extracted or `python3`/`python` is not on `PATH` (required to safely JSON-encode the block).
 
 **Example consumer (`jq`):**
