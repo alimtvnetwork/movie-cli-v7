@@ -387,6 +387,12 @@ jobs:
           ARCH=""
           NO_PATH=false
 
+          # Script-scope so the EXIT trap can see it even after main() returns.
+          # Declared empty up here; main() assigns it. Guarded with ${tmp_dir:-}
+          # in the trap so `set -u` never trips if we exit before mktemp runs.
+          tmp_dir=""
+          trap 'if [[ -n "${tmp_dir:-}" && -d "${tmp_dir}" ]]; then rm -rf "$tmp_dir"; fi' EXIT
+
           usage() {
               echo "Usage: install.sh [--version VERSION] [--dir DIR] [--arch ARCH] [--no-path]"
               exit 0
@@ -510,10 +516,9 @@ jobs:
 
               local base_url="https://github.com/$REPO/releases/download/$version"
               local asset_name="${BINARY_NAME}-${version}-${os}-${arch}.tar.gz"
-              local tmp_dir
+              # tmp_dir is declared at script scope so the EXIT trap can clean
+              # it up safely; assigning here (no `local`) keeps that visibility.
               tmp_dir="$(mktemp -d)"
-
-              trap 'rm -rf "$tmp_dir"' EXIT
 
               echo "  Downloading $asset_name..."
               download "$base_url/$asset_name" "$tmp_dir/$asset_name"
