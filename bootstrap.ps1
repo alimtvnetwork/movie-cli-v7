@@ -27,7 +27,11 @@ param(
     [string]$RepoUrl = "https://github.com/alimtvnetwork/movie-cli-v7"
 )
 
-$ErrorActionPreference = 'Stop'
+# Do NOT use 'Stop' at script scope — when run via `irm | iex` an uncaught
+# terminating error bubbles up to the outer pipeline and surfaces as a
+# confusing "Cannot convert 'System.Byte[]' to 'System.String'" message from
+# iex. Handle errors locally with try/catch instead.
+$ErrorActionPreference = 'Continue'
 
 # ── Constants (spec §3) ───────────────────────────────────────
 $MAX_LOOKAHEAD     = 25
@@ -131,37 +135,71 @@ function ConvertTo-ScriptText {
 function Invoke-DelegatedInstall {
     param([string]$InstallUrl)
     Write-Log "[bootstrap] delegating to: $InstallUrl" 'Magenta'
-    $script = Invoke-WebRequest -Uri $InstallUrl `
-                                -UseBasicParsing `
-                                -TimeoutSec 30 `
-                                -ErrorAction Stop
-    Invoke-Expression (ConvertTo-ScriptText $script)
+    try {
+        $script = Invoke-WebRequest -Uri $InstallUrl `
+                                    -UseBasicParsing `
+                                    -TimeoutSec 30 `
+                                    -ErrorAction Stop
+    } catch {
+        Write-Log "[bootstrap] download failed: $($_.Exception.Message)" 'Red'
+        Write-Log "[bootstrap] log file: $LogFile" 'DarkGray'
+        return 1
+    }
+    try {
+        $text = ConvertTo-ScriptText $script
+        if ([string]::IsNullOrWhiteSpace($text)) {
+            Write-Log "[bootstrap] downloaded script body was empty" 'Red'
+            return 1
+        }
+        $sb = [ScriptBlock]::Create($text)
+        & $sb
+        if ($null -eq $LASTEXITCODE) { return 0 }
+        return [int]$LASTEXITCODE
+    } catch {
+        Write-Log "[bootstrap] delegated install failed: $($_.Exception.Message)" 'Red'
+        Write-Log "[bootstrap] log file: $LogFile" 'DarkGray'
+        return 1
+    }
 }
 
-# ── Entry point ───────────────────────────────────────────────
-Write-Log "[bootstrap] starting URL: $RepoUrl" 'Cyan'
-$parsed = Get-ParsedRepoUrl -Url $RepoUrl
+# ── Entry point (fully guarded) ───────────────────────────────
+function Invoke-BootstrapMain {
+    Write-Log "[bootstrap] starting URL: $RepoUrl" 'Cyan'
+    $parsed = Get-ParsedRepoUrl -Url $RepoUrl
 
-if (-not $parsed) {
-    Write-Log "[bootstrap] URL has no -v<N> suffix; installing as-is" 'Yellow'
-    $fallback = $RepoUrl.TrimEnd('/').Replace('github.com', 'raw.githubusercontent.com') + "/$PROBE_BRANCH/install.ps1"
-    Invoke-DelegatedInstall -InstallUrl $fallback
-    exit $LASTEXITCODE
+    if (-not $parsed) {
+        Write-Log "[bootstrap] URL has no -v<N> suffix; installing as-is" 'Yellow'
+        $fallback = $RepoUrl.TrimEnd('/').Replace('github.com', 'raw.githubusercontent.com') + "/$PROBE_BRANCH/install.ps1"
+        return (Invoke-DelegatedInstall -InstallUrl $fallback)
+    }
+
+    Write-Log "[bootstrap] parsed: owner=$($parsed.Owner) base=$($parsed.Base) current=v$($parsed.N)" 'Cyan'
+    $winner = Find-LatestSibling -Parsed $parsed
+
+    if (-not $winner) {
+        Write-Log "[bootstrap] no -v<N..N+$MAX_LOOKAHEAD> repo found; falling back to starting URL" 'Yellow'
+        $fallback = "https://raw.githubusercontent.com/$($parsed.Owner)/$($parsed.Base)-v$($parsed.N)/$PROBE_BRANCH/install.ps1"
+        return (Invoke-DelegatedInstall -InstallUrl $fallback)
+    }
+
+    Write-Log "[bootstrap] selected: https://github.com/$($parsed.Owner)/$($parsed.Base)-v$($winner.Version)" 'Cyan'
+    if ($winner.Version -ne $parsed.N) {
+        Write-Log "[bootstrap] auto-upgrade: v$($parsed.N) -> v$($winner.Version)" 'Cyan'
+    }
+    return (Invoke-DelegatedInstall -InstallUrl $winner.Url)
 }
 
-Write-Log "[bootstrap] parsed: owner=$($parsed.Owner) base=$($parsed.Base) current=v$($parsed.N)" 'Cyan'
-$winner = Find-LatestSibling -Parsed $parsed
-
-if (-not $winner) {
-    Write-Log "[bootstrap] no -v<N..N+$MAX_LOOKAHEAD> repo found; falling back to starting URL" 'Yellow'
-    $fallback = "https://raw.githubusercontent.com/$($parsed.Owner)/$($parsed.Base)-v$($parsed.N)/$PROBE_BRANCH/install.ps1"
-    Invoke-DelegatedInstall -InstallUrl $fallback
-    exit $LASTEXITCODE
+$bootstrapExit = 1
+try {
+    $bootstrapExit = Invoke-BootstrapMain
+    if ($null -eq $bootstrapExit) { $bootstrapExit = 0 }
+} catch {
+    Write-Log "[bootstrap] unhandled error: $($_.Exception.Message)" 'Red'
+    Write-Log "[bootstrap] log file: $LogFile" 'DarkGray'
+    $bootstrapExit = 1
 }
 
-Write-Log "[bootstrap] selected: https://github.com/$($parsed.Owner)/$($parsed.Base)-v$($winner.Version)" 'Cyan'
-if ($winner.Version -ne $parsed.N) {
-    Write-Log "[bootstrap] auto-upgrade: v$($parsed.N) -> v$($winner.Version)" 'Cyan'
-}
-Invoke-DelegatedInstall -InstallUrl $winner.Url
-exit $LASTEXITCODE
+# Set $LASTEXITCODE for callers but DO NOT call `exit` — `exit` inside an
+# `irm | iex` pipeline can terminate the host shell on some PowerShell
+# versions. Let the script return naturally.
+$global:LASTEXITCODE = [int]$bootstrapExit
