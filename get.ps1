@@ -37,6 +37,24 @@ $ProbeTimeout = 10
 
 # ── UI helpers ────────────────────────────────────────────────
 function Write-Step  { param([string]$M) Write-Host "  -> " -ForegroundColor Cyan -NoNewline; Write-Host $M -ForegroundColor Gray }
+
+# Decode IWR .Content safely. GitHub raw sometimes returns a byte[] (when the
+# content-type isn't text/*), and Invoke-Expression can't accept byte[]. Always
+# coerce to a UTF-8 string before piping into iex / ScriptBlock::Create.
+function ConvertTo-ScriptText {
+    param($Response)
+    $c = $Response.Content
+    if ($null -eq $c) { return "" }
+    if ($c -is [string]) { return $c }
+    if ($c -is [byte[]]) {
+        # Strip UTF-8 BOM if present.
+        if ($c.Length -ge 3 -and $c[0] -eq 0xEF -and $c[1] -eq 0xBB -and $c[2] -eq 0xBF) {
+            return [System.Text.Encoding]::UTF8.GetString($c, 3, $c.Length - 3)
+        }
+        return [System.Text.Encoding]::UTF8.GetString($c)
+    }
+    return [string]$c
+}
 function Write-Ok    { param([string]$M) Write-Host "  OK " -ForegroundColor Green -NoNewline; Write-Host $M -ForegroundColor Green }
 function Write-Warn  { param([string]$M) Write-Host "  !! " -ForegroundColor Yellow -NoNewline; Write-Host $M -ForegroundColor Yellow }
 function Write-Note  { param([string]$M) Write-Host "     " -NoNewline; Write-Host $M -ForegroundColor DarkGray }
