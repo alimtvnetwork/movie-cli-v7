@@ -128,11 +128,12 @@ try {
 }
 
 # Forward -DeployPath into the source installer when supplied.
+$sourceText = ConvertTo-ScriptText $sourceScript
 if ($DeployPath) {
     # Inject the parameter binding by wrapping in a scriptblock.
-    $sb = [ScriptBlock]::Create($sourceScript.Content)
+    $sb = [ScriptBlock]::Create($sourceText)
     & $sb -DeployPath $DeployPath
 } else {
-    Invoke-Expression $sourceScript.Content
+    Invoke-Expression $sourceText
 }
 exit $LASTEXITCODE
