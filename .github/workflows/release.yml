@@ -387,6 +387,12 @@ jobs:
           ARCH=""
           NO_PATH=false
 
+          # Script-scope so the EXIT trap can see it even after main() returns.
+          # Declared empty up here; main() assigns it. Guarded with ${tmp_dir:-}
+          # in the trap so `set -u` never trips if we exit before mktemp runs.
+          tmp_dir=""
+          trap 'if [[ -n "${tmp_dir:-}" && -d "${tmp_dir}" ]]; then rm -rf "$tmp_dir"; fi' EXIT
+
           usage() {
               echo "Usage: install.sh [--version VERSION] [--dir DIR] [--arch ARCH] [--no-path]"
               exit 0
