@@ -516,10 +516,9 @@ jobs:
 
               local base_url="https://github.com/$REPO/releases/download/$version"
               local asset_name="${BINARY_NAME}-${version}-${os}-${arch}.tar.gz"
-              local tmp_dir
+              # tmp_dir is declared at script scope so the EXIT trap can clean
+              # it up safely; assigning here (no `local`) keeps that visibility.
               tmp_dir="$(mktemp -d)"
-
-              trap 'rm -rf "$tmp_dir"' EXIT
 
               echo "  Downloading $asset_name..."
               download "$base_url/$asset_name" "$tmp_dir/$asset_name"
