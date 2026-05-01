@@ -114,6 +114,20 @@ function Find-LatestSibling {
 }
 
 # ── Delegate to the winner's install.ps1 (spec §4 step 4) ─────
+function ConvertTo-ScriptText {
+    param($Response)
+    $c = $Response.Content
+    if ($null -eq $c) { return "" }
+    if ($c -is [string]) { return $c }
+    if ($c -is [byte[]]) {
+        if ($c.Length -ge 3 -and $c[0] -eq 0xEF -and $c[1] -eq 0xBB -and $c[2] -eq 0xBF) {
+            return [System.Text.Encoding]::UTF8.GetString($c, 3, $c.Length - 3)
+        }
+        return [System.Text.Encoding]::UTF8.GetString($c)
+    }
+    return [string]$c
+}
+
 function Invoke-DelegatedInstall {
     param([string]$InstallUrl)
     Write-Log "[bootstrap] delegating to: $InstallUrl" 'Magenta'
@@ -121,7 +135,7 @@ function Invoke-DelegatedInstall {
                                 -UseBasicParsing `
                                 -TimeoutSec 30 `
                                 -ErrorAction Stop
-    Invoke-Expression $script.Content
+    Invoke-Expression (ConvertTo-ScriptText $script)
 }
 
 # ── Entry point ───────────────────────────────────────────────
