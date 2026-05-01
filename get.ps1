@@ -91,7 +91,7 @@ if ($releaseAvailable) {
     Write-Note "Source: $ReleaseUrl"
     Write-Host ""
     $installScript = Invoke-WebRequest -Uri $ReleaseUrl -UseBasicParsing -TimeoutSec 30
-    Invoke-Expression $installScript.Content
+    Invoke-Expression (ConvertTo-ScriptText $installScript)
     exit $LASTEXITCODE
 }
 
